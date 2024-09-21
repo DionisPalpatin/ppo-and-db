@@ -1,0 +1,161 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.form-container {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 320px;
+    margin: 20px auto;
+}
+
+/*.form-container, .menu {*/
+/*    background: #fff;*/
+/*    padding: 20px;*/
+/*    border-radius: 8px;*/
+/*    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);*/
+/*    width: 300px;*/
+/*    margin: 20px auto;*/
+/*}*/
+
+.hidden {
+    display: none;
+}
+
+.menu-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+/*.menu-buttons {*/
+/*    display: flex;*/
+/*    justify-content: space-around;*/
+/*    flex-wrap: wrap;*/
+/*    margin-top: 20px;*/
+/*}*/
+
+.menu-buttons button {
+    background-color: #007bff;
+    flex: 1 1 200px;
+    margin: 10px;
+}
+
+button {
+    background-color: #007BFF; /* Синий цвет */
+    color: white;
+    padding: 15px 30px; /* Увеличена высота */
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    display: block;
+    margin: 20px auto; /* Центрирование */
+    width: 100%; /* Чтобы кнопка занимала всю ширину */
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+.output-container {
+    margin-top: 20px;
+}
+
+.error {
+    color: red;
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0;
+    box-sizing: border-box;
+}
+
+
+
+
+
+
+
+/*.hidden {*/
+/*    display: none;*/
+/*}*/
+
+/*.error {*/
+/*    color: red;*/
+/*}*/
+
+/*.container {*/
+/*    text-align: center;*/
+/*}*/
+
+/*.form-container, .menu {*/
+/*    background: #fff;*/
+/*    padding: 20px;*/
+/*    border-radius: 8px;*/
+/*    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);*/
+/*    width: 300px;*/
+/*    margin: 20px auto;*/
+/*}*/
+
+/*button {*/
+/*    background-color: #007bff;*/
+/*    color: white;*/
+/*    border: none;*/
+/*    padding: 10px 15px;*/
+/*    border-radius: 5px;*/
+/*    margin: 5px;*/
+/*    cursor: pointer;*/
+/*    transition: background-color 0.3s ease;*/
+/*}*/
+
+/*button:hover {*/
+/*    background-color: #0056b3;*/
+/*}*/
+
+/*.menu-buttons {*/
+/*    display: flex;*/
+/*    justify-content: space-around;*/
+/*    flex-wrap: wrap;*/
+/*}*/
+
+/*.output-container {*/
+/*    margin-top: 20px;*/
+/*}*/
+
+/*p#toggle-form {*/
+/*    cursor: pointer;*/
+/*    color: #007bff;*/
+/*}*/
+/*p#toggle-form span {*/
+/*    font-weight: bold;*/
+/*    text-decoration: underline;*/
+/*}*/
+
+
+
+
+
+
+
+
+
+
+
