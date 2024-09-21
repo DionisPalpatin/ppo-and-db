@@ -1,0 +1,389 @@
+package mypackage
+
+import (
+    "os"
+    "testing"
+
+    "github.com/stretchr/testify/assert"
+    "github.com/stretchr/testify/mock"
+
+    "github.com/your-project/bl" // Замените "your-project" на имя вашего проекта
+    "github.com/your-project/configs" // Замените "your-project" на имя вашего проекта
+    "github.com/your-project/mocks" // Замените "your-project" на имя вашего проекта
+)
+
+// ... (код для MockINoteRepository, MockIUserRepository, MockITeamRepository, MockISectionRepository)
+
+func TestGetNote(t *testing.T) {
+    t.Run("SuccessGetNote", func(t *testing.T) {
+        retErr := configs.CreateError(configs.AllIsOk, nil, "")
+        retNote := &bl.Note{Id: 1, SectionID: 1, OwnerID: 1}
+        retSection := &bl.Section{Id: 1, CommandID: 1}
+        returnRequester := &bl.User{Id: 1, CommandID: 1, Role: configs.Admin}
+
+        mockNoteRepo := new(mocks.MockINoteRepository)
+        mockNoteRepo.On("GetNoteByID", 1).Return(retNote, retErr)
+        mockSectionRepo := new(mocks.MockISectionRepository)
+        mockSectionRepo.On("GetSectionByID", 1).Return(retSection, retErr)
+
+        nsSrv := bl.NoteService{}
+        note, err := nsSrv.GetNote(1, returnRequester, mockNoteRepo, nil, nil, mockSectionRepo)
+
+        assert.Nil(t, err)
+        assert.Equal(t, 1, note.Id)
+
+        mockNoteRepo.AssertExpectations(t)
+        mockSectionRepo.AssertExpectations(t)
+    })
+
+    t.Run("ErrorGetNoteByID", func(t *testing.T) {
+        retErr := configs.CreateError(configs.ErrGetNoteByID, configs.ErrGetNoteByIDError(), "GetNoteByID")
+        returnRequester := &bl.User{Id: 1, CommandID: 1, Role: configs.Admin}
+
+        mockNoteRepo := new(mocks.MockINoteRepository)
+        mockNoteRepo.On("GetNoteByID", 1).Return(nil, retErr)
+
+        nsSrv := bl.NoteService{}
+        _, err := nsSrv.GetNote(1, returnRequester, mockNoteRepo, nil, nil, nil)
+
+        assert.NotNil(t, err)
+        assert.Equal(t, configs.ErrGetNoteByID, err.ErrNum)
+
+        mockNoteRepo.AssertExpectations(t)
+    })
+
+    t.Run("ErrorGetSectionByID", func(t *testing.T) {
+        retErr := configs.CreateError(configs.ErrGetSectionByID, configs.ErrGetSectionByIDError(), "GetSectionByID")
+        retNote := &bl.Note{Id: 1, SectionID: 1, OwnerID: 1}
+        returnRequester := &bl.User{Id: 1, CommandID: 1, Role: configs.Admin}
+
+        mockNoteRepo := new(mocks.MockINoteRepository)
+        mockNoteRepo.On("GetNoteByID", 1).Return(retNote, configs.CreateError(configs.AllIsOk, nil, ""))
+        mockSectionRepo := new(mocks.MockISectionRepository)
+        mockSectionRepo.On("GetSectionByID", 1).Return(nil, retErr)
+
+        nsSrv := bl.NoteService{}
+        _, err := nsSrv.GetNote(1, returnRequester, mockNoteRepo, nil, nil, mockSectionRepo)
+
+        assert.NotNil(t, err)
+        assert.Equal(t, configs.ErrGetSectionByID, err.ErrNum)
+
+        mockNoteRepo.AssertExpectations(t)
+        mockSectionRepo.AssertExpectations(t)
+    })
+
+    t.Run("ErrorAccessDenied", func(t *testing.T) {
+        retErr := configs.CreateError(configs.AllIsOk, nil, "")
+        retNote := &bl.Note{Id: 1, SectionID: 1, OwnerID: 1}
+        retSection := &bl.Section{Id: 1, CommandID: 2}
+        returnRequester := &bl.User{Id: 1, CommandID: 1, Role: configs.Admin}
+
+        mockNoteRepo := new(mocks.MockINoteRepository)
+        mockNoteRepo.On("GetNoteByID", 1).Return(retNote, configs.CreateError(configs.AllIsOk, nil, ""))
+        mockSectionRepo := new(mocks.MockISectionRepository)
+        mockSectionRepo.On("GetSectionByID", 1).Return(retSection, retErr)
+
+        nsSrv := bl.NoteService{}
+        _, err := nsSrv.GetNote(1, returnRequester, mockNoteRepo, nil, nil, mockSectionRepo)
+
+        assert.NotNil(t, err)
+        assert.Equal(t, configs.ErrAccessDenied, err.ErrNum)
+
+        mockNoteRepo.AssertExpectations(t)
+        mockSectionRepo.AssertExpectations(t)
+    })
+}
+
+func TestGetAllNotes(t *testing.T) {
+    t.Run("SuccessGetAllNotes", func(t *testing.T) {
+        retErr := configs.CreateError(configs.AllIsOk, nil, "")
+        retNotes := []*bl.Note{
+            {Id: 1, OwnerID: 1},
+            {Id: 2, OwnerID: 2},
+        }
+        returnRequester := &bl.User{Id: 1, CommandID: 1, Role: configs.Admin}
+
+        mockNoteRepo := new(mocks.MockINoteRepository)
+        mockNoteRepo.On("GetAllNotes").Return(retNotes, retErr)
+
+        nsSrv := bl.NoteService{}
+        notes, err := nsSrv.GetAllNotes(returnRequester, mockNoteRepo)
+
+        assert.Nil(t, err)
+        assert.Len(t, notes, 2)
+        assert.Equal(t, 1, notes[0].Id)
+        assert.Equal(t, 2, notes[1].Id)
+
+        mockNoteRepo.AssertExpectations(t)
+    })
+
+    t.Run("ErrorAccessDenied", func(t *testing.T) {
+        returnRequester := &bl.User{Id: 1, CommandID: 1, Role: configs.Reader}
+
+        nsSrv := bl.NoteService{}
+        notes, err := nsSrv.GetAllNotes(returnRequester, nil)
+
+        assert.NotNil(t, err)
+        assert.Equal(t, configs.ErrAccessDenied, err.ErrNum)
+
+        assert.Nil(t, notes)
+    })
+}
+
+func TestAddNote(t *testing.T) {
+    t.Run("SuccessAddNote", func(t *testing.T) {
+        retErr := configs.CreateError(configs.AllIsOk, nil, "")
+        retNote := &bl.Note{Id: 1, OwnerID: 1}
+        returnRequester := &bl.User{Id: 1, CommandID: 1, Role: configs.Admin}
+
+        mockNoteRepo := new(mocks.MockINoteRepository)
+        mockNoteRepo.On("AddNote", retNote).Return(retErr)
+
+        nsSrv := bl.NoteService{}
+        err := nsSrv.AddNote(retNote, returnRequester, mockNoteRepo)
+
+        assert.Nil(t, err)
+
+        mockNoteRepo.AssertExpectations(t)
+    })
+
+    t.Run("ErrorAccessDenied", func(t *testing.T) {
+        retNote := &bl.Note{Id: 1, OwnerID: 1}
+        returnRequester := &bl.User{Id: 1, CommandID: 1, Role: configs.Reader}
+
+        nsSrv := bl.NoteService{}
+        err := nsSrv.AddNote(retNote, returnRequester, nil)
+
+        assert.NotNil(t, err)
+        assert.Equal(t, configs.ErrAccessDenied, err.ErrNum)
+    })
+}
+
+func TestDeleteNote(t *testing.T) {
+    t.Run("SuccessDeleteNote", func(t *testing.T) {
+        retErr := configs.CreateError(configs.AllIsOk, nil, "")
+        retNote := &bl.Note{Id: 1, OwnerID: 1}
+        returnRequester := &bl.User{Id: 1, CommandID: 1, Role: configs.Admin}
+
+        mockNoteRepo := new(mocks.MockINoteRepository)
+        mockNoteRepo.On("GetNoteByID", 1).Return(retNote, configs.CreateError(configs.AllIsOk, nil, ""))
+        mockNoteRepo.On("DeleteNote", 1).Return(retErr)
+
+        nsSrv := bl.NoteService{}
+        err := nsSrv.DeleteNote(1, returnRequester, mockNoteRepo)
+
+        assert.Nil(t, err)
+
+        mockNoteRepo.AssertExpectations(t)
+    })
+
+    t.Run("ErrorGetNoteByID", func(t *testing.T) {
+        retErr := configs.CreateError(configs.ErrGetNoteByID, configs.ErrGetNoteByIDError(), "GetNoteByID")
+        returnRequester := &bl.User{Id: 1, CommandID: 1, Role: configs.Admin}
+
+        mockNoteRepo := new(mocks.MockINoteRepository)
+        mockNoteRepo.On("GetNoteByID", 1).Return(nil, retErr)
+
+        nsSrv := bl.NoteService{}
+        err := nsSrv.DeleteNote(1, returnRequester, mockNoteRepo)
+
+        assert.NotNil(t, err)
+        assert.Equal(t, configs.ErrGetNoteByID, err.ErrNum)
+
+        mockNoteRepo.AssertExpectations(t)
+    })
+
+    t.Run("ErrorAccessDenied", func(t *testing.T) {
+        retNote := &bl.Note{Id: 1, OwnerID: 2}
+        returnRequester := &bl.User{Id: 1, CommandID: 1, Role: configs.Author}
+
+        mockNoteRepo := new(mocks.MockINoteRepository)
+        mockNoteRepo.On("GetNoteByID", 1).Return(retNote, configs.CreateError(configs.AllIsOk, nil, ""))
+
+        nsSrv := bl.NoteService{}
+        err := nsSrv.DeleteNote(1, returnRequester, mockNoteRepo)
+
+        assert.NotNil(t, err)
+        assert.Equal(t, configs.ErrAccessDenied, err.ErrNum)
+
+        mockNoteRepo.AssertExpectations(t)
+    })
+}
+
+func TestUpdateNoteContent(t *testing.T) {
+    t.Run("SuccessUpdateNoteContentText", func(t *testing.T) {
+        retErr := configs.CreateError(configs.AllIsOk, nil, "")
+        retNote := &bl.Note{Id: 1, OwnerID: 1, ContentType: configs.TextCont}
+        returnRequester := &bl.User{Id: 1, CommandID: 1, Role: configs.Admin}
+        filePath := "test.txt"
+        file, err := os.Open(filePath)
+        if err != nil {
+            t.Fatal(err)
+        }
+        defer file.Close()
+
+        mockNoteRepo := new(mocks.MockINoteRepository)
+        mockNoteRepo.On("GetNoteByID", 1).Return(retNote, configs.CreateError(configs.AllIsOk, nil, ""))
+        mockNoteRepo.On("UpdateNoteContentText", mock.Anything, retNote).Return(retErr)
+
+        nsSrv := bl.NoteService{}
+        err = nsSrv.UpdateNoteContent(1, returnRequester, filePath, mockNoteRepo, nil)
+
+        assert.Nil(t, err)
+
+        mockNoteRepo.AssertExpectations(t)
+    })
+
+    t.Run("SuccessUpdateNoteContentImg", func(t *testing.T) {
+        retErr := configs.CreateError(configs.AllIsOk, nil, "")
+        retNote := &bl.Note{Id: 1, OwnerID: 1, ContentType: configs.ImgCont}
+        returnRequester := &bl.User{Id: 1, CommandID: 1, Role: configs.Admin}
+        filePath := "test.jpg"
+        file, err := os.Open(filePath)
+        if err != nil {
+            t.Fatal(err)
+        }
+        defer file.Close()
+
+        mockNoteRepo := new(mocks.MockINoteRepository)
+        mockNoteRepo.On("GetNoteByID", 1).Return(retNote, configs.CreateError(configs.AllIsOk, nil, ""))
+        mockNoteRepo.On("UpdateNoteContentImg", mock.Anything, retNote).Return(retErr)
+
+        nsSrv := bl.NoteService{}
+        err = nsSrv.UpdateNoteContent(1, returnRequester, filePath, mockNoteRepo, nil)
+
+        assert.Nil(t, err)
+
+        mockNoteRepo.AssertExpectations(t)
+    })
+
+    t.Run("SuccessUpdateNoteContentRawData", func(t *testing.T) {
+        retErr := configs.CreateError(configs.AllIsOk, nil, "")
+        retNote := &bl.Note{Id: 1, OwnerID: 1, ContentType: configs.RawDataCont}
+        returnRequester := &bl.User{Id: 1, CommandID: 1, Role: configs.Admin}
+        filePath := "test.bin"
+        file, err := os.Open(filePath)
+        if err != nil {
+            t.Fatal(err)
+        }
+        defer file.Close()
+
+        mockNoteRepo := new(mocks.MockINoteRepository)
+        mockNoteRepo.On("GetNoteByID", 1).Return(retNote, configs.CreateError(configs.AllIsOk, nil, ""))
+        mockNoteRepo.On("UpdateNoteContentRawData", mock.Anything, retNote).Return(retErr)
+
+        nsSrv := bl.NoteService{}
+        err = nsSrv.UpdateNoteContent(1, returnRequester, filePath, mockNoteRepo, nil)
+
+        assert.Nil(t, err)
+
+        mockNoteRepo.AssertExpectations(t)
+    })
+
+    t.Run("ErrorGetNoteByID", func(t *testing.T) {
+        retErr := configs.CreateError(configs.ErrGetNoteByID, configs.ErrGetNoteByIDError(), "GetNoteByID")
+        returnRequester := &bl.User{Id: 1, CommandID: 1, Role: configs.Admin}
+        filePath := "test.txt"
+
+        mockNoteRepo := new(mocks.MockINoteRepository)
+        mockNoteRepo.On("GetNoteByID", 1).Return(nil, retErr)
+
+        nsSrv := bl.NoteService{}
+        err := nsSrv.UpdateNoteContent(1, returnRequester, filePath, mockNoteRepo, nil)
+
+        assert.NotNil(t, err)
+        assert.Equal(t, configs.ErrGetNoteByID, err.ErrNum)
+
+        mockNoteRepo.AssertExpectations(t)
+    })
+
+    t.Run("ErrorAccessDenied", func(t *testing.T) {
+        retErr := configs.CreateError(configs.AllIsOk, nil, "")
+        retNote := &bl.Note{Id: 1, OwnerID: 2, ContentType: configs.TextCont}
+        returnRequester := &bl.User{Id: 1, CommandID: 1, Role: configs.Author}
+        filePath := "test.txt"
+        file, err := os.Open(filePath)
+        if err != nil {
+            t.Fatal(err)
+        }
+        defer file.Close()
+
+        mockNoteRepo := new(mocks.MockINoteRepository)
+        mockNoteRepo.On("GetNoteByID", 1).Return(retNote, configs.CreateError(configs.AllIsOk, nil, ""))
+
+        nsSrv := bl.NoteService{}
+        err = nsSrv.UpdateNoteContent(1, returnRequester, filePath, mockNoteRepo, nil)
+
+        assert.NotNil(t, err)
+        assert.Equal(t, configs.ErrAccessDenied, err.ErrNum)
+
+        mockNoteRepo.AssertExpectations(t)
+    })
+
+    t.Run("ErrorOpenFile", func(t *testing.T) {
+        retErr := configs.CreateError(configs.AllIsOk, nil, "")
+        retNote := &bl.Note{Id: 1, OwnerID: 1, ContentType: configs.TextCont}
+        returnRequester := &bl.User{Id: 1, CommandID: 1, Role: configs.Admin}
+        filePath := "test.txt"
+
+        mockNoteRepo := new(mocks.MockINoteRepository)
+        mockNoteRepo.On("GetNoteByID", 1).Return(retNote, configs.CreateError(configs.AllIsOk, nil, ""))
+
+        nsSrv := bl.NoteService{}
+        err := nsSrv.UpdateNoteContent(1, returnRequester, filePath, mockNoteRepo, nil)
+
+        assert.NotNil(t, err)
+        assert.Equal(t, configs.ErrNoFile, err.ErrNum)
+
+        mockNoteRepo.AssertExpectations(t)
+    })
+}
+
+func TestUpdateNoteInfo(t *testing.T) {
+    t.Run("SuccessUpdateNoteInfo", func(t *testing.T) {
+        retErr := configs.CreateError(configs.AllIsOk, nil, "")
+        retNote := &bl.Note{Id: 1, OwnerID: 1}
+        returnRequester := &bl.User{Id: 1, CommandID: 1, Role: configs.Admin}
+
+        mockNoteRepo := new(mocks.MockINoteRepository)
+        mockNoteRepo.On("UpdateNoteInfo", retNote).Return(retErr)
+
+        nsSrv := bl.NoteService{}
+        err := nsSrv.UpdateNoteInfo(returnRequester, retNote, mockNoteRepo, nil)
+
+        assert.Nil(t, err)
+
+        mockNoteRepo.AssertExpectations(t)
+    })
+
+    t.Run("ErrorAccessDenied", func(t *testing.T) {
+        retNote := &bl.Note{Id: 1, OwnerID: 2}
+        returnRequester := &bl.User{Id: 1, CommandID: 1, Role: configs.Author}
+
+        mockNoteRepo := new(mocks.MockINoteRepository)
+
+        nsSrv := bl.NoteService{}
+        err := nsSrv.UpdateNoteInfo(returnRequester, retNote, mockNoteRepo, nil)
+
+        assert.NotNil(t, err)
+        assert.Equal(t, configs.ErrAccessDenied, err.ErrNum)
+
+        mockNoteRepo.AssertExpectations(t)
+    })
+}
+
+func TestAddNoteToCollection(t *testing.T) {
+    t.Run("SuccessAddNoteToCollection", func(t *testing.T) {
+        retErr := configs.CreateError(configs.AllIsOk, nil, "")
+
+        mockNoteRepo := new(mocks.MockINoteRepository)
+        mockNoteRepo.On("AddNoteToCollection", 1, 1).Return(retErr)
+
+        nsSrv := bl.NoteService{}
+        err := nsSrv.AddNoteToCollection(1, 1, mockNoteRepo)
+
+        assert.Nil(t, err)
+
+        mockNoteRepo.AssertExpectations(t)
+    })
+}

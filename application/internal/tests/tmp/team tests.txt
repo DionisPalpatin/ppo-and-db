@@ -1,0 +1,422 @@
+func TestGetAllTeams(t *testing.T) {
+ t.Run("SuccessGetAllTeams", func(t *testing.T) {
+  retErr := configs.CreateError(configs.AllIsOk, nil, "")
+  retUser := &bl.User{Role: configs.Admin}
+  returnTeams := []*bl.Team{
+   {Id: 1, Name: "Team 1"},
+   {Id: 2, Name: "Team 2"},
+  }
+
+  mockUserRepo := new(mocks.MockIUserRepository)
+  mockUserRepo.On("GetUserByID", 1).Return(retUser, retErr)
+  mockTeamRepo := new(mocks.MockITeamRepository)
+  mockTeamRepo.On("GetAllTeams").Return(returnTeams, retErr)
+
+  tsSrv := bl.TeamService{}
+  teams, err := tsSrv.GetAllTeams(1, mockTeamRepo, mockUserRepo)
+
+  assert.Nil(t, err)
+  assert.Len(t, teams, 2)
+  assert.Equal(t, 1, teams[0].Id)
+  assert.Equal(t, "Team 1", teams[0].Name)
+  assert.Equal(t, 2, teams[1].Id)
+  assert.Equal(t, "Team 2", teams[1].Name)
+
+  mockUserRepo.AssertExpectations(t)
+  mockTeamRepo.AssertExpectations(t)
+ })
+
+ t.Run("ErrorGetRequester", func(t *testing.T) {
+  retErr := configs.CreateError(configs.ErrGetUserByID, configs.ErrGetUserByIDError(), "GetUserByID")
+
+  mockUserRepo := new(mocks.MockIUserRepository)
+  mockUserRepo.On("GetUserByID", -1).Return(nil, retErr)
+
+  tsSrv := bl.TeamService{}
+  _, err := tsSrv.GetAllTeams(-1, nil, mockUserRepo)
+
+  assert.NotNil(t, err)
+  assert.Equal(t, configs.ErrGetUserByID, err.ErrNum)
+
+  mockUserRepo.AssertExpectations(t)
+ })
+
+ t.Run("ErrorRequesterNotAdmin", func(t *testing.T) {
+  retErr := configs.CreateError(configs.AllIsOk, nil, "")
+  retUser := &bl.User{Role: configs.Reader}
+
+  mockUserRepo := new(mocks.MockIUserRepository)
+  mockUserRepo.On("GetUserByID", 1).Return(retUser, retErr)
+
+  tsSrv := bl.TeamService{}
+  _, err := tsSrv.GetAllTeams(1, nil, mockUserRepo)
+
+  assert.NotNil(t, err)
+  assert.Equal(t, configs.ErrAccessDenied, err.ErrNum)
+
+  mockUserRepo.AssertExpectations(t)
+ })
+
+ t.Run("ErrorGetAllTeams", func(t *testing.T) {
+  retErr := configs.CreateError(configs.ErrGetAllTeams, configs.ErrGetAllTeamsError(), "GetAllTeams")
+
+  mockUserRepo := new(mocks.MockIUserRepository)
+  mockUserRepo.On("GetUserByID", 1).Return(&bl.User{Role: configs.Admin}, configs.CreateError(configs.AllIsOk, nil, ""))
+  mockTeamRepo := new(mocks.MockITeamRepository)
+  mockTeamRepo.On("GetAllTeams").Return(nil, retErr)
+
+  tsSrv := bl.TeamService{}
+  _, err := tsSrv.GetAllTeams(1, mockTeamRepo, mockUserRepo)
+
+  assert.NotNil(t, err)
+  assert.Equal(t, configs.ErrGetAllTeams, err.ErrNum)
+
+  mockUserRepo.AssertExpectations(t)
+  mockTeamRepo.AssertExpectations(t)
+ })
+}
+
+func TestUpdateTeam(t *testing.T) {
+    t.Run("SuccessUpdateTeam", func(t *testing.T) {
+        retErr := configs.CreateError(configs.AllIsOk, nil, "")
+        retUser := &bl.User{Role: configs.Admin}
+        returnTeam := &bl.Team{Id: 1, Name: "Team 1"}
+
+        mockUserRepo := new(mocks.MockIUserRepository)
+        mockUserRepo.On("GetUserByID", 1).Return(retUser, retErr)
+        mockTeamRepo := new(mocks.MockITeamRepository)
+        mockTeamRepo.On("UpdateTeam", returnTeam).Return(retErr)
+
+        tsSrv := bl.TeamService{}
+        err := tsSrv.UpdateTeam(1, returnTeam, mockTeamRepo, mockUserRepo)
+
+        assert.Nil(t, err)
+
+        mockUserRepo.AssertExpectations(t)
+        mockTeamRepo.AssertExpectations(t)
+    })
+
+    t.Run("ErrorGetRequester", func(t *testing.T) {
+        retErr := configs.CreateError(configs.ErrGetUserByID, configs.ErrGetUserByIDError(), "GetUserByID")
+
+        mockUserRepo := new(mocks.MockIUserRepository)
+        mockUserRepo.On("GetUserByID", -1).Return(nil, retErr)
+
+        tsSrv := bl.TeamService{}
+        err := tsSrv.UpdateTeam(-1, nil, nil, mockUserRepo)
+
+        assert.NotNil(t, err)
+        assert.Equal(t, configs.ErrGetUserByID, err.ErrNum)
+
+        mockUserRepo.AssertExpectations(t)
+    })
+
+    t.Run("ErrorRequesterNotAdmin", func(t *testing.T) {
+        retErr := configs.CreateError(configs.AllIsOk, nil, "")
+        retUser := &bl.User{Role: configs.Reader}
+
+        mockUserRepo := new(mocks.MockIUserRepository)
+        mockUserRepo.On("GetUserByID", 1).Return(retUser, retErr)
+
+        tsSrv := bl.TeamService{}
+        err := tsSrv.UpdateTeam(1, nil, nil, mockUserRepo)
+
+        assert.NotNil(t, err)
+        assert.Equal(t, configs.ErrAccessDenied, err.ErrNum)
+
+        mockUserRepo.AssertExpectations(t)
+    })
+
+    t.Run("ErrorUpdateTeam", func(t *testing.T) {
+        retErr := configs.CreateError(configs.ErrUpdateTeam, configs.ErrUpdateTeamError(), "UpdateTeam")
+        retUser := &bl.User{Role: configs.Admin}
+        returnTeam := &bl.Team{Id: 1, Name: "Team 1"}
+
+        mockUserRepo := new(mocks.MockIUserRepository)
+        mockUserRepo.On("GetUserByID", 1).Return(retUser, configs.CreateError(configs.AllIsOk, nil, ""))
+        mockTeamRepo := new(mocks.MockITeamRepository)
+        mockTeamRepo.On("UpdateTeam", returnTeam).Return(retErr)
+
+        tsSrv := bl.TeamService{}
+        err := tsSrv.UpdateTeam(1, returnTeam, mockTeamRepo, mockUserRepo)
+
+        assert.NotNil(t, err)
+        assert.Equal(t, configs.ErrUpdateTeam, err.ErrNum)
+
+        mockUserRepo.AssertExpectations(t)
+        mockTeamRepo.AssertExpectations(t)
+    })
+}
+
+func TestDeleteTeam(t *testing.T) {
+    t.Run("SuccessDeleteTeam", func(t *testing.T) {
+        retErr := configs.CreateError(configs.AllIsOk, nil, "")
+        retUser := &bl.User{Role: configs.Admin}
+
+        mockUserRepo := new(mocks.MockIUserRepository)
+        mockUserRepo.On("GetUserByID", 1).Return(retUser, retErr)
+        mockTeamRepo := new(mocks.MockITeamRepository)
+        mockTeamRepo.On("DeleteTeam", 1).Return(retErr)
+
+        tsSrv := bl.TeamService{}
+        err := tsSrv.DeleteTeam(1, 1, mockTeamRepo, mockUserRepo)
+
+        assert.Nil(t, err)
+
+        mockUserRepo.AssertExpectations(t)
+        mockTeamRepo.AssertExpectations(t)
+    })
+
+    t.Run("ErrorGetRequester", func(t *testing.T) {
+        retErr := configs.CreateError(configs.ErrGetUserByID, configs.ErrGetUserByIDError(), "GetUserByID")
+
+        mockUserRepo := new(mocks.MockIUserRepository)
+        mockUserRepo.On("GetUserByID", -1).Return(nil, retErr)
+
+        tsSrv := bl.TeamService{}
+        err := tsSrv.DeleteTeam(-1, 1, nil, mockUserRepo)
+
+        assert.NotNil(t, err)
+        assert.Equal(t, configs.ErrGetUserByID, err.ErrNum)
+
+        mockUserRepo.AssertExpectations(t)
+    })
+
+    t.Run("ErrorRequesterNotAdmin", func(t *testing.T) {
+        retErr := configs.CreateError(configs.AllIsOk, nil, "")
+        retUser := &bl.User{Role: configs.Reader}
+
+        mockUserRepo := new(mocks.MockIUserRepository)
+        mockUserRepo.On("GetUserByID", 1).Return(retUser, retErr)
+
+        tsSrv := bl.TeamService{}
+        err := tsSrv.DeleteTeam(1, 1, nil, mockUserRepo)
+
+        assert.NotNil(t, err)
+        assert.Equal(t, configs.ErrAccessDenied, err.ErrNum)
+
+        mockUserRepo.AssertExpectations(t)
+    })
+
+    t.Run("ErrorDeleteTeam", func(t *testing.T) {
+        retErr := configs.CreateError(configs.ErrDeleteTeam, configs.ErrDeleteTeamError(), "DeleteTeam")
+        retUser := &bl.User{Role: configs.Admin}
+
+        mockUserRepo := new(mocks.MockIUserRepository)
+        mockUserRepo.On("GetUserByID", 1).Return(retUser, configs.CreateError(configs.AllIsOk, nil, ""))
+        mockTeamRepo := new(mocks.MockITeamRepository)
+        mockTeamRepo.On("DeleteTeam", 1).Return(retErr)
+
+        tsSrv := bl.TeamService{}
+        err := tsSrv.DeleteTeam(1, 1, mockTeamRepo, mockUserRepo)
+
+        assert.NotNil(t, err)
+        assert.Equal(t, configs.ErrDeleteTeam, err.ErrNum)
+
+        mockUserRepo.AssertExpectations(t)
+        mockTeamRepo.AssertExpectations(t)
+    })
+}
+
+func TestAddTeam(t *testing.T) {
+    t.Run("SuccessAddTeam", func(t *testing.T) {
+        retErr := configs.CreateError(configs.AllIsOk, nil, "")
+        retUser := &bl.User{Role: configs.Admin}
+        returnTeam := &bl.Team{Id: 1, Name: "Team 1"}
+
+        mockUserRepo := new(mocks.MockIUserRepository)
+        mockUserRepo.On("GetUserByID", 1).Return(retUser, retErr)
+        mockTeamRepo := new(mocks.MockITeamRepository)
+        mockTeamRepo.On("AddTeam", returnTeam).Return(retErr)
+
+        tsSrv := bl.TeamService{}
+        err := tsSrv.AddTeam(1, returnTeam, mockTeamRepo, mockUserRepo)
+
+        assert.Nil(t, err)
+
+        mockUserRepo.AssertExpectations(t)
+        mockTeamRepo.AssertExpectations(t)
+    })
+
+    t.Run("ErrorGetRequester", func(t *testing.T) {
+        retErr := configs.CreateError(configs.ErrGetUserByID, configs.ErrGetUserByIDError(), "GetUserByID")
+
+        mockUserRepo := new(mocks.MockIUserRepository)
+        mockUserRepo.On("GetUserByID", -1).Return(nil, retErr)
+
+        tsSrv := bl.TeamService{}
+        err := tsSrv.AddTeam(-1, nil, nil, mockUserRepo)
+
+        assert.NotNil(t, err)
+        assert.Equal(t, configs.ErrGetUserByID, err.ErrNum)
+
+        mockUserRepo.AssertExpectations(t)
+    })
+
+    t.Run("ErrorRequesterNotAdmin", func(t *testing.T) {
+        retErr := configs.CreateError(configs.AllIsOk, nil, "")
+        retUser := &bl.User{Role: configs.Reader}
+
+        mockUserRepo := new(mocks.MockIUserRepository)
+        mockUserRepo.On("GetUserByID", 1).Return(retUser, retErr)
+
+        tsSrv := bl.TeamService{}
+        err := tsSrv.AddTeam(1, nil, nil, mockUserRepo)
+
+        assert.NotNil(t, err)
+        assert.Equal(t, configs.ErrAccessDenied, err.ErrNum)
+
+        mockUserRepo.AssertExpectations(t)
+    })
+
+    t.Run("ErrorAddTeam", func(t *testing.T) {
+        retErr := configs.CreateError(configs.ErrAddTeam, configs.ErrAddTeamError(), "AddTeam")
+        retUser := &bl.User{Role: configs.Admin}
+        returnTeam := &bl.Team{Id: 1, Name: "Team 1"}
+
+        mockUserRepo := new(mocks.MockIUserRepository)
+        mockUserRepo.On("GetUserByID", 1).Return(retUser, configs.CreateError(configs.AllIsOk, nil, ""))
+        mockTeamRepo := new(mocks.MockITeamRepository)
+        mockTeamRepo.On("AddTeam", returnTeam).Return(retErr)
+
+        tsSrv := bl.TeamService{}
+        err := tsSrv.AddTeam(1, returnTeam, mockTeamRepo, mockUserRepo)
+
+        assert.NotNil(t, err)
+        assert.Equal(t, configs.ErrAddTeam, err.ErrNum)
+
+        mockUserRepo.AssertExpectations(t)
+        mockTeamRepo.AssertExpectations(t)
+    })
+}
+
+func TestAddUser(t *testing.T) {
+    t.Run("SuccessAddUser", func(t *testing.T) {
+        retErr := configs.CreateError(configs.AllIsOk, nil, "")
+        retUser := &bl.User{Role: configs.Admin}
+
+        mockUserRepo := new(mocks.MockIUserRepository)
+        mockUserRepo.On("GetUserByID", 1).Return(retUser, retErr)
+        mockTeamRepo := new(mocks.MockITeamRepository)
+        mockTeamRepo.On("AddUser", 1, 1).Return(retErr)
+
+        tsSrv := bl.TeamService{}
+        err := tsSrv.AddUser(1, 1, 1, mockTeamRepo, mockUserRepo)
+
+        assert.Nil(t, err)
+
+        mockUserRepo.AssertExpectations(t)
+        mockTeamRepo.AssertExpectations(t)
+    })
+
+    t.Run("ErrorGetRequester", func(t *testing.T) {
+        retErr := configs.CreateError(configs.ErrGetUserByID, configs.ErrGetUserByIDError(), "GetUserByID")
+
+        mockUserRepo := new(mocks.MockIUserRepository)
+        mockUserRepo.On("GetUserByID", -1).Return(nil, retErr)
+
+        tsSrv := bl.TeamService{}
+        err := tsSrv.AddUser(-1, 1, 1, nil, mockUserRepo)
+
+        assert.NotNil(t, err)
+        assert.Equal(t, configs.ErrGetUserByID, err.ErrNum)
+
+        mockUserRepo.AssertExpectations(t)
+    })
+
+    t.Run("ErrorRequesterNotAdmin", func(t *testing.T) {
+        retErr := configs.CreateError(configs.AllIsOk, nil, "")
+        retUser := &bl.User{Role: configs.Reader}
+
+        mockUserRepo := new(mocks.MockIUserRepository)
+        mockUserRepo.On("GetUserByID", 1).Return(retUser, retErr)
+
+        tsSrv := bl.TeamService{}
+        err := tsSrv.AddUser(1, 1, 1, nil, mockUserRepo)
+
+        assert.NotNil(t, err)
+        assert.Equal(t, configs.ErrAccessDenied, err.ErrNum)
+
+        mockUserRepo.AssertExpectations(t)
+    })
+
+    t.Run("ErrorAddUser", func(t *testing.T) {
+        retErr := configs.CreateError(configs.ErrAddUser, configs.ErrAddUserError(), "AddUser")
+        retUser := &bl.User{Role: configs.Admin}
+
+        mockUserRepo := new(mocks.MockIUserRepository)
+        mockUserRepo.On("GetUserByID", 1).Return(retUser, configs.CreateError(configs.AllIsOk, nil, ""))
+        mockTeamRepo := new(mocks.MockITeamRepository)
+        mockTeamRepo.On("AddUser", 1, 1).Return(retErr)
+
+        tsSrv := bl.TeamService{}
+        err := tsSrv.AddUser(1, 1, 1, mockTeamRepo, mockUserRepo)
+
+        assert.NotNil(t, err)
+        assert.Equal(t, configs.ErrAddUser, err.ErrNum)
+
+        mockUserRepo.AssertExpectations(t)
+        mockTeamRepo.AssertExpectations(t)
+    })
+}
+
+func TestGetTeamMembers(t *testing.T) {
+ t.Run("SuccessGetTeamMembers", func(t *testing.T) {
+  retErr := configs.CreateError(configs.AllIsOk, nil, "")
+  returnTeam := &bl.Team{Id: 1, Name: "Team 1"}
+  returnMembers := []*bl.User{
+   {Id: 1, FirstName: "John", LastName: "Doe"},
+   {Id: 2, FirstName: "Jane", LastName: "Doe"},
+  }
+
+  mockTeamRepo := new(mocks.MockITeamRepository)
+  mockTeamRepo.On("GetTeamByID", 1).Return(returnTeam, retErr)
+  mockTeamRepo.On("GetTeamMembers", 1).Return(returnMembers, retErr)
+
+  tsSrv := bl.TeamService{}
+  members, err := tsSrv.GetTeamMembers(1, mockTeamRepo)
+
+  assert.Nil(t, err)
+  assert.Len(t, members, 2)
+  assert.Equal(t, 1, members[0].Id)
+  assert.Equal(t, "John", members[0].FirstName)
+  assert.Equal(t, "Doe", members[0].LastName)
+  assert.Equal(t, 2, members[1].Id)
+  assert.Equal(t, "Jane", members[1].FirstName)
+  assert.Equal(t, "Doe", members[1].LastName)
+
+  mockTeamRepo.AssertExpectations(t)
+ })
+
+ t.Run("ErrorGetTeamByID", func(t *testing.T) {
+  retErr := configs.CreateError(configs.ErrGetTeamByID, configs.ErrGetTeamByIDError(), "GetTeamByID")
+
+  mockTeamRepo := new(mocks.MockITeamRepository)
+  mockTeamRepo.On("GetTeamByID", 1).Return(nil, retErr)
+
+  tsSrv := bl.TeamService{}
+  members, err := tsSrv.GetTeamMembers(1, mockTeamRepo)
+
+  assert.NotNil(t, err)
+  assert.Equal(t, configs.ErrGetTeamByID, err.ErrNum)
+
+  mockTeamRepo.AssertExpectations(t)
+ })
+
+ t.Run("ErrorGetTeamMembers", func(t *testing.T) {
+  retErr := configs.CreateError(configs.ErrGetTeamMembers, configs.ErrGetTeamMembersError(), "GetTeamMembers")
+  returnTeam := &bl.Team{Id: 1, Name: "Team 1"}
+
+  mockTeamRepo := new(mocks.MockITeamRepository)
+  mockTeamRepo.On("GetTeamByID", 1).Return(returnTeam, configs.CreateError(configs.AllIsOk, nil, ""))
+  mockTeamRepo.On("GetTeamMembers", 1).Return(nil, retErr)
+
+  tsSrv := bl.TeamService{}
+  members, err := tsSrv.GetTeamMembers(1, mockTeamRepo)
+
+  assert.NotNil(t, err)
+  assert.Equal(t, configs.ErrGetTeamMembers, err.ErrNum)
+
+  mockTeamRepo.AssertExpectations(t)
+ })
+}

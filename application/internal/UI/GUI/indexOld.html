@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Авторизация и Регистрация</title>
+    <link rel="stylesheet" href="css/stylesOld.css">
+</head>
+<body>
+<div class="container">
+    <!-- Форма входа -->
+    <div id="auth-form" class="form-container">
+        <h2>Вход</h2>
+        <input type="text" id="login" placeholder="Введите ваш логин" required>
+        <input type="password" id="password" placeholder="Введите ваш пароль" required>
+        <button id="login-btn">Войти</button>
+        <p id="login-error-message" class="error"></p>
+        <p>Нет аккаунта? <a href="#" id="show-register-form">Зарегистрироваться</a></p>
+    </div>
+
+    <!-- Форма регистрации -->
+    <div id="register-form" class="form-container">
+        <h2>Регистрация</h2>
+        <input type="text" id="register-fio" placeholder="Введите ваше ФИО" required>
+        <input type="text" id="register-login" placeholder="Придумайте логин" required>
+        <input type="password" id="register-password" placeholder="Придумайте пароль" required>
+        <button id="register-btn">Зарегистрироваться</button>
+        <p id="register-error-message" class="error"></p>
+        <p>Уже есть аккаунт? <a href="#" id="show-login-form">Войти</a></p>
+    </div>
+
+    <!-- Меню для Читателя -->
+    <div id="reader-menu" class="menu hidden">
+        <h2>Меню для читателя</h2>
+        <div class="menu-buttons">
+            <button id="find-note">Найти заметку</button>
+            <button id="view-public-notes">Вывести все общедоступные заметки</button>
+            <button id="view-collections">Вывести все свои коллекции</button>
+            <button id="view-collection-notes">Вывести все заметки в коллекции</button>
+            <button id="view-team-section-notes">Вывести все записки в разделе команды</button>
+            <button id="logout">Выйти из аккаунта</button>
+        </div>
+
+        <!-- Контейнер для вывода данных -->
+        <div id="output" class="output-container"></div>
+    </div>
+</div>
+
+<script src="js/script.js"></script>
+</body>
+</html>

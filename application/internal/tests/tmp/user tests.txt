@@ -1,0 +1,209 @@
+func TestGetUser(t *testing.T) {
+    t.Run("SuccessGetUserByID", func(t *testing.T) {
+        mockRepo := new(MockUserRepository)
+        mockRepo.On("GetUserByID", 1).Return(&User{ID: 1, Role: Admin}, nil)
+        usSrv := UserService{IUserRepository: mockRepo}
+        user, err := usSrv.GetUser(1, "", SearchByID, 1, mockRepo)
+        assert.Nil(t, err)
+        assert.Equal(t, 1, user.ID)
+        mockRepo.AssertExpectations(t)
+    })
+
+    t.Run("SuccessGetUserByLogin", func(t *testing.T) {
+        mockRepo := new(MockUserRepository)
+        mockRepo.On("GetUserByLogin", "testuser").Return(&User{ID: 1, Role: Admin}, nil)
+        usSrv := UserService{IUserRepository: mockRepo}
+        user, err := usSrv.GetUser(0, "testuser", SearchByString, 1, mockRepo)
+        assert.Nil(t, err)
+        assert.Equal(t, 1, user.ID)
+        mockRepo.AssertExpectations(t)
+    })
+
+    t.Run("ErrorGetRequester", func(t *testing.T) {
+        mockRepo := new(MockUserRepository)
+        mockRepo.On("GetUserByID", 1).Return(nil, CreateError(ErrAccessDenied, ErrAccessDeniedError(), "GetUserByID"))
+        usSrv := UserService{IUserRepository: mockRepo}
+        user, err := usSrv.GetUser(1, "", SearchByID, 1, mockRepo)
+        assert.Nil(t, user)
+        assert.Equal(t, ErrAccessDenied, err.ErrNum)
+        mockRepo.AssertExpectations(t)
+    })
+
+    t.Run("ErrorRequesterNotAdmin", func(t *testing.T) {
+        mockRepo := new(MockUserRepository)
+        mockRepo.On("GetUserByID", 1).Return(&User{ID: 1, Role: User}, nil)
+        usSrv := UserService{IUserRepository: mockRepo}
+        user, err := usSrv.GetUser(1, "", SearchByID, 1, mockRepo)
+        assert.Nil(t, user)
+        assert.Equal(t, ErrAccessDenied, err.ErrNum)
+        mockRepo.AssertExpectations(t)
+    })
+
+    t.Run("ErrorUnknownSearchParameter", func(t *testing.T) {
+        mockRepo := new(MockUserRepository)
+        usSrv := UserService{IUserRepository: mockRepo}
+        user, err := usSrv.GetUser(1, "", 100, 1, mockRepo)
+        assert.Nil(t, user)
+        assert.Equal(t, ErrSearchParameter, err.ErrNum)
+        mockRepo.AssertExpectations(t)
+    })
+
+    t.Run("ErrorGetUserByID", func(t *testing.T) {
+        mockRepo := new(MockUserRepository)
+        mockRepo.On("GetUserByID", 1).Return(nil, CreateError(ErrInternalError, errors.New("Ошибка получения пользователя"), "GetUserByID"))
+        usSrv := UserService{IUserRepository: mockRepo}
+        user, err := usSrv.GetUser(1, "", SearchByID, 1, mockRepo)
+        assert.Nil(t, user)
+        assert.Equal(t, ErrInternalError, err.ErrNum)
+        mockRepo.AssertExpectations(t)
+    })
+
+    t.Run("ErrorGetUserByLogin", func(t *testing.T) {
+        mockRepo := new(MockUserRepository)
+        mockRepo.On("GetUserByLogin", "testuser").Return(nil, CreateError(ErrInternalError, errors.New("Ошибка получения пользователя"), "GetUserByLogin"))
+        usSrv := UserService{IUserRepository: mockRepo}
+        user, err := usSrv.GetUser(0, "testuser", SearchByString, 1, mockRepo)
+        assert.Nil(t, user)
+        assert.Equal(t, ErrInternalError, err.ErrNum)
+        mockRepo.AssertExpectations(t)
+    })
+}
+
+func TestGetAllUsers(t *testing.T) {
+    t.Run("SuccessGetAllUsers", func(t *testing.T) {
+        mockRepo := new(MockUserRepository)
+        mockRepo.On("GetUserByID", 1).Return(&User{ID: 1, Role: Admin}, nil)
+        mockRepo.On("GetAllUsers").Return([]*User{
+            {ID: 1, Role: Admin},
+            {ID: 2, Role: User},
+        }, nil)
+
+        usSrv := UserService{IUserRepository: mockRepo}
+        users, err := usSrv.GetAllUsers(1, mockRepo)
+
+        assert.Nil(t, err)
+        assert.Len(t, users, 2)
+        assert.Equal(t, 1, users[0].ID)
+        assert.Equal(t, Admin, users[0].Role)
+        assert.Equal(t, 2, users[1].ID)
+        assert.Equal(t, User, users[1].Role)
+        mockRepo.AssertExpectations(t)
+    })
+
+    t.Run("ErrorGetRequester", func(t *testing.T) {
+        mockRepo := new(MockUserRepository)
+        mockRepo.On("GetUserByID", 1).Return(nil, CreateError(ErrInternalError, errors.New("Ошибка получения пользователя"), "GetUserByID"))
+        usSrv := UserService{IUserRepository: mockRepo}
+        users, err := usSrv.GetAllUsers(1, mockRepo)
+        assert.Nil(t, users)
+        assert.Equal(t, ErrInternalError, err.ErrNum)
+        mockRepo.AssertExpectations(t)
+    })
+
+    t.Run("ErrorRequesterNotAdmin", func(t *testing.T) {
+        mockRepo := new(MockUserRepository)
+        mockRepo.On("GetUserByID", 1).Return(&User{ID: 1, Role: User}, nil)
+        usSrv := UserService{IUserRepository: mockRepo}
+        users, err := usSrv.GetAllUsers(1, mockRepo)
+        assert.Nil(t, users)
+        assert.Equal(t, ErrAccessDenied, err.ErrNum)
+        mockRepo.AssertExpectations(t)
+    })
+
+    t.Run("ErrorGetAllUsers", func(t *testing.T) {
+        mockRepo := new(MockUserRepository)
+        mockRepo.On("GetUserByID", 1).Return(&User{ID: 1, Role: Admin}, nil)
+        mockRepo.On("GetAllUsers").Return(nil, CreateError(ErrInternalError, errors.New("Ошибка получения всех пользователей"), "GetAllUsers"))
+        usSrv := UserService{IUserRepository: mockRepo}
+        users, err := usSrv.GetAllUsers(1, mockRepo)
+        assert.Nil(t, users)
+        assert.Equal(t, ErrInternalError, err.ErrNum)
+        mockRepo.AssertExpectations(t)
+    })
+}
+
+func TestUpdateUser(t *testing.T) {
+    t.Run("SuccessUpdateUser", func(t *testing.T) {
+        mockRepo := new(MockUserRepository)
+        mockRepo.On("GetUserByID", 1).Return(&bl.User{ID: 1, Role: config.Admin}, nil)
+        mockRepo.On("UpdateUser", &bl.User{ID: 2, Role: config.User}).Return(nil)
+        usSrv := UserService{IUserRepository: mockRepo}
+        err := usSrv.UpdateUser(1, &bl.User{ID: 2, Role: config.User}, mockRepo)
+        assert.Nil(t, err)
+        mockRepo.AssertExpectations(t)
+    })
+
+    t.Run("ErrorGetRequester", func(t *testing.T) {
+        mockRepo := new(MockUserRepository)
+        mockRepo.On("GetUserByID", 1).Return(nil, config.CreateError(config.ErrInternalError, errors.New("Ошибка получения пользователя"), "GetUserByID"))
+        usSrv := UserService{IUserRepository: mockRepo}
+        err := usSrv.UpdateUser(1, &bl.User{ID: 2, Role: config.User}, mockRepo)
+        assert.NotNil(t, err)
+        assert.Equal(t, config.ErrInternalError, err.ErrNum)
+        mockRepo.AssertExpectations(t)
+    })
+
+    t.Run("ErrorRequesterNotAdmin", func(t *testing.T) {
+        mockRepo := new(MockUserRepository)
+        mockRepo.On("GetUserByID", 1).Return(&bl.User{ID: 1, Role: config.User}, nil)
+        usSrv := UserService{IUserRepository: mockRepo}
+        err := usSrv.UpdateUser(1, &bl.User{ID: 2, Role: config.User}, mockRepo)
+        assert.NotNil(t, err)
+        assert.Equal(t, config.ErrAccessDenied, err.ErrNum)
+        mockRepo.AssertExpectations(t)
+    })
+
+    t.Run("ErrorUpdateUser", func(t *testing.T) {
+        mockRepo := new(MockUserRepository)
+        mockRepo.On("GetUserByID", 1).Return(&bl.User{ID: 1, Role: config.Admin}, nil)
+        mockRepo.On("UpdateUser", &bl.User{ID: 2, Role: config.User}).Return(config.CreateError(config.ErrInternalError, errors.New("Ошибка обновления пользователя"), "UpdateUser"))
+        usSrv := UserService{IUserRepository: mockRepo}
+        err := usSrv.UpdateUser(1, &bl.User{ID: 2, Role: config.User}, mockRepo)
+        assert.NotNil(t, err)
+        assert.Equal(t, config.ErrInternalError, err.ErrNum)
+        mockRepo.AssertExpectations(t)
+    })
+}
+
+func TestDeleteUser(t *testing.T) {
+    t.Run("SuccessDeleteUser", func(t *testing.T) {
+        mockRepo := new(MockUserRepository)
+        mockRepo.On("GetUserByID", 1).Return(&bl.User{ID: 1, Role: config.Admin}, nil)
+        mockRepo.On("DeleteUser", 2).Return(nil)
+        usSrv := UserService{IUserRepository: mockRepo}
+        err := usSrv.DeleteUser(1, 2, mockRepo)
+        assert.Nil(t, err)
+        mockRepo.AssertExpectations(t)
+    })
+
+    t.Run("ErrorGetRequester", func(t *testing.T) {
+        mockRepo := new(MockUserRepository)
+        mockRepo.On("GetUserByID", 1).Return(nil, config.CreateError(config.ErrInternalError, errors.New("Ошибка получения пользователя"), "GetUserByID"))
+        usSrv := UserService{IUserRepository: mockRepo}
+        err := usSrv.DeleteUser(1, 2, mockRepo)
+        assert.NotNil(t, err)
+        assert.Equal(t, config.ErrInternalError, err.ErrNum)
+        mockRepo.AssertExpectations(t)
+    })
+
+    t.Run("ErrorRequesterNotAdmin", func(t *testing.T) {
+        mockRepo := new(MockUserRepository)
+        mockRepo.On("GetUserByID", 1).Return(&bl.User{ID: 1, Role: config.User}, nil)
+        usSrv := UserService{IUserRepository: mockRepo}
+        err := usSrv.DeleteUser(1, 2, mockRepo)
+        assert.NotNil(t, err)
+        assert.Equal(t, config.ErrAccessDenied, err.ErrNum)
+        mockRepo.AssertExpectations(t)
+    })
+
+    t.Run("ErrorDeleteUser", func(t *testing.T) {
+        mockRepo := new(MockUserRepository)
+        mockRepo.On("GetUserByID", 1).Return(&bl.User{ID: 1, Role: config.Admin}, nil)
+        mockRepo.On("DeleteUser", 2).Return(config.CreateError(config.ErrInternalError, errors.New("Ошибка удаления пользователя"), "DeleteUser"))
+        usSrv := UserService{IUserRepository: mockRepo}
+        err := usSrv.DeleteUser(1, 2, mockRepo)
+        assert.NotNil(t, err)
+        assert.Equal(t, config.ErrInternalError, err.ErrNum)
+        mockRepo.AssertExpectations(t)
+    })
+}

@@ -1,0 +1,29 @@
+# PostgreSQL settings
+postgres:
+    psql_host:     localhost
+    psql_port:     5432
+    psql_user:     postgres
+    psql_password: postgrespassword
+    psql_db_name:   NotebookApp
+    psql_schema_name: test
+    db_driver_name: postgres
+
+# Logger settings
+logger:
+    log_level: "debug"
+    log_file: "G:\\Study\\University\\Database Course Project\\notebook app\\cmd\\log.txt"
+
+text_types:
+    - txt
+    - md
+image_types:
+    - jpg
+    - png
+
+system: 1
+
+# Which UI program will use
+ui_mode: tech
+
+# "2006-01-02 15:04:05 -0700" -- для timestamp with tz
+datetime_format: "2006-01-02 15:04:05 -0700"
