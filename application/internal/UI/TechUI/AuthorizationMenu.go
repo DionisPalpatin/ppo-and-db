@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"notebook_app/config"
-	bl "notebook_app/internal/business_logic"
-	"notebook_app/internal/models"
+	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/config"
+	bl "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
+	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/models"
 )
 
 func AuthorizationMenu(configs *config.Configs, ireps *bl.IRepositories, isvcs *bl.IServices) *models.User {

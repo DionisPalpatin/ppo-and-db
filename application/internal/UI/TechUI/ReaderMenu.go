@@ -3,10 +3,10 @@ package TechUI
 import (
 	"fmt"
 
-	"notebook_app/config"
-	"notebook_app/internal/UI/TechUI/methods"
-	bl "notebook_app/internal/business_logic"
-	"notebook_app/internal/models"
+	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/config"
+	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/UI/TechUI/methods"
+	bl "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
+	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/models"
 )
 
 func ReaderMenu(user *models.User, configs *config.Configs, ireps *bl.IRepositories, isvcs *bl.IServices) {

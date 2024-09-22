@@ -1,6 +1,6 @@
 package bl
 
-import "notebook_app/internal/models"
+import "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/models"
 
 type TeamService struct{}
 

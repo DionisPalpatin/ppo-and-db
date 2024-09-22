@@ -3,8 +3,8 @@ package da
 import (
 	_ "github.com/lib/pq"
 
-	"notebook_app/config"
-	"notebook_app/internal/logger"
+	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/config"
+	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/logger"
 )
 
 // ---------------------------------------------------------------------------------------------------------------------

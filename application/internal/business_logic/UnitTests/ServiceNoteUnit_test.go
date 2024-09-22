@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"notebook_app/internal/business_logic"
-	"notebook_app/internal/business_logic/UnitTests/mocks"
+	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
+	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic/UnitTests/mocks"
 )
 
 func TestGetNote(t *testing.T) {

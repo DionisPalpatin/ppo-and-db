@@ -3,7 +3,7 @@ package display
 import (
 	"fmt"
 
-	"notebook_app/internal/models"
+	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/models"
 )
 
 func DisplayNotesInSection(notes []*models.Note) {

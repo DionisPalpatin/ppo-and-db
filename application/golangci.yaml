@@ -50,7 +50,7 @@ output:
 linters-settings:
   errorlint:
     # Check whether fmt.Errorf uses the %w verb for formatting errors.
-    # See the https://github.com/polyfloyd/go-errorlint for caveats.
+    # See the github.com/polyfloyd/go-errorlint for caveats.
     # Default: true
     errorf: true
 
@@ -84,11 +84,11 @@ linters-settings:
 
   gocritic:
     disabled-checks:
-      - whyNoLint # https://github.com/go-critic/go-critic/issues/1063
+      - whyNoLint # github.com/go-critic/go-critic/issues/1063
       - importShadow
       - sloppyReassign
     # Enable multiple checks by tags, run `GL_DEBUG=gocritic golangci-lint run` to see all tags and checks.
-    # See https://github.com/go-critic/go-critic#usage -> section "Tags".
+    # See github.com/go-critic/go-critic#usage -> section "Tags".
     # Default: []
     enabled-tags:
       - diagnostic

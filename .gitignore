@@ -1,1 +1,4 @@
-/.idea
+.idea/
+application/pgdata/
+*.exe
+application/log/

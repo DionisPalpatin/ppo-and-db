@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"log/slog"
 
-	"notebook_app/internal/business_logic"
-	"notebook_app/internal/models"
+	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
+	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/models"
 )
 
 func (sr *SectionRepository) GetSectionByID(id int) (*models.Section, *bl.MyError) {

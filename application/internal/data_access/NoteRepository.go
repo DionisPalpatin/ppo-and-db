@@ -8,8 +8,8 @@ import (
 	"io"
 	"log/slog"
 
-	"notebook_app/internal/business_logic"
-	"notebook_app/internal/models"
+	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
+	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/models"
 )
 
 func (nr *NoteRepository) GetNoteByID(id int) (*models.Note, []byte, *bl.MyError) {

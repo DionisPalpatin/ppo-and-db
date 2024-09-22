@@ -3,8 +3,8 @@ package mocks
 import (
 	"github.com/stretchr/testify/mock"
 
-	"notebook_app/internal/business_logic"
-	"notebook_app/internal/models"
+	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
+	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/models"
 )
 
 // MockITeamRepository Мок-реализация ITeamRepository

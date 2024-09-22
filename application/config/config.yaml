@@ -11,7 +11,7 @@ postgres:
 # Logger settings
 logger:
     log_level: "debug"
-    log_file: "G:\\Study\\University\\Database Course Project\\notebook app\\cmd\\log.txt"
+    log_file: "./log/main.log"
 
 text_types:
     - txt

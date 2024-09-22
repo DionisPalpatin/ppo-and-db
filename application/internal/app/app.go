@@ -3,20 +3,20 @@ package app
 import (
 	"log/slog"
 
-	"notebook_app/config"
-	"notebook_app/internal/UI/TechUI"
-	"notebook_app/internal/app/AppConfigs"
-	bl "notebook_app/internal/business_logic"
-	da "notebook_app/internal/data_access"
-	"notebook_app/internal/database"
-	mylogger "notebook_app/internal/logger"
+	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/config"
+	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/UI/TechUI"
+	appconfigs "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/app/AppConfigs"
+	bl "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
+	da "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/data_access"
+	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/database"
+	mylogger "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/logger"
 )
 
 func initDBConnection(config *config.Configs) error {
 	logger := config.LogConfigs.Logger
 	logger.WriteLog("Init DB connection", slog.LevelInfo, nil)
 
-	err := database.Connect(config.DBConfigs)
+	err := database.Connect(config.LogConfigs.Logger, config.DBConfigs)
 	if err != nil {
 		logger.WriteLog("Unable to init db connection", slog.LevelError, nil)
 	}
@@ -77,7 +77,7 @@ func initInterfaces(conf *appconfigs.AppConfigs) {
 // }
 
 func RunBackend() error {
-	configFile := "G:\\Study\\University\\Database Course Project\\notebook app\\config\\config.yaml"
+	configFile := "./config/config.yaml"
 
 	appConfigs := new(appconfigs.AppConfigs)
 	var err error

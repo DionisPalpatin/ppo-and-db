@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"log/slog"
 
-	bl "notebook_app/internal/business_logic"
-	"notebook_app/internal/models"
+	bl "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
+	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/models"
 )
 
 func (tr *TeamRepository) GetTeamByID(id int) (*models.Team, *bl.MyError) {

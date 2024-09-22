@@ -3,7 +3,7 @@ package bl
 import (
 	"os"
 
-	"notebook_app/internal/models"
+	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/models"
 )
 
 type NoteService struct{}
