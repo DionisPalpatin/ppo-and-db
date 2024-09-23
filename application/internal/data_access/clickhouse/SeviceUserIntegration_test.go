@@ -1,4 +1,4 @@
-package da
+package postgres
 
 import (
 	"testing"

@@ -1,4 +1,4 @@
-package da
+package postgres
 
 import (
 	"context"
@@ -14,7 +14,7 @@ import (
 func (tr *TeamRepository) GetTeamByID(id int) (*models.Team, *bl.MyError) {
 	tr.MyLogger.WriteLog("GetTeamByID is called (Repo)", slog.LevelInfo, nil)
 
-	if id < 0 {
+	if id == 0 {
 		myErr := bl.CreateError(bl.ErrGetTeamByID, bl.ErrGetTeamByIDError(), "GetTeamByID")
 		tr.MyLogger.WriteLog(myErr.Err.Error(), slog.LevelError, nil)
 		return nil, myErr
@@ -22,8 +22,8 @@ func (tr *TeamRepository) GetTeamByID(id int) (*models.Team, *bl.MyError) {
 
 	var team models.Team
 	db := tr.DbConfigs.DB
-	schemaName := tr.DbConfigs.SchemaName
-	query := fmt.Sprintf("SELECT * FROM %s.teams WHERE id = $1", schemaName)
+	schemaName := tr.DbConfigs.Name
+	query := fmt.Sprintf("SELECT * FROM %s.teams WHERE id = ?", schemaName)
 	ctx := context.Background()
 
 	err := db.QueryRowContext(ctx, query, id).Scan(
@@ -60,8 +60,8 @@ func (tr *TeamRepository) GetTeamByName(name string) (*models.Team, *bl.MyError)
 
 	var team models.Team
 	db := tr.DbConfigs.DB
-	schemaName := tr.DbConfigs.SchemaName
-	query := fmt.Sprintf("SELECT * FROM %s.teams WHERE name = $1", schemaName)
+	schemaName := tr.DbConfigs.Name
+	query := fmt.Sprintf("SELECT * FROM %s.teams WHERE name = ?", schemaName)
 	ctx := context.Background()
 
 	err := db.QueryRowContext(ctx, query, name).Scan(
@@ -90,7 +90,7 @@ func (tr *TeamRepository) GetTeamByName(name string) (*models.Team, *bl.MyError)
 func (tr *TeamRepository) GetTeamBySectionID(id int) (*models.Team, *bl.MyError) {
 	tr.MyLogger.WriteLog("GetTeamBySectionID is called (Repo)", slog.LevelInfo, nil)
 
-	if id < 0 {
+	if id == 0 {
 		myErr := bl.CreateError(bl.ErrGetTeamBySectionID, bl.ErrGetTeamBySectionIDError(), "GetTeamBySectionID")
 		tr.MyLogger.WriteLog(myErr.Err.Error(), slog.LevelError, nil)
 		return nil, myErr
@@ -98,8 +98,8 @@ func (tr *TeamRepository) GetTeamBySectionID(id int) (*models.Team, *bl.MyError)
 
 	var team models.Team
 	db := tr.DbConfigs.DB
-	schemaName := tr.DbConfigs.SchemaName
-	query := fmt.Sprintf("SELECT * FROM %s.teams t JOIN %s.teams_sections ts ON t.id = ts.team_id WHERE ts.section_id = $1", schemaName, schemaName)
+	schemaName := tr.DbConfigs.Name
+	query := fmt.Sprintf("SELECT * FROM %s.teams t JOIN %s.teams_sections ts ON t.id = ts.team_id WHERE ts.section_id = ?", schemaName, schemaName)
 	ctx := context.Background()
 
 	err := db.QueryRowContext(ctx, query, id).Scan(
@@ -129,7 +129,7 @@ func (tr *TeamRepository) GetAllTeams() ([]*models.Team, *bl.MyError) {
 	tr.MyLogger.WriteLog("GetAllTeams is called (Repo)", slog.LevelInfo, nil)
 
 	db := tr.DbConfigs.DB
-	schemaName := tr.DbConfigs.SchemaName
+	schemaName := tr.DbConfigs.Name
 	query := fmt.Sprintf("SELECT * FROM %s.teams", schemaName)
 	ctx := context.Background()
 
@@ -179,8 +179,8 @@ func (tr *TeamRepository) AddTeam(team *models.Team) *bl.MyError {
 	}
 
 	db := tr.DbConfigs.DB
-	schemaName := tr.DbConfigs.SchemaName
-	query := fmt.Sprintf("INSERT INTO %s.teams (name, registration_date) VALUES ($1, $2)", schemaName)
+	schemaName := tr.DbConfigs.Name
+	query := fmt.Sprintf("INSERT INTO %s.teams (name, registration_date) VALUES (?, ?)", schemaName)
 	ctx := context.Background()
 
 	tx, err := db.BeginTx(ctx, nil)
@@ -220,16 +220,16 @@ func (tr *TeamRepository) DeleteTeam(team_id int) *bl.MyError {
 	}
 
 	db := tr.DbConfigs.DB
-	schemaName := tr.DbConfigs.SchemaName
+	schemaName := tr.DbConfigs.Name
 	ctx := context.Background()
 
 	// Запросы для удаления и изменения всех затрагиваемых таблиц
-	query0 := fmt.Sprintf("SELECT section_id FROM %s.teams_sections WHERE team_id = $1", schemaName)
-	query1 := fmt.Sprintf("UPDATE %s.notes SET section_id = -1 WHERE section_id = $2", schemaName, schemaName)
-	query2 := fmt.Sprintf("DELETE FROM %s.teams_sections WHERE team_id = $1", schemaName)
-	query3 := fmt.Sprintf("DELETE FROM %s.team_members WHERE team_id = $1", schemaName)
-	query4 := fmt.Sprintf("DELETE FROM %s.teams WHERE id = $1", schemaName)
-	query5 := fmt.Sprintf("DELETE FROM %s.sections WHERE id = $1", schemaName)
+	query0 := fmt.Sprintf("SELECT section_id FROM %s.teams_sections WHERE team_id = ?", schemaName)
+	query1 := fmt.Sprintf("ALTER TABLE %s.notes UPDATE section_id = -1 WHERE section_id = ?", schemaName)
+	query2 := fmt.Sprintf("ALTER TABLE %s.teams_sections DELETE WHERE team_id = ?", schemaName)
+	query3 := fmt.Sprintf("ALTER TABLE %s.team_members DELETE WHERE team_id = ?", schemaName)
+	query4 := fmt.Sprintf("ALTER TABLE %s.teams DELETE WHERE id = ?", schemaName)
+	query5 := fmt.Sprintf("ALTER TABLE %s.sections DELETE WHERE id = ?", schemaName)
 	result_query := fmt.Sprintf("%s; %s; %s; %s; %s;", query1, query2, query3, query4, query5)
 
 	sec_id := 0
@@ -268,8 +268,8 @@ func (tr *TeamRepository) AddUserToTeam(uid int, tid int) *bl.MyError {
 	}
 
 	db := tr.DbConfigs.DB
-	schemaName := tr.DbConfigs.SchemaName
-	query := fmt.Sprintf("INSERT INTO %s.team_members (team_id, user_id) values ($1, $2)", schemaName)
+	schemaName := tr.DbConfigs.Name
+	query := fmt.Sprintf("INSERT INTO %s.team_members (team_id, user_id) values (?, ?)", schemaName)
 	ctx := context.Background()
 
 	tx, err := db.BeginTx(ctx, nil)
@@ -305,8 +305,8 @@ func (tr *TeamRepository) DeleteUserFromTeam(uid int, tid int) *bl.MyError {
 	}
 
 	db := tr.DbConfigs.DB
-	schemaName := tr.DbConfigs.SchemaName
-	query := fmt.Sprintf("DELETE FROM %s.teams_sections WHERE user_id = $1 AND team_id = $2", schemaName)
+	schemaName := tr.DbConfigs.Name
+	query := fmt.Sprintf("ALTER TABLE %s.teams_sections DELETE WHERE user_id = ? AND team_id = ?", schemaName)
 	ctx := context.Background()
 
 	tx, err := db.BeginTx(ctx, nil)
@@ -342,8 +342,8 @@ func (tr *TeamRepository) UpdateTeam(team *models.Team) *bl.MyError {
 	}
 
 	db := tr.DbConfigs.DB
-	schemaName := tr.DbConfigs.SchemaName
-	query := fmt.Sprintf("UPDATE %s.teams SET name = $1, registration_date = $2 WHERE id = $3", schemaName)
+	schemaName := tr.DbConfigs.Name
+	query := fmt.Sprintf("ALTER TABLE %s.teams UPDATE name = ?, registration_date = ? WHERE id = ?", schemaName)
 	ctx := context.Background()
 
 	tx, err := db.BeginTx(ctx, nil)
@@ -384,8 +384,8 @@ func (tr *TeamRepository) GetTeamMembers(teamID int) ([]*models.User, *bl.MyErro
 	}
 
 	db := tr.DbConfigs.DB
-	schemaName := tr.DbConfigs.SchemaName
-	query := fmt.Sprintf("SELECT * FROM %s.users u JOIN %s.team_members tm ON u.id = tm.user_id WHERE tm.team_id = $1", schemaName, schemaName)
+	schemaName := tr.DbConfigs.Name
+	query := fmt.Sprintf("SELECT * FROM %s.users u JOIN %s.team_members tm ON u.id = tm.user_id WHERE tm.team_id = ?", schemaName, schemaName)
 	ctx := context.Background()
 
 	rows, err := db.QueryContext(ctx, query, teamID)
@@ -429,8 +429,8 @@ func (tr *TeamRepository) GetUserTeam(user *models.User) (*models.Team, *bl.MyEr
 	tr.MyLogger.WriteLog("GetUserTeam is called (Repo)", slog.LevelInfo, nil)
 
 	db := tr.DbConfigs.DB
-	schemaName := tr.DbConfigs.SchemaName
-	query := fmt.Sprintf("SELECT * FROM %s.teams t JOIN %s.team_members tm ON t.id = tm.team_id WHERE tm.user_id = $1", schemaName, schemaName)
+	schemaName := tr.DbConfigs.Name
+	query := fmt.Sprintf("SELECT * FROM %s.teams t JOIN %s.team_members tm ON t.id = tm.team_id WHERE tm.user_id = ?", schemaName, schemaName)
 	ctx := context.Background()
 	team := models.Team{}
 

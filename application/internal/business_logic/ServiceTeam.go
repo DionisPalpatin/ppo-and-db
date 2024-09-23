@@ -5,9 +5,9 @@ import "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/mo
 type TeamService struct{}
 
 func (ts TeamService) GetTeam(id int, name string, searchBy int, requester *models.User, itr ITeamRepository) (*models.Team, *MyError) {
-	if requester.Role != Admin {
-		return nil, CreateError(ErrAccessDenied, ErrAccessDeniedError(), "GetTeam")
-	}
+	// if requester.Role != Admin {
+	// 	return nil, CreateError(ErrAccessDenied, ErrAccessDeniedError(), "GetTeam")
+	// }
 
 	var team *models.Team
 	var err *MyError

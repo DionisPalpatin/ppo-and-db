@@ -11,7 +11,8 @@ postgres:
 # Logger settings
 logger:
     log_level: "debug"
-    log_file: "./log/main.log"
+#    log_file: "./log/main.log"  # for docker
+    log_file: "main.log"
 
 text_types:
     - txt
@@ -21,9 +22,10 @@ image_types:
     - png
 
 system: 1
+server_port: 8080
 
 # Which UI program will use
-ui_mode: tech
+ui_mode: "gui"
 
 # "2006-01-02 15:04:05 -0700" -- для timestamp with tz
 datetime_format: "2006-01-02 15:04:05 -0700"

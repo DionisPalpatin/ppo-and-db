@@ -1,4 +1,4 @@
-package da
+package postgres
 
 import (
 	"context"
@@ -15,7 +15,7 @@ import (
 func (nr *NoteRepository) GetNoteByID(id int) (*models.Note, []byte, *bl.MyError) {
 	nr.MyLogger.WriteLog("GetNoteByID is called (Repo)", slog.LevelInfo, nil)
 
-	if id < 0 {
+	if id == 0 {
 		myErr := bl.CreateError(bl.ErrGetNoteByID, bl.ErrGetNoteByIDError(), "GetNoteByID")
 		return nil, nil, myErr
 	}
@@ -23,7 +23,7 @@ func (nr *NoteRepository) GetNoteByID(id int) (*models.Note, []byte, *bl.MyError
 	var note models.Note
 	db := nr.DbConfigs.DB
 	schemaName := nr.DbConfigs.SchemaName
-	query := fmt.Sprintf("SELECT * FROM %s.notes WHERE id = $1", schemaName)
+	query := fmt.Sprintf("SELECT * FROM %s.notes WHERE id = ?", schemaName)
 	ctx := context.Background()
 
 	err := db.QueryRowContext(ctx, query, id).Scan(
@@ -84,7 +84,7 @@ func (nr *NoteRepository) GetNoteByName(name string) (*models.Note, []byte, *bl.
 	var note models.Note
 	db := nr.DbConfigs.DB
 	schemaName := nr.DbConfigs.SchemaName
-	query := fmt.Sprintf("SELECT * FROM %s.notes WHERE name = $1", schemaName)
+	query := fmt.Sprintf("SELECT * FROM %s.notes WHERE name = ?", schemaName)
 	ctx := context.Background()
 
 	err := db.QueryRowContext(ctx, query, name).Scan(
@@ -186,6 +186,56 @@ func (nr *NoteRepository) GetAllNotes() ([]*models.Note, *bl.MyError) {
 	return notes, myOk
 }
 
+func (nr *NoteRepository) GetAllPublicNotes() ([]*models.Note, *bl.MyError) {
+	nr.MyLogger.WriteLog("GetAllNotes is called (Repo)", slog.LevelInfo, nil)
+
+	db := nr.DbConfigs.DB
+	schemaName := nr.DbConfigs.SchemaName
+	query := fmt.Sprintf("SELECT * FROM %s.notes WHERE access = 1", schemaName)
+	ctx := context.Background()
+
+	rows, err := db.QueryContext(ctx, query)
+	if err != nil {
+		myErr := bl.CreateError(bl.ErrGetAllNotes, err, "GetAllNotes")
+		nr.MyLogger.WriteLog(myErr.Err.Error(), slog.LevelError, nil)
+		return nil, myErr
+	}
+	defer rows.Close()
+
+	var notes []*models.Note
+	for rows.Next() {
+		var note models.Note
+		err := rows.Scan(
+			&note.Id,
+			&note.Access,
+			&note.Name,
+			&note.ContentType,
+			&note.Likes,
+			&note.Dislikes,
+			&note.RegistrationDate,
+			&note.OwnerID,
+			&note.SectionID,
+		)
+
+		if err != nil {
+			myErr := bl.CreateError(bl.ErrGetAllNotes, err, "GetAllNotes")
+			nr.MyLogger.WriteLog(myErr.Err.Error(), slog.LevelError, nil)
+			return nil, myErr
+		}
+
+		notes = append(notes, &note)
+	}
+
+	if err := rows.Err(); err != nil {
+		myErr := bl.CreateError(bl.ErrGetAllNotes, err, "GetAllNotes")
+		nr.MyLogger.WriteLog(myErr.Err.Error(), slog.LevelError, nil)
+		return nil, myErr
+	}
+
+	myOk := bl.CreateError(bl.AllIsOk, nil, "")
+	return notes, myOk
+}
+
 func (nr *NoteRepository) AddNote(note *models.Note) *bl.MyError {
 	nr.MyLogger.WriteLog("AddNote is called (Repo)", slog.LevelInfo, nil)
 
@@ -197,7 +247,7 @@ func (nr *NoteRepository) AddNote(note *models.Note) *bl.MyError {
 
 	db := nr.DbConfigs.DB
 	schemaName := nr.DbConfigs.SchemaName
-	query := fmt.Sprintf("INSERT INTO %s.notes (access, name, content_type, likes, dislikes, registration_date, owner_id, section_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)", schemaName)
+	query := fmt.Sprintf("INSERT INTO %s.notes (access, name, content_type, likes, dislikes, registration_date, owner_id, section_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", schemaName)
 	ctx := context.Background()
 
 	tx, err := db.BeginTx(ctx, nil)
@@ -238,21 +288,21 @@ func (nr *NoteRepository) AddNote(note *models.Note) *bl.MyError {
 func (nr *NoteRepository) DeleteNote(id int) *bl.MyError {
 	nr.MyLogger.WriteLog("DeleteNote is called (Repo)", slog.LevelInfo, nil)
 
-	if id < 0 {
+	if id == 0 {
 		myErr := bl.CreateError(bl.ErrDeleteNote, bl.ErrDeleteNoteError(), "DeleteNote")
 		nr.MyLogger.WriteLog(myErr.Err.Error(), slog.LevelError, nil)
 		return myErr
 	}
 
 	db := nr.DbConfigs.DB
-	schemaName := nr.DbConfigs.SchemaName
+	schemaName := nr.DbConfigs.Name
 	ctx := context.Background()
 
-	query1 := fmt.Sprintf("DELETE FROM %s.texts WHERE note_id = $1", schemaName)
-	query2 := fmt.Sprintf("DELETE FROM %s.images WHERE note_id = $1", schemaName)
-	query3 := fmt.Sprintf("DELETE FROM %s.raw_datas WHERE note_id = $1", schemaName)
-	query4 := fmt.Sprintf("DELETE FROM %s.notes_collections WHERE note_id = $1", schemaName)
-	query5 := fmt.Sprintf("DELETE FROM %s.notes WHERE id = $1", schemaName)
+	query1 := fmt.Sprintf("ALTER TABLE %s.texts DELETE WHERE note_id = ?", schemaName)
+	query2 := fmt.Sprintf("ALTER TABLE %s.images DELETE WHERE note_id = ?", schemaName)
+	query3 := fmt.Sprintf("ALTER TABLE %s.raw_datas DELETE WHERE note_id = ?", schemaName)
+	query4 := fmt.Sprintf("ALTER TABLE %s.notes_collections DELETE WHERE note_id = ?", schemaName)
+	query5 := fmt.Sprintf("ALTER TABLE %s.notes DELETE WHERE id = ?", schemaName)
 	result_query := fmt.Sprintf("%s; %s; %s; %s; %s;", query1, query2, query3, query4, query5)
 
 	tx, err := db.BeginTx(ctx, nil)
@@ -291,8 +341,8 @@ func (nr *NoteRepository) UpdateNoteContentText(reader io.Reader, note *models.N
 	}
 
 	db := nr.DbConfigs.DB
-	schemaName := nr.DbConfigs.SchemaName
-	query := fmt.Sprintf("INSERT INTO %s.texts (data, note_id) VALUES ($1, $2)", schemaName)
+	schemaName := nr.DbConfigs.Name
+	query := fmt.Sprintf("INSERT INTO %s.texts (data, note_id) VALUES (?, ?)", schemaName)
 	ctx := context.Background()
 
 	tx, err := db.BeginTx(ctx, nil)
@@ -337,8 +387,8 @@ func (nr *NoteRepository) UpdateNoteContentImg(reader io.Reader, note *models.No
 	}
 
 	db := nr.DbConfigs.DB
-	schemaName := nr.DbConfigs.SchemaName
-	query := fmt.Sprintf("INSERT INTO %s.images (data, note_id) VALUES ($1, $2)", schemaName)
+	schemaName := nr.DbConfigs.Name
+	query := fmt.Sprintf("INSERT INTO %s.images (data, note_id) VALUES (?, ?)", schemaName)
 	ctx := context.Background()
 
 	tx, err := db.BeginTx(ctx, nil)
@@ -383,8 +433,8 @@ func (nr *NoteRepository) UpdateNoteContentRawData(reader io.Reader, note *model
 	}
 
 	db := nr.DbConfigs.DB
-	schemaName := nr.DbConfigs.SchemaName
-	query := fmt.Sprintf("INSERT INTO %s.raw_datas (data, note_id) VALUES ($1, $2)", schemaName)
+	schemaName := nr.DbConfigs.Name
+	query := fmt.Sprintf("INSERT INTO %s.raw_datas (data, note_id) VALUES (?, ?)", schemaName)
 	ctx := context.Background()
 
 	tx, err := db.BeginTx(ctx, nil)
@@ -430,8 +480,8 @@ func (nr *NoteRepository) UpdateNoteInfo(note *models.Note) *bl.MyError {
 	}
 
 	db := nr.DbConfigs.DB
-	schemaName := nr.DbConfigs.SchemaName
-	query := fmt.Sprintf("UPDATE %s.notes SET access = $1, name = $2, content_type = $3, likes = $4, dislikes = $5, registration_date = $6, owner_id = $7, section_id = $8 WHERE id = $9", schemaName)
+	schemaName := nr.DbConfigs.Name
+	query := fmt.Sprintf("ALTER TABLE %s.notes UPDATE access = ?, name = ?, content_type = ?, likes = ?, dislikes = ?, registration_date = ?, owner_id = ?, section_id = ? WHERE id = ?", schemaName)
 	ctx := context.Background()
 
 	tx, err := db.BeginTx(ctx, nil)
@@ -480,8 +530,8 @@ func (nr *NoteRepository) AddNoteToCollection(collectionID int, noteID int) *bl.
 	}
 
 	db := nr.DbConfigs.DB
-	schemaName := nr.DbConfigs.SchemaName
-	query := fmt.Sprintf("INSERT INTO %s.note_collections (note_id, collection_id) VALUES ($1, $2)", schemaName)
+	schemaName := nr.DbConfigs.Name
+	query := fmt.Sprintf("INSERT INTO %s.note_collections (note_id, collection_id) VALUES (?, ?)", schemaName)
 	ctx := context.Background()
 
 	tx, err := db.BeginTx(ctx, nil)
@@ -519,8 +569,8 @@ func (nr *NoteRepository) DeleteNoteFromCollection(collectionID int, noteID int)
 	}
 
 	db := nr.DbConfigs.DB
-	schemaName := nr.DbConfigs.SchemaName
-	query := fmt.Sprintf("DELETE FROM %s.note_collections WHERE note_id = $1 AND collection_id = $2", schemaName)
+	schemaName := nr.DbConfigs.Name
+	query := fmt.Sprintf("ALTER TABLE %s.note_collections DELETE WHERE note_id = ? AND collection_id = ?", schemaName)
 	ctx := context.Background()
 
 	tx, err := db.BeginTx(ctx, nil)

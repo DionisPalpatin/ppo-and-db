@@ -37,7 +37,7 @@ func (MenuPoints) DisplayAllOpenNotes(ireps *bl.IRepositories, isvcs *bl.IServic
 	ins := isvcs.INoteSvc
 	inr := ireps.INoteRepo
 
-	notes, err := ins.GetAllNotes(&models.User{Role: bl.Admin}, inr)
+	notes, err := ins.GetAllNotes(false, &models.User{Role: bl.Admin}, inr)
 	if err.ErrNum == bl.ErrAccessDenied {
 		display.DisplayError("Ошибка: у Вас нет доступа к данной Записке")
 	} else if err.ErrNum == bl.ErrGetNoteByName {
@@ -127,7 +127,7 @@ func (MenuPoints) AddNote(user *models.User, configs *config.Configs, ireps *bl.
 	fmt.Fscan(os.Stdin, &filePath)
 
 	ind := strings.LastIndexByte(filePath, '.')
-	if ind > -1 {
+	if ind > 0 {
 		fileType := filePath[ind+1:]
 
 		i := 0
@@ -184,7 +184,7 @@ func (MenuPoints) DisplayAllNotes(user *models.User, ireps *bl.IRepositories, is
 	inr := ireps.INoteRepo
 	ins := isvcs.INoteSvc
 
-	notes, myErr := ins.GetAllNotes(user, inr)
+	notes, myErr := ins.GetAllNotes(false, user, inr)
 	if myErr.ErrNum == bl.ErrAccessDenied {
 		display.DisplayError("Ошибка: у Вас нет прав на выполнение данной операции")
 	} else if myErr.ErrNum == bl.ErrGetNoteByName {

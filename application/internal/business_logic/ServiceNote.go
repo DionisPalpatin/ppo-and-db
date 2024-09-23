@@ -53,12 +53,17 @@ func (NoteService) GetNote(id int, name string, searchBy int, requester *models.
 	return note, data, myErr
 }
 
-func (NoteService) GetAllNotes(requester *models.User, inr INoteRepository) ([]*models.Note, *MyError) {
+func (NoteService) GetAllNotes(open bool, requester *models.User, inr INoteRepository) ([]*models.Note, *MyError) {
 	if requester.Role != Admin {
 		return nil, CreateError(ErrAccessDenied, ErrAccessDeniedError(), "GetAllTeams")
 	}
 
-	return inr.GetAllNotes()
+	if open {
+		return inr.GetAllPublicNotes()
+	} else {
+		return inr.GetAllNotes()
+	}
+
 }
 
 func (NoteService) AddNote(note *models.Note, requester *models.User, inr INoteRepository) *MyError {

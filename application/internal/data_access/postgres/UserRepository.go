@@ -1,4 +1,4 @@
-package da
+package postgres
 
 import (
 	"context"
@@ -136,6 +136,8 @@ func (ur *UserRepository) GetAllUsers() ([]*models.User, *bl.MyError) {
 		ur.MyLogger.WriteLog(myErr.Err.Error(), slog.LevelError, nil)
 		return nil, myErr
 	}
+
+	// fmt.Print(users)
 
 	myOk := bl.CreateError(bl.AllIsOk, nil, "")
 	return users, myOk

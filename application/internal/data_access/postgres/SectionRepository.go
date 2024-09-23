@@ -1,4 +1,4 @@
-package da
+package postgres
 
 import (
 	"context"
@@ -189,7 +189,7 @@ func (sr *SectionRepository) AddSection(section *models.Section, team *models.Te
 func (sr *SectionRepository) DeleteSection(id int) *bl.MyError {
 	sr.MyLogger.WriteLog("DeleteSection is called (Repo)", slog.LevelInfo, nil)
 
-	if id < 0 {
+	if id <= 0 {
 		myErr := bl.CreateError(bl.ErrDeleteSection, bl.ErrDeleteSectionError(), "DeleteSection")
 		sr.MyLogger.WriteLog(myErr.Err.Error(), slog.LevelError, nil)
 		return myErr
@@ -389,7 +389,7 @@ func (sr *SectionRepository) DeleteNoteFromSection(note *models.Note, section *m
 
 	db := sr.DbConfigs.DB
 	schemaName := sr.DbConfigs.SchemaName
-	query := fmt.Sprintf("UPDATE %s.notes SET section_id = -1 WHERE id = $1 AND section_id = $2", schemaName)
+	query := fmt.Sprintf("UPDATE %s.notes SET section_id = 0 WHERE id = $1 AND section_id = $2", schemaName)
 	ctx := context.Background()
 
 	tx, err := db.BeginTx(ctx, nil)

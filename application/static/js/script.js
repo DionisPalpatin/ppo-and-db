@@ -8,106 +8,138 @@ document.getElementById('actionSelect').addEventListener('change', function() {
         case 'addNote':
             renderAddNoteForm();
             break;
+
         case 'deleteNote':
             renderDeleteNoteForm();
             break;
+
         case 'findNote':
             renderFindNoteForm();
             break;
+
         case 'showPublicNotes':
-            fetchNotes('/api/notes/public');
+            fetchNotes('public');
             break;
+
         case 'showAllNotes':
-            fetchNotes('/api/notes');
+            fetchNotes('all');
             break;
+
         case 'showCollectionNotes':
             renderShowCollectionNotesForm();
             break;
+
         case 'showTeamNotes':
-            fetchNotes('/api/notes/team');
+            fetchNotes('team');
             break;
-        case 'showAllTeamNotes':
-            fetchNotes('/api/notes/all-teams');
-            break;
+
+        // case 'showAllTeamNotes':
+        //     fetchNotes('allteams');
+        //     break;
         case 'addCollection':
             renderAddCollectionForm();
             break;
+
         case 'deleteCollection':
             renderDeleteCollectionForm();
             break;
+
         case 'showUserCollections':
-            fetchCollections('/api/collections/user');
+            fetchCollections('user');
             break;
+
         case 'showAllCollections':
-            fetchCollections('/api/collections');
+            fetchCollections('all');
             break;
+
         case 'addNoteToCollection':
             renderAddNoteToCollectionForm();
             break;
+
         case 'deleteNoteFromCollection':
             renderDeleteNoteFromCollectionForm();
             break;
+
         case 'deleteUser':
             renderDeleteUserForm();
             break;
+
         case 'updateUserFio':
             renderUpdateUserFioForm();
             break;
+
         case 'updateUserRole':
             renderUpdateUserRoleForm();
             break;
+
         case 'findUser':
             renderFindUserForm();
             break;
+
         case 'showAllUsers':
-            fetchUsers('/api/users');
+            fetchUsers('all');
             break;
+
         case 'addTeam':
             renderAddTeamForm();
             break;
+
         case 'deleteTeam':
             renderDeleteTeamForm();
             break;
+
         case 'findTeam':
             renderFindTeamForm();
             break;
+
         case 'showAllTeamMembers':
             renderShowTeamMembersForm();
             break;
+
         case 'showAllTeams':
-            fetchTeams('/api/teams');
+            fetchTeams('all');
             break;
+
         case 'addUserToTeam':
             renderAddUserToTeamForm();
             break;
+
         case 'deleteUserFromTeam':
             renderDeleteUserFromTeamForm();
             break;
+
         case 'addSection':
             renderAddSectionForm();
             break;
+
         case 'deleteSection':
             renderDeleteSectionForm();
             break;
+
         case 'showAllSections':
-            fetchSections('/api/sections');
+            fetchSections('all');
             break;
+
         case 'addNoteToSection':
             renderAddNoteToSectionForm();
             break;
+
         case 'deleteNoteFromSection':
             renderDeleteNoteFromSectionForm();
             break;
+
         case 'logout':
             logout();
             break;
+
         default:
             contentArea.innerHTML = '<p>Выберите действие.</p>';
     }
 });
 
 
-// check
+// Notes functions
+// check .. вщту
 function renderAddNoteForm() {
     const contentArea = document.getElementById('contentArea');
     contentArea.innerHTML = `
@@ -169,9 +201,9 @@ function renderAddNoteForm() {
 }
 
 
-// check
-function fetchNotes(apiUrl) {
-    fetch(apiUrl)
+// check .. вщту
+function fetchNotes(s) {
+    fetch(`/api/notes?s=${s}`, {method: 'GET'})
         .then(response => response.json())
         .then(data => {
             const contentArea = document.getElementById('contentArea');
@@ -190,7 +222,7 @@ function fetchNotes(apiUrl) {
 }
 
 
-// check
+// check .. вщту
 function renderDeleteNoteFromSectionForm() {
     const contentArea = document.getElementById('contentArea');
     contentArea.innerHTML = `
@@ -222,7 +254,7 @@ function renderDeleteNoteFromSectionForm() {
 }
 
 
-// check
+// check done
 function renderAddNoteToSectionForm() {
     const contentArea = document.getElementById('contentArea');
     contentArea.innerHTML = `
@@ -236,9 +268,7 @@ function renderAddNoteToSectionForm() {
         const noteId = document.getElementById('noteId').value;
         const sectionId = document.getElementById('sectionId').value;
 
-        let apiUrl;
-        // Проверяем, является ли ввод числом, если да — это ID
-        if (!isNaN(noteId)) {
+        let apiUrl;if (!isNaN(noteId)) {
             apiUrl = `/api/sections/${sectionId}/notes/id/${noteId}`;
         } else {
             // Иначе будем искать по имени
@@ -256,7 +286,7 @@ function renderAddNoteToSectionForm() {
 }
 
 
-// check
+// check done
 function renderDeleteNoteForm() {
     const contentArea = document.getElementById('contentArea');
     contentArea.innerHTML = `
@@ -268,9 +298,7 @@ function renderDeleteNoteForm() {
     document.getElementById('submitDeleteNote').addEventListener('click', function() {
         const noteId = document.getElementById('noteId').value;
 
-        let apiUrl;
-        // Проверяем, является ли ввод числом, если да — это ID
-        if (!isNaN(noteId)) {
+        let apiUrl;if (!isNaN(noteId)) {
             apiUrl = `/api/notes/id/${noteId}`;
         } else {
             // Иначе будем искать по имени
@@ -291,7 +319,7 @@ function renderDeleteNoteForm() {
 }
 
 
-// check
+// check done
 function renderFindNoteForm() {
     const contentArea = document.getElementById('contentArea');
     contentArea.innerHTML = `
@@ -303,16 +331,14 @@ function renderFindNoteForm() {
     document.getElementById('submitFindNote').addEventListener('click', function() {
         const noteInput = document.getElementById('noteInput').value;
 
-        let apiUrl;
-        // Проверяем, является ли ввод числом, если да — это ID
-        if (!isNaN(noteInput)) {
+        let apiUrl;if (!isNaN(noteInput)) {
             apiUrl = `/api/notes/id/${noteInput}`;
         } else {
             // Иначе будем искать по имени
             apiUrl = `/api/notes/name/${noteInput}`;
         }
 
-        fetch(apiUrl)
+        fetch(apiUrl, {method: 'GET'})
             .then(response => response.json())
             .then(note => {
                 contentArea.innerHTML = `
@@ -330,7 +356,7 @@ function renderFindNoteForm() {
 }
 
 
-// check
+// check done
 function renderShowCollectionNotesForm() {
     const contentArea = document.getElementById('contentArea');
     contentArea.innerHTML = `
@@ -342,16 +368,14 @@ function renderShowCollectionNotesForm() {
     document.getElementById('submitShowCollectionNotes').addEventListener('click', function() {
         const collectionId = document.getElementById('collectionId').value;
 
-        let apiUrl;
-        // Проверяем, является ли ввод числом, если да — это ID
-        if (!isNaN(collectionId)) {
+        let apiUrl;if (!isNaN(collectionId)) {
             apiUrl = `/api/collections/id/${collectionId}/notes`;
         } else {
             // Иначе будем искать по имени
             apiUrl = `/api/collections/name/${collectionId}/notes`;
         }
 
-        fetch(apiUrl)
+        fetch(apiUrl, {method: 'GET'})
             .then(response => response.json())
             .then(notes => {
                 const contentArea = document.getElementById('contentArea');
@@ -361,78 +385,7 @@ function renderShowCollectionNotesForm() {
 }
 
 
-// check
-function renderAddCollectionForm() {
-    const contentArea = document.getElementById('contentArea');
-    contentArea.innerHTML = `
-    <h3>Добавить Подборку</h3>
-    <input class="form-input" type="text" id="collectionName" placeholder="Введите название подборки">
-    <button id="submitAddCollection">Добавить</button>
-  `;
-
-    document.getElementById('submitAddCollection').addEventListener('click', function() {
-        const collectionName = document.getElementById('collectionName').value;
-
-        fetch('/api/collections', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ name: collectionName, owner_id: UserID })
-        })
-            .then(response => response.json())
-            .then(data => {
-                alert('Подборка добавлена!');
-            })
-            .catch(error => {
-                console.error('Ошибка:', error);
-            });
-    });
-}
-
-
-// check
-function renderDeleteCollectionForm() {
-    const contentArea = document.getElementById('contentArea');
-    contentArea.innerHTML = `
-    <h3>Удалить Подборку</h3>
-    <input class="form-input" type="text" id="collectionId" placeholder="Введите ID или имя подборки">
-    <button id="submitDeleteCollection">Удалить</button>
-  `;
-
-    document.getElementById('submitDeleteCollection').addEventListener('click', function() {
-        const collectionId = document.getElementById('collectionId').value;
-
-        let apiUrl;
-        // Проверяем, является ли ввод числом, если да — это ID
-        if (!isNaN(collectionId)) {
-            apiUrl = `/api/collections/id/${collectionId}`;
-        } else {
-            // Иначе будем искать по имени
-            apiUrl = `/api/collections/name/${collectionId}`;
-        }
-
-        fetch(apiUrl, {
-            method: 'DELETE'
-        }).then(response => response.json()).then(data => {
-            alert(data.message || 'Подборка удалена');
-        });
-    });
-}
-
-
-// check
-function fetchCollections(s) {
-    fetch(`/api/collections?s=${s}`)
-        .then(response => response.json())
-        .then(collections => {
-            const contentArea = document.getElementById('contentArea');
-            contentArea.innerHTML = collections.map(coll => `<div>${coll.id}) ${coll.name}</div>`).join('');
-        });
-}
-
-
-// check
+// check done
 function renderAddNoteToCollectionForm() {
     const contentArea = document.getElementById('contentArea');
     contentArea.innerHTML = `
@@ -472,7 +425,8 @@ function renderAddNoteToCollectionForm() {
 }
 
 
-// check
+
+// check done
 function renderDeleteNoteFromCollectionForm() {
     const contentArea = document.getElementById('contentArea');
     contentArea.innerHTML = `
@@ -510,7 +464,80 @@ function renderDeleteNoteFromCollectionForm() {
 }
 
 
-// check
+// Collecition functions
+// check done
+function renderAddCollectionForm() {
+    const contentArea = document.getElementById('contentArea');
+    contentArea.innerHTML = `
+    <h3>Добавить Подборку</h3>
+    <input class="form-input" type="text" id="collectionName" placeholder="Введите название подборки">
+    <button id="submitAddCollection">Добавить</button>
+  `;
+
+    document.getElementById('submitAddCollection').addEventListener('click', function() {
+        const collectionName = document.getElementById('collectionName').value;
+
+        fetch('/api/collections', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ name: collectionName, owner_id: UserID })
+        })
+            .then(response => response.json())
+            .then(data => {
+                alert('Подборка добавлена!');
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+            });
+    });
+}
+
+
+// check done
+function renderDeleteCollectionForm() {
+    const contentArea = document.getElementById('contentArea');
+    contentArea.innerHTML = `
+    <h3>Удалить Подборку</h3>
+    <input class="form-input" type="text" id="collectionId" placeholder="Введите ID или имя подборки">
+    <button id="submitDeleteCollection">Удалить</button>
+  `;
+
+    document.getElementById('submitDeleteCollection').addEventListener('click', function() {
+        const collectionId = document.getElementById('collectionId').value;
+
+        let apiUrl;
+        // Проверяем, является ли ввод числом, если да — это ID
+        if (!isNaN(collectionId)) {
+            apiUrl = `/api/collections/id/${collectionId}`;
+        } else {
+            // Иначе будем искать по имени
+            apiUrl = `/api/collections/name/${collectionId}`;
+        }
+
+        fetch(apiUrl, {
+            method: 'DELETE'
+        }).then(response => response.json()).then(data => {
+            alert(data.message || 'Подборка удалена');
+        });
+    });
+}
+
+
+// check done
+function fetchCollections(s) {
+    fetch(`/api/collections?s=${s}`, {method: 'GET'})
+        .then(response => response.json())
+        .then(collections => {
+            const contentArea = document.getElementById('contentArea');
+            contentArea.innerHTML = collections.map(coll => `<div>${coll.id}) ${coll.name}</div>`).join('');
+        });
+}
+
+
+// User functions
+// check done
 function renderDeleteUserForm() {
     const contentArea = document.getElementById('contentArea');
     contentArea.innerHTML = `
@@ -543,7 +570,10 @@ function renderDeleteUserForm() {
 }
 
 
-// check
+
+
+
+// check done
 function renderUpdateUserFioForm() {
     const contentArea = document.getElementById('contentArea');
     contentArea.innerHTML = `
@@ -575,7 +605,7 @@ function renderUpdateUserFioForm() {
 }
 
 
-// check
+// check done
 function renderUpdateUserRoleForm() {
     const contentArea = document.getElementById('contentArea');
     contentArea.innerHTML = `
@@ -607,7 +637,7 @@ function renderUpdateUserRoleForm() {
 }
 
 
-// check
+// check done
 function renderFindUserForm() {
     const contentArea = document.getElementById('contentArea');
     contentArea.innerHTML = `
@@ -626,7 +656,7 @@ function renderFindUserForm() {
             apiUrl = `/api/users/name/${userId}`;
         }
 
-        fetch(apiUrl)
+        fetch(apiUrl, {method: 'GET'})
             .then(response => response.json())
             .then(user => {
                 contentArea.innerHTML = `
@@ -643,9 +673,9 @@ function renderFindUserForm() {
 }
 
 
-// check
-function fetchUsers(apiUrl) {
-    fetch(apiUrl)
+// check done
+function fetchUsers(s) {
+    fetch(`/api/users?s=${s}`, {method: 'GET'})
         .then(response => response.json())
         .then(users => {
             const contentArea = document.getElementById('contentArea');
@@ -664,7 +694,8 @@ function fetchUsers(apiUrl) {
 }
 
 
-// check
+// Teams functions
+// check done
 function renderAddTeamForm() {
     const contentArea = document.getElementById('contentArea');
     contentArea.innerHTML = `
@@ -694,7 +725,9 @@ function renderAddTeamForm() {
 }
 
 
-// check
+
+
+// check done
 function renderDeleteTeamForm() {
     const contentArea = document.getElementById('contentArea');
     contentArea.innerHTML = `
@@ -724,7 +757,7 @@ function renderDeleteTeamForm() {
 }
 
 
-// check
+// check done
 function renderFindTeamForm() {
     const contentArea = document.getElementById('contentArea');
     contentArea.innerHTML = `
@@ -743,7 +776,7 @@ function renderFindTeamForm() {
             apiUrl = `/api/teams/name/${teamIdOrName}`;
         }
 
-        fetch(apiUrl)
+        fetch(apiUrl, {method: 'GET'})
             .then(response => response.json())
             .then(team => {
                 const contentArea = document.getElementById('contentArea');
@@ -753,7 +786,7 @@ function renderFindTeamForm() {
 }
 
 
-// check
+// check done
 function renderShowTeamMembersForm() {
     const contentArea = document.getElementById('contentArea');
     contentArea.innerHTML = `
@@ -772,7 +805,7 @@ function renderShowTeamMembersForm() {
             apiUrl = `/api/teams/name/${teamId}/members`;
         }
 
-        fetch(apiUrl)
+        fetch(apiUrl, {method: 'GET'})
             .then(response => response.json())
             .then(members => {
                 const contentArea = document.getElementById('contentArea');
@@ -782,9 +815,9 @@ function renderShowTeamMembersForm() {
 }
 
 
-// check
+// check done
 function fetchTeams(s) {
-    fetch(`/api/teams?s=${s}`)
+    fetch(`/api/teams?s=${s}`, {method: 'GET'})
         .then(response => response.json())
         .then(teams => {
             const contentArea = document.getElementById('contentArea');
@@ -793,7 +826,7 @@ function fetchTeams(s) {
 }
 
 
-// check
+// check done
 function renderAddUserToTeamForm() {
     const contentArea = document.getElementById('contentArea');
     contentArea.innerHTML = `
@@ -832,6 +865,8 @@ function renderAddUserToTeamForm() {
     });
 }
 
+
+/////////////////////////////////////////////////
 
 // check
 function renderDeleteUserFromTeamForm() {
@@ -903,6 +938,7 @@ function renderAddSectionForm() {
 }
 
 
+// check
 function renderDeleteSectionForm() {
     const contentArea = document.getElementById('contentArea');
     contentArea.innerHTML = `
@@ -923,7 +959,7 @@ function renderDeleteSectionForm() {
             apiUrl = `/api/sections/name/${sectionId}`;
         }
 
-        fetch(`/api/sections/${sectionId}`, {
+        fetch(apiUrl, {
             method: 'DELETE'
         }).then(response => response.json()).then(data => {
             alert(data.message || 'Раздел удален');
@@ -934,7 +970,7 @@ function renderDeleteSectionForm() {
 
 // check
 function fetchSections(s) {
-    fetch(`/api/sections?s=${s}`)
+    fetch(`/api/sections?s=${s}`, {method: 'GET'})
         .then(response => response.json())
         .then(sections => {
             const contentArea = document.getElementById('contentArea');
@@ -942,3 +978,11 @@ function fetchSections(s) {
         });
 }
 
+function logout() {
+    // Удаляем информацию о пользователе из localStorage
+    localStorage.removeItem('UserId');
+    localStorage.removeItem('UserRole');
+
+    // Перенаправляем на страницу авторизации
+    window.location.href = '/index.html'; // Замените на актуальный путь к странице авторизации
+}

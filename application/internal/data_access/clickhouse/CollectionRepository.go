@@ -1,4 +1,4 @@
-package da
+package postgres
 
 import (
 	"context"
@@ -14,7 +14,7 @@ import (
 func (cr *CollectionRepository) GetCollectionByID(id int) (*models.Collection, *bl.MyError) {
 	cr.MyLogger.WriteLog("GetCollectionByID is called (Repo)", slog.LevelInfo, nil)
 
-	if id < 0 {
+	if id == 0 {
 		myErr := bl.CreateError(bl.ErrGetCollectionByID, bl.ErrGetCollectionByIDError(), "GetCollectionByID")
 		cr.MyLogger.WriteLog(myErr.Err.Error(), slog.LevelError, nil)
 		return nil, myErr
@@ -22,8 +22,8 @@ func (cr *CollectionRepository) GetCollectionByID(id int) (*models.Collection, *
 
 	var collection models.Collection
 	db := cr.DbConfigs.DB
-	schemaName := cr.DbConfigs.SchemaName
-	query := fmt.Sprintf("SELECT * FROM %s.collections WHERE id = $1", schemaName)
+	schemaName := cr.DbConfigs.Name
+	query := fmt.Sprintf("SELECT * FROM %s.collections WHERE id = ?", schemaName)
 	ctx := context.Background()
 
 	err := db.QueryRowContext(ctx, query, id).Scan(
@@ -60,8 +60,8 @@ func (cr *CollectionRepository) GetCollectionByName(name string) (*models.Collec
 
 	var collection models.Collection
 	db := cr.DbConfigs.DB
-	schemaName := cr.DbConfigs.SchemaName
-	query := fmt.Sprintf("SELECT * FROM %s.collections WHERE name = $1", schemaName)
+	schemaName := cr.DbConfigs.Name
+	query := fmt.Sprintf("SELECT * FROM %s.collections WHERE name = ?", schemaName)
 	ctx := context.Background()
 
 	err := db.QueryRowContext(ctx, query, name).Scan(
@@ -91,7 +91,7 @@ func (cr *CollectionRepository) GetAllCollections() ([]*models.Collection, *bl.M
 	cr.MyLogger.WriteLog("GetAllCollections is called (Repo)", slog.LevelInfo, nil)
 
 	db := cr.DbConfigs.DB
-	schemaName := cr.DbConfigs.SchemaName
+	schemaName := cr.DbConfigs.Name
 	query := fmt.Sprintf("SELECT * FROM %s.collections", schemaName)
 	ctx := context.Background()
 
@@ -142,8 +142,8 @@ func (cr *CollectionRepository) GetAllUserCollections(user *models.User) ([]*mod
 	}
 
 	db := cr.DbConfigs.DB
-	schemaName := cr.DbConfigs.SchemaName
-	query := fmt.Sprintf("SELECT c.* FROM %s.collections c JOIN %s.notes n ON c.id = n.collection_id WHERE n.owner_id = $1", schemaName, schemaName)
+	schemaName := cr.DbConfigs.Name
+	query := fmt.Sprintf("SELECT c.* FROM %s.collections c JOIN %s.notes n ON c.id = n.collection_id WHERE n.owner_id = ?", schemaName, schemaName)
 	ctx := context.Background()
 
 	rows, err := db.QueryContext(ctx, query, user.Id)
@@ -192,8 +192,8 @@ func (cr *CollectionRepository) AddCollection(collection *models.Collection) *bl
 	}
 
 	db := cr.DbConfigs.DB
-	schemaName := cr.DbConfigs.SchemaName
-	query := fmt.Sprintf("INSERT INTO %s.collections (name, creation_date) VALUES ($1, $2)", schemaName)
+	schemaName := cr.DbConfigs.Name
+	query := fmt.Sprintf("INSERT INTO %s.collections (name, creation_date) VALUES (?, ?)", schemaName)
 	ctx := context.Background()
 
 	tx, err := db.BeginTx(ctx, nil)
@@ -223,17 +223,17 @@ func (cr *CollectionRepository) AddCollection(collection *models.Collection) *bl
 func (cr *CollectionRepository) DeleteCollection(id int) *bl.MyError {
 	cr.MyLogger.WriteLog("DeleteCollection is called (Repo)", slog.LevelInfo, nil)
 
-	if id < 0 {
+	if id == 0 {
 		myErr := bl.CreateError(bl.ErrDeleteCollection, bl.ErrDeleteCollectionError(), "DeleteCollection")
 		cr.MyLogger.WriteLog(myErr.Err.Error(), slog.LevelError, nil)
 		return myErr
 	}
 
 	db := cr.DbConfigs.DB
-	schemaName := cr.DbConfigs.SchemaName
+	schemaName := cr.DbConfigs.Name
 	ctx := context.Background()
-	query1 := fmt.Sprintf("DELETE FROM %s.notes_collections WHERE collection_id = $1", schemaName)
-	query2 := fmt.Sprintf("DELETE FROM %s.collections WHERE id = $1", schemaName)
+	query1 := fmt.Sprintf("ALTER TABLE %s.notes_collections DELETE WHERE collection_id = ?", schemaName)
+	query2 := fmt.Sprintf("ALTER TABLE %s.collections DELETE WHERE id = ?", schemaName)
 	result_query := fmt.Sprintf("%s; %s;", query1, query2)
 
 	tx, err := db.BeginTx(ctx, nil)
@@ -270,8 +270,8 @@ func (cr *CollectionRepository) UpdateCollection(collection *models.Collection) 
 	}
 
 	db := cr.DbConfigs.DB
-	schemaName := cr.DbConfigs.SchemaName
-	query := fmt.Sprintf("UPDATE %s.collections SET name = $1, creation_date = $2 WHERE id = $3", schemaName)
+	schemaName := cr.DbConfigs.Name
+	query := fmt.Sprintf("ALTER TABLE %s.collections UPDATE name = ?, creation_date = ? WHERE id = ?", schemaName)
 	ctx := context.Background()
 
 	tx, err := db.BeginTx(ctx, nil)
@@ -308,8 +308,8 @@ func (cr *CollectionRepository) GetAllNotesInCollection(collection *models.Colle
 	}
 
 	db := cr.DbConfigs.DB
-	schemaName := cr.DbConfigs.SchemaName
-	query := fmt.Sprintf("SELECT * FROM %s.notes n JOIN %s.note_collections nc ON n.id = nc.note_id WHERE nc.collection_id = $1", schemaName, schemaName)
+	schemaName := cr.DbConfigs.Name
+	query := fmt.Sprintf("SELECT * FROM %s.notes n JOIN %s.note_collections nc ON n.id = nc.note_id WHERE nc.collection_id = ?", schemaName, schemaName)
 	ctx := context.Background()
 
 	rows, err := db.QueryContext(ctx, query, collection.Id)

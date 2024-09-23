@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Меню Администратора</title>
+    <link rel="stylesheet" href="/css/styleAdmin.css">
+</head>
+<body>
+<h1>Меню Администратора</h1>
+<div class="menu-container">
+    <select id="actionSelect">
+        <option value="">Выберите действие</option>
+        <option value="findNote">Найти Записку</option>
+        <option value="showPublicNotes">Вывести все общедоступные Записки</option>
+        <option value="showCollectionNotes">Вывести все Записки в коллекции</option>
+        <option value="showTeamNotes">Вывести все Записки в разделе своей команды</option>
+        <option value="addCollection">Добавить Подборку</option>
+        <option value="deleteCollection">Удалить Подборку</option>
+        <option value="showUserCollections">Вывести все свои Подборки</option>
+        <option value="addNoteToCollection">Добавить Записку в Подборку</option>
+        <option value="deleteNoteFromCollection">Удалить Записку из Подборки</option>
+        <option value="logout">Выйти из аккаунта</option>
+    </select>
+</div>
+
+<div id="contentArea"></div>
+
+<script src="/js/script.js"></script>
+</body>
+</html>

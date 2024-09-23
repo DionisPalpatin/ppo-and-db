@@ -53,6 +53,7 @@ type Configs struct {
 	Mode           string   `yaml:"ui_mode"`
 	DateTimeFormat string   `yaml:"datetime_format"`
 	System         int      `yaml:"system"`
+	ServerPort     int      `yaml:"server_port"`
 	TextTypes      []string `yaml:"text_types"`
 	ImageTypes     []string `yaml:"image_types"`
 

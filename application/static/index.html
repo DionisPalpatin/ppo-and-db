@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login & Register</title>
+    <link rel="stylesheet" href="css/styleIndex.css">
+</head>
+<body>
+<div class="container">
+    <!-- Toggle buttons for switching between login and register forms -->
+    <div class="form-toggle">
+        <button id="loginToggle" class="toggle-button active">Login</button>
+        <button id="registerToggle" class="toggle-button">Register</button>
+    </div>
+
+    <!-- Login Form -->
+    <div id="loginForm" class="form-box">
+        <h2>Login</h2>
+        <input class="form-input" type="text" id="loginUsername" placeholder="Username">
+        <input class="form-input" type="password" id="loginPassword" placeholder="Password">
+        <button id="submitLogin">Login</button>
+    </div>
+
+    <!-- Register Form -->
+    <div id="registerForm" class="form-box hidden">
+        <h2>Register</h2>
+        <input class="form-input" type="text" id="registerFio" placeholder="Full Name">
+        <input class="form-input" type="text" id="registerUsername" placeholder="Username">
+        <input class="form-input" type="password" id="registerPassword" placeholder="Password">
+        <button id="submitRegister">Register</button>
+    </div>
+</div>
+
+<script src="js/index.js"></script>
+</body>
+</html>
