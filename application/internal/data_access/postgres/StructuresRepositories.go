@@ -36,10 +36,7 @@ type CollectionRepository struct {
 	MyLogger  *mylogger.MyLogger
 }
 
-type Repositories struct {
-	UsrRepo  UserRepository
-	SecRepo  SectionRepository
-	NoteRepo NoteRepository
-	ColRepo  CollectionRepository
-	TeamRepo TeamRepository
+type StatisticRepository struct {
+	DbConfigs *config.DBConfigs
+	MyLogger  *mylogger.MyLogger
 }

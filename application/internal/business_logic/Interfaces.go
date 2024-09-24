@@ -147,13 +147,26 @@ type IOAuthService interface {
 	SignInUser(login string, password string, iur IUserRepository) (*models.User, *MyError)
 }
 
-type IRepositories struct {
-	IUsrRepo  IUserRepository
-	ISecRepo  ISectionRepository
-	INoteRepo INoteRepository
-	IColRepo  ICollectionRepository
-	ITeamRepo ITeamRepository
+// ---------------------------------------------------------------------------------------------------------------------
+// Statistic interfaces
+// ---------------------------------------------------------------------------------------------------------------------
+
+type IStatisticService interface {
+	GetFullStat(requester *models.User, isr IStatisticRepository) (*models.Stat, *MyError)
 }
+
+type IStatisticRepository interface {
+	CountMarks() int
+	CountUsers() int
+	CountTeams() int
+	CountSections() int
+	CountNotes() int
+	CountCollections() int
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Other structures
+// ---------------------------------------------------------------------------------------------------------------------
 
 type IServices struct {
 	IUsrSvc   IUserService
@@ -162,4 +175,14 @@ type IServices struct {
 	IColSvc   ICollectionService
 	ITeamSvc  ITeamService
 	IOAuthSvc IOAuthService
+	IStatSvc  IStatisticService
+}
+
+type IRepositories struct {
+	IUsrRepo  IUserRepository
+	ISecRepo  ISectionRepository
+	INoteRepo INoteRepository
+	IColRepo  ICollectionRepository
+	ITeamRepo ITeamRepository
+	IStatRepo IStatisticRepository
 }

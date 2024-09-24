@@ -1029,3 +1029,15 @@ func (app *AppConfigs) GetAllSectionsHandler(w http.ResponseWriter, r *http.Requ
 		json.NewEncoder(w).Encode(sections)
 	}
 }
+
+func (app *AppConfigs) GetFullStatHendler(w http.ResponseWriter, r *http.Request) {
+	stat, myErr := app.IServices.IStatSvc.GetFullStat(app.CurUser, app.IRepos.IStatRepo)
+
+	if myErr.ErrNum != bl.AllIsOk {
+		http.Error(w, myErr.Error(), http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(stat)
+}

@@ -40,6 +40,7 @@ func initInterfaces(conf *appconfigs.AppConfigs) {
 			INoteRepo: &dapostgres.NoteRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
 			IColRepo:  &dapostgres.CollectionRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
 			ITeamRepo: &dapostgres.TeamRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
+			IStatRepo: &dapostgres.StatisticRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
 		}
 	} else if dbconf.DriverName == "clickhouse" {
 		conf.IRepos = &bl.IRepositories{
@@ -48,6 +49,7 @@ func initInterfaces(conf *appconfigs.AppConfigs) {
 			INoteRepo: &daclickhouse.NoteRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
 			IColRepo:  &daclickhouse.CollectionRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
 			ITeamRepo: &daclickhouse.TeamRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
+			IStatRepo: &daclickhouse.StatisticRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
 		}
 	}
 
@@ -58,6 +60,7 @@ func initInterfaces(conf *appconfigs.AppConfigs) {
 		IColSvc:   &bl.CollectionService{},
 		ITeamSvc:  &bl.TeamService{},
 		IOAuthSvc: &bl.OAuthService{},
+		IStatSvc:  &bl.StatService{},
 	}
 }
 
@@ -211,6 +214,9 @@ func initRouter(conf *appconfigs.AppConfigs) {
 	conf.Router.HandleFunc("/api/sections/{sectionId}/notes/id/{noteId}", conf.DeleteNoteFromSectionHandler).Methods("DELETE")
 	/* check renderDeleteNoteFromSectionForm */
 	conf.Router.HandleFunc("/api/sections/{sectionId}/notes/name/{noteId}", conf.DeleteNoteFromSectionHandler).Methods("DELETE")
+
+	conf.Router.HandleFunc("/api/stat", conf.GetFullStatHendler).Methods("GET")
+
 }
 
 func RunBackend() error {

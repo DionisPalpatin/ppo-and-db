@@ -128,6 +128,10 @@ document.getElementById('actionSelect').addEventListener('change', function() {
             renderDeleteNoteFromSectionForm();
             break;
 
+        case 'showStat':
+            fetchStat();
+            break;
+
         case 'logout':
             logout();
             break;
@@ -977,6 +981,26 @@ function fetchSections(s) {
         .then(sections => {
             const contentArea = document.getElementById('contentArea');
             contentArea.innerHTML = sections.map(section => `<div>${section.id}) ${section.name}</div>`).join('');
+        });
+}
+
+function fetchStat() {
+    fetch(`/api/stat`, {method: 'GET'})
+        .then(response => response.json())
+        .then(stat => {
+            contentArea.innerHTML = `
+        <h3>Статистика</h3>
+        <p>ID: ${stat.Id}</p>
+        <p>Пользователей: ${stat.TotalUsers}</p>
+        <p>Записок: ${stat.TotalNotes}</p>
+        <p>Оценок: ${stat.TotalMarks}</p>
+        <p>Разделов: ${stat.TotalSections}</p>
+        <p>Команд: ${stat.TotalTeams}</p>
+        <p>Подборок: ${stat.TotalCollections}</p>
+      `;
+        })
+        .catch(error => {
+            console.error('Ошибка:', error);
         });
 }
 

@@ -87,6 +87,10 @@ const (
 	ErrAddNoteToSection     = 500 + iota
 )
 
+const (
+	ErrGetFullStat = 600 + iota
+)
+
 // Функции для создания ошибок
 func ErrAccessDeniedError() error {
 	return errors.New("Доступ запрещен")
@@ -271,6 +275,10 @@ func ErrUpdateSectionError() error {
 
 func ErrAddNoteToSectionError() error {
 	return errors.New("Ошибка добавления Записки в раздел")
+}
+
+func ErrGetFullStatError() error {
+	return errors.New("Ошибка получения статистики")
 }
 
 func CreateError(errNum int, err error, funcName string) *MyError {
