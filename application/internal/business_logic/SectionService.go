@@ -1,14 +1,14 @@
 package bl
 
-import "notebook_app/internal/models"
+import "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/models"
 
 type SectionService struct{}
 
 func (SectionService) GetSection(secID int, name string, user *models.User, searchBy int, isr ISectionRepository) (*models.Section, *MyError) {
-	if user.Role != Admin {
-		err := CreateError(ErrAccessDenied, ErrAccessDeniedError(), "GetSection")
-		return nil, err
-	}
+	// if user.Role != Admin {
+	// 	err := CreateError(ErrAccessDenied, ErrAccessDeniedError(), "GetSection")
+	// 	return nil, err
+	// }
 
 	var section *models.Section
 	var err *MyError

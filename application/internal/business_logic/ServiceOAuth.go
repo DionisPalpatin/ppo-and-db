@@ -3,8 +3,8 @@ package bl
 import (
 	"time"
 
-	"notebook_app/config"
-	"notebook_app/internal/models"
+	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/config"
+	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/models"
 )
 
 type OAuthService struct{}

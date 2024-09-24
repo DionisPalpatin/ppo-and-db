@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  postgres:
+    container_name: postgres_container
+
+    image: postgres:latest
+    
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgrespassword"
+      POSTGRES_DB: "NotebookApp"
+      PGDATA: /var/lib/postgresql/data/pgdata
+
+    volumes:
+      - ./initdb:/docker-entrypoint-initdb.d
+      - .:/var/lib/postgresql/data
+    
+    ports:
+      - "5432:5432"
+    
+    networks:
+      - noteappnetwork
+    
+    restart: unless-stopped
+
+  
+  pgadmin:
+    container_name: pgadmin_container
+    
+    image: dpage/pgadmin4:latest
+    
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    
+    ports:
+      - "5050:80"
+    
+    networks:
+      - noteappnetwork
+    
+    restart: unless-stopped  
+
+  
+  # note_app_backend:
+  #   container_name: backend_container
+  #   stdin_open: true # docker run -i
+  #   tty: true        # docker run -t
+
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+    
+  #   ports:
+  #     - "13338:13338"
+    
+  #   volumes:
+  #     - ./log:/notebookapp/log
+  #     - ./config:/notebookapp/config
+    
+  #   depends_on:
+  #     - postgres
+    
+  #   networks:
+  #     - noteappnetwork
+
+
+networks:
+  noteappnetwork:
+    driver: bridge

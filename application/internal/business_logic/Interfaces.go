@@ -3,7 +3,7 @@ package bl
 import (
 	"io"
 
-	"notebook_app/internal/models"
+	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/models"
 )
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -12,7 +12,7 @@ import (
 
 type INoteService interface {
 	GetNote(id int, name string, searchBy int, requester *models.User, inr INoteRepository, isr ISectionRepository, itr ITeamRepository) (*models.Note, []byte, *MyError)
-	GetAllNotes(requester *models.User, inr INoteRepository) ([]*models.Note, *MyError)
+	GetAllNotes(open bool, requester *models.User, inr INoteRepository) ([]*models.Note, *MyError)
 	AddNote(note *models.Note, requester *models.User, inr INoteRepository) *MyError
 	DeleteNote(id int, requester *models.User, inr INoteRepository) *MyError
 	UpdateNoteContent(noteID int, requester *models.User, filePath string, inr INoteRepository) *MyError
@@ -25,6 +25,7 @@ type INoteRepository interface {
 	GetNoteByID(id int) (*models.Note, []byte, *MyError)
 	GetNoteByName(name string) (*models.Note, []byte, *MyError)
 	GetAllNotes() ([]*models.Note, *MyError)
+	GetAllPublicNotes() ([]*models.Note, *MyError)
 	AddNote(note *models.Note) *MyError
 	DeleteNote(id int) *MyError
 	UpdateNoteContentText(reader io.Reader, note *models.Note) *MyError

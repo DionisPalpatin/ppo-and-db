@@ -1,200 +1,980 @@
-// document.addEventListener("DOMContentLoaded", function() {
-//     const loginBtn = document.getElementById('login-btn');
-//     const errorMessage = document.getElementById('error-message');
-//     const authForm = document.getElementById('auth-form');
-//     const readerMenu = document.getElementById('reader-menu');
-//     const output = document.getElementById('output');
-//
-//     // Авторизация пользователя
-//     loginBtn.addEventListener('click', async function() {
-//         const login = document.getElementById('login').value;
-//         const password = document.getElementById('password').value;
-//
-//         // Пример авторизации через API
-//         const response = await fetch('/api/login', {
-//             method: 'POST',
-//             headers: {
-//                 'Content-Type': 'application/json',
-//             },
-//             body: JSON.stringify({ login, password })
-//         });
-//
-//         if (response.ok) {
-//             const data = await response.json();
-//             // Если авторизация успешна, показываем меню для Читателя
-//             authForm.classList.add('hidden');
-//             readerMenu.classList.remove('hidden');
-//         } else {
-//             errorMessage.textContent = 'Invalid login or password';
-//         }
-//     });
-//
-//     // Функция для отображения данных
-//     function displayList(items, type) {
-//         output.innerHTML = ''; // Очистка контейнера перед выводом новых данных
-//
-//         const ul = document.createElement('ul');
-//         items.forEach(item => {
-//             const li = document.createElement('li');
-//             li.textContent = `${item.Id}) ${item.Name}`;
-//             ul.appendChild(li);
-//         });
-//         output.appendChild(ul);
-//     }
-//
-//     // Получение всех общедоступных заметок
-//     document.getElementById('view-public-notes').addEventListener('click', async function() {
-//         const response = await fetch('/api/notes/public', { method: 'GET' });
-//         if (response.ok) {
-//             const notes = await response.json();
-//             displayList(notes, 'note');
-//         } else {
-//             console.error('Failed to fetch notes');
-//         }
-//     });
-//
-//     // Получение всех коллекций пользователя
-//     document.getElementById('view-collections').addEventListener('click', async function() {
-//         const response = await fetch('/api/collections', { method: 'GET' });
-//         if (response.ok) {
-//             const collections = await response.json();
-//             displayList(collections, 'collection');
-//         } else {
-//             console.error('Failed to fetch collections');
-//         }
-//     });
-//
-//     // Пример выхода из аккаунта
-//     document.getElementById('logout').addEventListener('click', function() {
-//         // Обработать логику выхода, например очистку токена
-//         window.location.reload(); // Перезагружаем страницу для возврата к форме логина
-//     });
-// });
+document.getElementById('actionSelect').addEventListener('change', function() {
+    const action = this.value;
+    const contentArea = document.getElementById('contentArea');
+
+    contentArea.innerHTML = ''; // Очищаем содержимое для нового действия
+
+    switch(action) {
+        case 'addNote':
+            renderAddNoteForm();
+            break;
+
+        case 'deleteNote':
+            renderDeleteNoteForm();
+            break;
+
+        case 'findNote':
+            renderFindNoteForm();
+            break;
+
+        case 'showPublicNotes':
+            fetchNotes('public');
+            break;
+
+        case 'showAllNotes':
+            fetchNotes('all');
+            break;
+
+        case 'showCollectionNotes':
+            renderShowCollectionNotesForm();
+            break;
+
+        case 'showTeamNotes':
+            fetchNotes('team');
+            break;
+
+        // case 'showAllTeamNotes':
+        //     fetchNotes('allteams');
+        //     break;
+        case 'addCollection':
+            renderAddCollectionForm();
+            break;
+
+        case 'deleteCollection':
+            renderDeleteCollectionForm();
+            break;
+
+        case 'showUserCollections':
+            fetchCollections('user');
+            break;
+
+        case 'showAllCollections':
+            fetchCollections('all');
+            break;
+
+        case 'addNoteToCollection':
+            renderAddNoteToCollectionForm();
+            break;
+
+        case 'deleteNoteFromCollection':
+            renderDeleteNoteFromCollectionForm();
+            break;
+
+        case 'deleteUser':
+            renderDeleteUserForm();
+            break;
+
+        case 'updateUserFio':
+            renderUpdateUserFioForm();
+            break;
+
+        case 'updateUserRole':
+            renderUpdateUserRoleForm();
+            break;
+
+        case 'findUser':
+            renderFindUserForm();
+            break;
+
+        case 'showAllUsers':
+            fetchUsers('all');
+            break;
+
+        case 'addTeam':
+            renderAddTeamForm();
+            break;
+
+        case 'deleteTeam':
+            renderDeleteTeamForm();
+            break;
+
+        case 'findTeam':
+            renderFindTeamForm();
+            break;
+
+        case 'showAllTeamMembers':
+            renderShowTeamMembersForm();
+            break;
+
+        case 'showAllTeams':
+            fetchTeams('all');
+            break;
+
+        case 'addUserToTeam':
+            renderAddUserToTeamForm();
+            break;
+
+        case 'deleteUserFromTeam':
+            renderDeleteUserFromTeamForm();
+            break;
+
+        case 'addSection':
+            renderAddSectionForm();
+            break;
+
+        case 'deleteSection':
+            renderDeleteSectionForm();
+            break;
+
+        case 'showAllSections':
+            fetchSections('all');
+            break;
+
+        case 'addNoteToSection':
+            renderAddNoteToSectionForm();
+            break;
+
+        case 'deleteNoteFromSection':
+            renderDeleteNoteFromSectionForm();
+            break;
+
+        case 'logout':
+            logout();
+            break;
+
+        default:
+            contentArea.innerHTML = '<p>Выберите действие.</p>';
+    }
+});
 
 
-document.addEventListener("DOMContentLoaded", function() {
-    const loginBtn = document.getElementById('login-btn');
-    const registerBtn = document.getElementById('register-btn');
-    const loginErrorMessage = document.getElementById('login-error-message');
-    const registerErrorMessage = document.getElementById('register-error-message');
-    const authForm = document.getElementById('auth-form');
-    const registerForm = document.getElementById('register-form');
-    const readerMenu = document.getElementById('reader-menu');
-    const output = document.getElementById('output');
-    const showRegisterFormLink = document.getElementById('show-register-form');
-    const showLoginFormLink = document.getElementById('show-login-form');
+// Notes functions
+// check .. вщту
+function renderAddNoteForm() {
+    const contentArea = document.getElementById('contentArea');
+    contentArea.innerHTML = `
+    <h3>Добавить Записку</h3>
+    <input class="form-input" type="text" id="noteTitle" placeholder="Введите название записки" required>
+    <input class="form-input" type="text" id="noteText" placeholder="Введите текст записки" required>
+    <input class="form-input" type="file" id="noteImage" accept="image/png, image/jpeg">
+    <input class="form-input" type="file" id="noteRawData" accept=".bin,.dat">
+    <button id="submitAddNote">Добавить</button>
+    <div id="loadingMessage" style="display: none;">Загрузка...</div>
+  `;
 
-    showRegisterFormLink.addEventListener('click', function(event) {
-        event.preventDefault();
-        authForm.classList.add('hidden');
-        registerForm.classList.remove('hidden');
-    });
+    document.getElementById('submitAddNote').addEventListener('click', function() {
+        const noteTitle = document.getElementById('noteTitle').value;
+        const noteText = document.getElementById('noteText').value;
+        const noteImage = document.getElementById('noteImage').files[0];
+        const noteRawData = document.getElementById('noteRawData').files[0];
 
-    showLoginFormLink.addEventListener('click', function(event) {
-        event.preventDefault();
-        registerForm.classList.add('hidden');
-        authForm.classList.remove('hidden');
-    });
+        // Получаем userId из localStorage
+        const userId = localStorage.getItem('UserId');
+        const userRole = localStorage.getItem('UserRole')
 
-    // Авторизация пользователя
-    loginBtn.addEventListener('click', async function() {
-        const login = document.getElementById('login').value;
-        const password = document.getElementById('password').value;
+        if (!noteTitle) {
+            alert('Пожалуйста, введите название записки.');
+            return;
+        }
 
-        // Запрос на сервер для входа
-        const response = await fetch('/api/login', {
+        const formData = new FormData();
+
+        formData.append('title', noteTitle);
+        formData.append('text', noteText);
+        formData.append('userId', userId);
+        formData.append('userRole', userRole);// Передаем ID текущего пользователя
+        if (noteImage) {
+            formData.append('image', noteImage);
+        }
+        if (noteRawData) {
+            formData.append('rawData', noteRawData);
+        }
+
+        // Отображаем сообщение о загрузке
+        document.getElementById('loadingMessage').style.display = 'block';
+
+        fetch('/api/notes', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ login, password })
-        });
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('loadingMessage').style.display = 'none';
+                alert('Записка добавлена!');
+            })
+            .catch(error => {
+                document.getElementById('loadingMessage').style.display = 'none';
+                console.error('Ошибка:', error);
+                alert('Ошибка при добавлении записки');
+            });
+    });
+}
 
-        if (response.ok) {
-            const data = await response.json();
-            // Проверяем роль пользователя (1 - Читатель)
-            if (data.role === 1) {
-                // Если авторизация успешна и роль - Читатель, показываем меню
-                authForm.classList.add('hidden');
-                registerForm.classList.add('hidden');
-                readerMenu.classList.remove('hidden');
+
+// check .. вщту
+function fetchNotes(s) {
+    fetch(`/api/notes?s=${s}`, {method: 'GET'})
+        .then(response => response.json())
+        .then(data => {
+            const contentArea = document.getElementById('contentArea');
+            contentArea.innerHTML = `<h3>Записки</h3>`;
+            const list = document.createElement('ul');
+            data.forEach(note => {
+                const listItem = document.createElement('li');
+                listItem.textContent = `${note.id}) ${note.name}`;
+                list.appendChild(listItem);
+            });
+            contentArea.appendChild(list);
+        })
+        .catch(error => {
+            console.error('Ошибка:', error);
+        });
+}
+
+
+// check .. вщту
+function renderDeleteNoteFromSectionForm() {
+    const contentArea = document.getElementById('contentArea');
+    contentArea.innerHTML = `
+    <h3>Удалить Записку из Раздела</h3>
+    <input class="form-input" type="text" id="noteId" placeholder="ID или название записки">
+    <input class="form-input" type="text" id="sectionId" placeholder="ID раздела">
+    <button id="submitDeleteNoteFromSection">Удалить</button>
+  `;
+
+    document.getElementById('submitDeleteNoteFromSection').addEventListener('click', function() {
+        const noteId = document.getElementById('noteId').value;
+        const sectionId = document.getElementById('sectionId').value;
+
+        let apiUrl;
+        // Проверяем, является ли ввод числом, если да — это ID
+        if (!isNaN(noteId)) {
+            apiUrl = `/api/sections/${sectionId}/notes/id/${noteId}`;
+        } else {
+            // Иначе будем искать по имени
+            apiUrl = `/api/sections/${sectionId}/notes/name/${noteId}`;
+        }
+
+        fetch(apiUrl, {
+            method: 'DELETE'
+        }).then(response => response.json()).then(data => {
+            alert(data.message || 'Записка удалена');
+        });
+    });
+}
+
+
+// check done
+function renderAddNoteToSectionForm() {
+    const contentArea = document.getElementById('contentArea');
+    contentArea.innerHTML = `
+    <h3>Добавить Записку в Раздел</h3>
+    <input class="form-input" type="text" id="noteId" placeholder="ID или название записки">
+    <input class="form-input" type="text" id="sectionId" placeholder="ID раздела">
+    <button id="submitAddNoteToSection">Добавить</button>
+  `;
+
+    document.getElementById('submitAddNoteToSection').addEventListener('click', function() {
+        const noteId = document.getElementById('noteId').value;
+        const sectionId = document.getElementById('sectionId').value;
+
+        let apiUrl;if (!isNaN(noteId)) {
+            apiUrl = `/api/sections/${sectionId}/notes/id/${noteId}`;
+        } else {
+            // Иначе будем искать по имени
+            apiUrl = `/api/sections/${sectionId}/notes/name/${noteId}`;
+        }
+
+        fetch(apiUrl, {
+            method: 'POST',
+            body: JSON.stringify({ noteId }),
+            headers: { 'Content-Type': 'application/json' }
+        }).then(response => response.json()).then(data => {
+            alert(data.message || 'Записка добавлена');
+        });
+    });
+}
+
+
+// check done
+function renderDeleteNoteForm() {
+    const contentArea = document.getElementById('contentArea');
+    contentArea.innerHTML = `
+    <h3>Удалить Записку</h3>
+    <input class="form-input" type="text" id="noteId" placeholder="Введите ID или имя записки">
+    <button id="submitDeleteNote">Удалить</button>
+  `;
+
+    document.getElementById('submitDeleteNote').addEventListener('click', function() {
+        const noteId = document.getElementById('noteId').value;
+
+        let apiUrl;if (!isNaN(noteId)) {
+            apiUrl = `/api/notes/id/${noteId}`;
+        } else {
+            // Иначе будем искать по имени
+            apiUrl = `/api/notes/name/${noteId}`;
+        }
+
+        fetch(apiUrl, {
+            method: 'DELETE'
+        })
+            .then(response => response.json())
+            .then(data => {
+                alert('Записка удалена!');
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+            });
+    });
+}
+
+
+// check done
+function renderFindNoteForm() {
+    const contentArea = document.getElementById('contentArea');
+    contentArea.innerHTML = `
+    <h3>Найти Записку</h3>
+    <input class="form-input" type="text" id="noteInput" placeholder="Введите ID или имя записки">
+    <button id="submitFindNote">Найти</button>
+  `;
+
+    document.getElementById('submitFindNote').addEventListener('click', function() {
+        const noteInput = document.getElementById('noteInput').value;
+
+        let apiUrl;if (!isNaN(noteInput)) {
+            apiUrl = `/api/notes/id/${noteInput}`;
+        } else {
+            // Иначе будем искать по имени
+            apiUrl = `/api/notes/name/${noteInput}`;
+        }
+
+        fetch(apiUrl, {method: 'GET'})
+            .then(response => response.json())
+            .then(note => {
+                contentArea.innerHTML = `
+        <h3>Записка</h3>
+        <p>ID: ${note.id}</p>
+        <p>Текст: ${note.text}</p>
+        ${note.image ? `<img src="/uploads/${note.image}" alt="Записка Картинка" />` : ''}
+        ${note.rawData ? `<a href="/uploads/${note.rawData}" download>Скачать RAW данные</a>` : ''}
+      `;
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+            });
+    });
+}
+
+
+// check done
+function renderShowCollectionNotesForm() {
+    const contentArea = document.getElementById('contentArea');
+    contentArea.innerHTML = `
+    <h3>Показать Записки из Подборки</h3>
+    <input class="form-input" type="text" id="collectionId" placeholder="ID или название подборки">
+    <button id="submitShowCollectionNotes">Показать</button>
+  `;
+
+    document.getElementById('submitShowCollectionNotes').addEventListener('click', function() {
+        const collectionId = document.getElementById('collectionId').value;
+
+        let apiUrl;if (!isNaN(collectionId)) {
+            apiUrl = `/api/collections/id/${collectionId}/notes`;
+        } else {
+            // Иначе будем искать по имени
+            apiUrl = `/api/collections/name/${collectionId}/notes`;
+        }
+
+        fetch(apiUrl, {method: 'GET'})
+            .then(response => response.json())
+            .then(notes => {
+                const contentArea = document.getElementById('contentArea');
+                contentArea.innerHTML = notes.map(note => `<div>${note.id}) ${note.name}</div>`).join('');
+            });
+    });
+}
+
+
+// check done
+function renderAddNoteToCollectionForm() {
+    const contentArea = document.getElementById('contentArea');
+    contentArea.innerHTML = `
+    <h3>Добавить Записку в Подборку</h3>
+    <input class="form-input" type="text" id="noteId" placeholder="ID или название записки">
+    <input class="form-input" type="text" id="collectionId" placeholder="ID или название подборки">
+    <button id="submitAddNoteToCollection">Добавить</button>
+  `;
+
+    document.getElementById('submitAddNoteToCollection').addEventListener('click', function() {
+        const noteId = document.getElementById('noteId').value;
+        const collectionId = document.getElementById('collectionId').value;
+
+        let apiUrl;
+        if (!isNaN(noteId)) {
+            if (!isNaN(collectionId)) {
+                apiUrl = `/api/collections/id/${collectionId}/notes/id/${noteId}`;
             } else {
-                // Обработка для других ролей, если необходимо
-                alert('Эта роль еще не реализована в интерфейсе.');
+                apiUrl = `/api/collections/name/${collectionId}/notes/id/${noteId}`;
             }
         } else {
-            loginErrorMessage.textContent = 'Неверный логин или пароль';
+            if (!isNaN(collectionId)) {
+                apiUrl = `/api/collections/id/${collectionId}/notes/name/${noteId}`;
+            } else {
+                apiUrl = `/api/collections/name/${collectionId}/notes/name/${noteId}`;
+            }
         }
+
+        fetch(apiUrl, {
+            method: 'POST',
+            body: JSON.stringify({ noteId }),
+            headers: { 'Content-Type': 'application/json' }
+        }).then(response => response.json()).then(data => {
+            alert(data.message || 'Записка добавлена');
+        });
     });
+}
 
-    // Регистрация пользователя
-    registerBtn.addEventListener('click', async function() {
-        const fio = document.getElementById('register-fio').value;
-        const login = document.getElementById('register-login').value;
-        const password = document.getElementById('register-password').value;
 
-        // Запрос на сервер для регистрации
-        const response = await fetch('/api/register', {
+
+// check done
+function renderDeleteNoteFromCollectionForm() {
+    const contentArea = document.getElementById('contentArea');
+    contentArea.innerHTML = `
+    <h3>Удалить Записку из Подборки</h3>
+    <input class="form-input" type="text" id="noteId" placeholder="ID или название записки">
+    <input class="form-input" type="text" id="collectionId" placeholder="ID или название подборки">
+    <button id="submitDeleteNoteFromCollection">Удалить</button>
+  `;
+
+    document.getElementById('submitDeleteNoteFromCollection').addEventListener('click', function() {
+        const noteId = document.getElementById('noteId').value;
+        const collectionId = document.getElementById('collectionId').value;
+
+        let apiUrl;
+        if (!isNaN(noteId)) {
+            if (!isNaN(collectionId)) {
+                apiUrl = `/api/collections/id/${collectionId}/notes/id/${noteId}`;
+            } else {
+                apiUrl = `/api/collections/name/${collectionId}/notes/id/${noteId}`;
+            }
+        } else {
+            if (!isNaN(collectionId)) {
+                apiUrl = `/api/collections/id/${collectionId}/notes/name/${noteId}`;
+            } else {
+                apiUrl = `/api/collections/name/${collectionId}/notes/name/${noteId}`;
+            }
+        }
+
+        fetch(apiUrl, {
+            method: 'DELETE'
+        }).then(response => response.json()).then(data => {
+            alert(data.message || 'Записка удалена');
+        });
+    });
+}
+
+
+// Collecition functions
+// check done
+function renderAddCollectionForm() {
+    const contentArea = document.getElementById('contentArea');
+    contentArea.innerHTML = `
+    <h3>Добавить Подборку</h3>
+    <input class="form-input" type="text" id="collectionName" placeholder="Введите название подборки">
+    <button id="submitAddCollection">Добавить</button>
+  `;
+
+    document.getElementById('submitAddCollection').addEventListener('click', function() {
+        const collectionName = document.getElementById('collectionName').value;
+
+        fetch('/api/collections', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ fio, login, password })
+            body: JSON.stringify({ name: collectionName, owner_id: UserID })
+        })
+            .then(response => response.json())
+            .then(data => {
+                alert('Подборка добавлена!');
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+            });
+    });
+}
+
+
+// check done
+function renderDeleteCollectionForm() {
+    const contentArea = document.getElementById('contentArea');
+    contentArea.innerHTML = `
+    <h3>Удалить Подборку</h3>
+    <input class="form-input" type="text" id="collectionId" placeholder="Введите ID или имя подборки">
+    <button id="submitDeleteCollection">Удалить</button>
+  `;
+
+    document.getElementById('submitDeleteCollection').addEventListener('click', function() {
+        const collectionId = document.getElementById('collectionId').value;
+
+        let apiUrl;
+        // Проверяем, является ли ввод числом, если да — это ID
+        if (!isNaN(collectionId)) {
+            apiUrl = `/api/collections/id/${collectionId}`;
+        } else {
+            // Иначе будем искать по имени
+            apiUrl = `/api/collections/name/${collectionId}`;
+        }
+
+        fetch(apiUrl, {
+            method: 'DELETE'
+        }).then(response => response.json()).then(data => {
+            alert(data.message || 'Подборка удалена');
         });
-
-        if (response.ok) {
-            const data = await response.json();
-            alert('Регистрация прошла успешно! Теперь вы можете войти в систему.');
-            // Очищаем поля регистрации
-            document.getElementById('register-fio').value = '';
-            document.getElementById('register-login').value = '';
-            document.getElementById('register-password').value = '';
-        } else {
-            const errorData = await response.json();
-            registerErrorMessage.textContent = errorData.message || 'Ошибка регистрации';
-        }
     });
+}
 
-    // Функция для отображения данных
-    function displayList(items, type) {
-        output.innerHTML = ''; // Очистка контейнера перед выводом новых данных
 
-        const ul = document.createElement('ul');
-        items.forEach(item => {
-            const li = document.createElement('li');
-            li.textContent = `${item.Id}) ${item.Name}`;
-            ul.appendChild(li);
+// check done
+function fetchCollections(s) {
+    fetch(`/api/collections?s=${s}`, {method: 'GET'})
+        .then(response => response.json())
+        .then(collections => {
+            const contentArea = document.getElementById('contentArea');
+            contentArea.innerHTML = collections.map(coll => `<div>${coll.id}) ${coll.name}</div>`).join('');
         });
-        output.appendChild(ul);
-    }
+}
 
 
-    // Получение всех общедоступных заметок
-    document.getElementById('view-public-notes').addEventListener('click', async function() {
-        const response = await fetch('/api/notes/public', { method: 'GET' });
-        if (response.ok) {
-            const notes = await response.json();
-            displayList(notes, 'note');
+// User functions
+// check done
+function renderDeleteUserForm() {
+    const contentArea = document.getElementById('contentArea');
+    contentArea.innerHTML = `
+    <h3>Удалить Пользователя</h3>
+    <input class="form-input" type="text" id="userId" placeholder="Введите ID или имя пользователя">
+    <button id="submitDeleteUser">Удалить</button>
+  `;
+
+    document.getElementById('submitDeleteUser').addEventListener('click', function() {
+        const userId = document.getElementById('userId').value;
+
+        let apiUrl;
+        if (!isNaN(userId)) {
+            apiUrl = `/api/users/id/${userId}`;
         } else {
-            console.error('Не удалось получить заметки');
+            apiUrl = `/api/users/name/${userId}`;
         }
-    });
 
-    // Получение всех коллекций пользователя
-    document.getElementById('view-collections').addEventListener('click', async function() {
-        const response = await fetch('/api/collections', { method: 'GET' });
-        if (response.ok) {
-            const collections = await response.json();
-            displayList(collections, 'collection');
+        fetch(apiUrl, {
+            method: 'DELETE'
+        })
+            .then(response => response.json())
+            .then(data => {
+                alert('Пользователь удален!');
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+            });
+    });
+}
+
+
+
+
+
+// check done
+function renderUpdateUserFioForm() {
+    const contentArea = document.getElementById('contentArea');
+    contentArea.innerHTML = `
+    <h3>Изменить ФИО пользователя</h3>
+    <input class="form-input" type="text" id="userId" placeholder="ID или имя пользователя">
+    <input class="form-input" type="text" id="newFio" placeholder="Новое ФИО">
+    <button id="submitUpdateUserFio">Изменить</button>
+  `;
+
+    document.getElementById('submitUpdateUserFio').addEventListener('click', function() {
+        const userId = document.getElementById('userId').value;
+        const newFio = document.getElementById('newFio').value;
+
+        let apiUrl;
+        if (!isNaN(userId)) {
+            apiUrl = `/api/users/id/${userId}/fio`;
         } else {
-            console.error('Не удалось получить коллекции');
+            apiUrl = `/api/users/name/${userId}/fio`;
         }
-    });
 
-    // Выход из аккаунта
-    document.getElementById('logout').addEventListener('click', function() {
-        // Обработка выхода из системы, например, очистка токена
-        window.location.reload(); // Перезагружаем страницу для возврата к форме авторизации
+        fetch(apiUrl, {
+            method: 'PATCH',
+            body: JSON.stringify({ fio: newFio }),
+            headers: { 'Content-Type': 'application/json' }
+        }).then(response => response.json()).then(data => {
+            alert(data.message || 'ФИО обновлено');
+        });
     });
-});
+}
+
+
+// check done
+function renderUpdateUserRoleForm() {
+    const contentArea = document.getElementById('contentArea');
+    contentArea.innerHTML = `
+    <h3>Изменить Роль пользователя</h3>
+    <input class="form-input" type="text" id="userId" placeholder="ID или имя пользователя">
+    <input class="form-input" type="number" id="newRole" placeholder="Новая роль (число)">
+    <button id="submitUpdateUserRole">Изменить</button>
+  `;
+
+    document.getElementById('submitUpdateUserRole').addEventListener('click', function() {
+        const userId = document.getElementById('userId').value;
+        const newRole = document.getElementById('newRole').value;
+
+        let apiUrl;
+        if (!isNaN(userId)) {
+            apiUrl = `/api/users/id/${userId}/role`;
+        } else {
+            apiUrl = `/api/users/name/${userId}/role`;
+        }
+
+        fetch(apiUrl, {
+            method: 'PATCH',
+            body: JSON.stringify({ role: newRole }),
+            headers: { 'Content-Type': 'application/json' }
+        }).then(response => response.json()).then(data => {
+            alert(data.message || 'Роль обновлена');
+        });
+    });
+}
+
+
+// check done
+function renderFindUserForm() {
+    const contentArea = document.getElementById('contentArea');
+    contentArea.innerHTML = `
+    <h3>Найти Пользователя</h3>
+    <input class="form-input" type="text" id="userId" placeholder="Введите ID или ФИО пользователя">
+    <button id="submitFindUser">Найти</button>
+  `;
+
+    document.getElementById('submitFindUser').addEventListener('click', function() {
+        const userId = document.getElementById('userId').value;
+
+        let apiUrl;
+        if (!isNaN(userId)) {
+            apiUrl = `/api/users/id/${userId}`;
+        } else {
+            apiUrl = `/api/users/name/${userId}`;
+        }
+
+        fetch(apiUrl, {method: 'GET'})
+            .then(response => response.json())
+            .then(user => {
+                contentArea.innerHTML = `
+        <h3>Пользователь</h3>
+        <p>ID: ${user.id}</p>
+        <p>ФИО: ${user.fio}</p>
+        <p>Роль: ${user.role}</p>
+      `;
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+            });
+    });
+}
+
+
+// check done
+function fetchUsers(s) {
+    fetch(`/api/users?s=${s}`, {method: 'GET'})
+        .then(response => response.json())
+        .then(users => {
+            const contentArea = document.getElementById('contentArea');
+            contentArea.innerHTML = '<h3>Все Пользователи</h3>';
+            const list = document.createElement('ul');
+            users.forEach(user => {
+                const listItem = document.createElement('li');
+                listItem.textContent = `${user.id}) ${user.fio}`;
+                list.appendChild(listItem);
+            });
+            contentArea.appendChild(list);
+        })
+        .catch(error => {
+            console.error('Ошибка:', error);
+        });
+}
+
+
+// Teams functions
+// check done
+function renderAddTeamForm() {
+    const contentArea = document.getElementById('contentArea');
+    contentArea.innerHTML = `
+    <h3>Добавить Команду</h3>
+    <input class="form-input" type="text" id="teamName" placeholder="Введите название команды">
+    <button id="submitAddTeam">Добавить</button>
+  `;
+
+    document.getElementById('submitAddTeam').addEventListener('click', function() {
+        const teamName = document.getElementById('teamName').value;
+
+        fetch('/api/teams', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ name: teamName })
+        })
+            .then(response => response.json())
+            .then(data => {
+                alert('Команда добавлена!');
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+            });
+    });
+}
+
+
+
+
+// check done
+function renderDeleteTeamForm() {
+    const contentArea = document.getElementById('contentArea');
+    contentArea.innerHTML = `
+    <h3>Удалить Команду</h3>
+    <input class="form-input" type="text" id="teamId" placeholder="ID или название команды">
+    <button id="submitDeleteTeam">Удалить</button>
+  `;
+
+    document.getElementById('submitDeleteTeam').addEventListener('click', function() {
+        const teamId = document.getElementById('teamId').value;
+
+        let apiUrl;
+        // Проверяем, является ли ввод числом, если да — это ID
+        if (!isNaN(teamId)) {
+            apiUrl = `/api/teams/id/${teamId}`;
+        } else {
+            // Иначе будем искать по имени
+            apiUrl = `/api/teams/name/${teamId}`;
+        }
+
+        fetch(apiUrl, {
+            method: 'DELETE'
+        }).then(response => response.json()).then(data => {
+            alert(data.message || 'Команда удалена');
+        });
+    });
+}
+
+
+// check done
+function renderFindTeamForm() {
+    const contentArea = document.getElementById('contentArea');
+    contentArea.innerHTML = `
+    <h3>Найти Команду</h3>
+    <input class="form-input" type="text" id="teamIdOrName" placeholder="ID или название команды">
+    <button id="submitFindTeam">Найти</button>
+  `;
+
+    document.getElementById('submitFindTeam').addEventListener('click', function() {
+        const teamIdOrName = document.getElementById('teamIdOrName').value;
+
+        let apiUrl;
+        if (!isNaN(teamIdOrName)) {
+            apiUrl = `/api/teams/id/${teamIdOrName}`;
+        } else {
+            apiUrl = `/api/teams/name/${teamIdOrName}`;
+        }
+
+        fetch(apiUrl, {method: 'GET'})
+            .then(response => response.json())
+            .then(team => {
+                const contentArea = document.getElementById('contentArea');
+                contentArea.innerHTML = `<div>${team.id}) ${team.name}</div>`;
+            });
+    });
+}
+
+
+// check done
+function renderShowTeamMembersForm() {
+    const contentArea = document.getElementById('contentArea');
+    contentArea.innerHTML = `
+    <h3>Показать членов команды</h3>
+    <input class="form-input" type="text" id="teamId" placeholder="ID или название команды">
+    <button id="submitShowTeamMembers">Показать</button>
+  `;
+
+    document.getElementById('submitShowTeamMembers').addEventListener('click', function() {
+        const teamId = document.getElementById('teamId').value;
+
+        let apiUrl;
+        if (!isNaN(teamId)) {
+            apiUrl = `/api/teams/id/${teamId}/members`;
+        } else {
+            apiUrl = `/api/teams/name/${teamId}/members`;
+        }
+
+        fetch(apiUrl, {method: 'GET'})
+            .then(response => response.json())
+            .then(members => {
+                const contentArea = document.getElementById('contentArea');
+                contentArea.innerHTML = members.map(member => `<div>${member.id}) ${member.fio}</div>`).join('');
+            });
+    });
+}
+
+
+// check done
+function fetchTeams(s) {
+    fetch(`/api/teams?s=${s}`, {method: 'GET'})
+        .then(response => response.json())
+        .then(teams => {
+            const contentArea = document.getElementById('contentArea');
+            contentArea.innerHTML = teams.map(team => `<div>${team.id}) ${team.name}</div>`).join('');
+        });
+}
+
+
+// check done
+function renderAddUserToTeamForm() {
+    const contentArea = document.getElementById('contentArea');
+    contentArea.innerHTML = `
+    <h3>Добавить пользователя в команду</h3>
+    <input class="form-input" type="text" id="userId" placeholder="ID или ФИО пользователя">
+    <input class="form-input" type="text" id="teamId" placeholder="ID или название команды">
+    <button id="submitAddUserToTeam">Добавить</button>
+  `;
+
+    document.getElementById('submitAddUserToTeam').addEventListener('click', function() {
+        const userId = document.getElementById('userId').value;
+        const teamId = document.getElementById('teamId').value;
+
+        let apiUrl;
+        if (!isNaN(teamId)) {
+            if (!isNaN(userId)) {
+                apiUrl = `/api/teams/id/${teamId}/members/id/${userId}`;
+            } else {
+                apiUrl = `/api/teams/id/${teamId}/members/name/${userId}`;
+            }
+        } else {
+            if (!isNaN(userId)) {
+                apiUrl = `/api/teams/name/${teamId}/members/id/${userId}`;
+            } else {
+                apiUrl = `/api/teams/name/${teamId}/members/name/${userId}`;
+            }
+        }
+
+        fetch(apiUrl, {
+            method: 'POST',
+            body: JSON.stringify({ userId }),
+            headers: { 'Content-Type': 'application/json' }
+        }).then(response => response.json()).then(data => {
+            alert(data.message || 'Пользователь добавлен');
+        });
+    });
+}
+
+
+/////////////////////////////////////////////////
+
+// check
+function renderDeleteUserFromTeamForm() {
+    const contentArea = document.getElementById('contentArea');
+    contentArea.innerHTML = `
+    <h3>Удалить пользователя из команды</h3>
+    <input class="form-input" type="text" id="userId" placeholder="ID или ФИО пользователя">
+    <input class="form-input" type="text" id="teamId" placeholder="ID или команды">
+    <button id="submitDeleteUserFromTeam">Удалить</button>
+  `;
+
+    document.getElementById('submitDeleteUserFromTeam').addEventListener('click', function() {
+        const userId = document.getElementById('userId').value;
+        const teamId = document.getElementById('teamId').value;
+
+        let apiUrl;
+        if (!isNaN(teamId)) {
+            if (!isNaN(userId)) {
+                apiUrl = `/api/teams/id/${teamId}/members/id/${userId}`;
+            } else {
+                apiUrl = `/api/teams/id/${teamId}/members/name/${userId}`;
+            }
+        } else {
+            if (!isNaN(userId)) {
+                apiUrl = `/api/teams/name/${teamId}/members/id/${userId}`;
+            } else {
+                apiUrl = `/api/teams/name/${teamId}/members/name/${userId}`;
+            }
+        }
+
+        fetch(apiUrl, {
+            method: 'DELETE'
+        }).then(response => response.json()).then(data => {
+            alert(data.message || 'Пользователь удален');
+        });
+    });
+}
+
+
+// check
+function renderAddSectionForm() {
+    const contentArea = document.getElementById('contentArea');
+    contentArea.innerHTML = `
+    <h3>Добавить Раздел</h3>
+    <input class="form-input" type="text" id="sectionName" placeholder="ID или название команды, для которой создается раздел">
+    <button id="submitAddSection">Добавить</button>
+  `;
+
+    document.getElementById('submitAddSection').addEventListener('click', function() {
+        const teamName = document.getElementById('sectionName').value;
+
+        let apiUrl;
+        // Проверяем, является ли ввод числом, если да — это ID
+        if (!isNaN(teamName)) {
+            apiUrl = `/api/sections/id/${teamName}`;
+        } else {
+            // Иначе будем искать по имени
+            apiUrl = `/api/sections/name/${teamName}`;
+        }
+
+        fetch(apiUrl, {
+            method: 'POST',
+            body: JSON.stringify({ name: teamName }),
+            headers: { 'Content-Type': 'application/json' }
+        }).then(response => response.json()).then(data => {
+            alert(data.message || 'Раздел добавлен');
+        });
+    });
+}
+
+
+// check
+function renderDeleteSectionForm() {
+    const contentArea = document.getElementById('contentArea');
+    contentArea.innerHTML = `
+    <h3>Удалить Раздел</h3>
+    <input class="form-input" type="text" id="sectionId" placeholder="ID раздела или имя команды, к которой он относится">
+    <button id="submitDeleteSection">Удалить</button>
+  `;
+
+    document.getElementById('submitDeleteSection').addEventListener('click', function() {
+        const sectionId = document.getElementById('sectionId').value;
+
+        let apiUrl;
+        // Проверяем, является ли ввод числом, если да — это ID
+        if (!isNaN(sectionId)) {
+            apiUrl = `/api/sections/id/${sectionId}`;
+        } else {
+            // Иначе будем искать по имени
+            apiUrl = `/api/sections/name/${sectionId}`;
+        }
+
+        fetch(apiUrl, {
+            method: 'DELETE'
+        }).then(response => response.json()).then(data => {
+            alert(data.message || 'Раздел удален');
+        });
+    });
+}
+
+
+// check
+function fetchSections(s) {
+    fetch(`/api/sections?s=${s}`, {method: 'GET'})
+        .then(response => response.json())
+        .then(sections => {
+            const contentArea = document.getElementById('contentArea');
+            contentArea.innerHTML = sections.map(section => `<div>${section.id}) ${section.name}</div>`).join('');
+        });
+}
 

@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"notebook_app/internal/business_logic"
-	"notebook_app/internal/business_logic/UnitTests/mocks"
+	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
+	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic/UnitTests/mocks"
 )
 
 func TestGetNote(t *testing.T) {
@@ -108,7 +108,7 @@ func TestGetAllNotes(t *testing.T) {
 		mockNoteRepo.On("GetAllNotes").Return(retNotes, retErr)
 
 		nsSrv := bl.NoteService{}
-		notes, err := nsSrv.GetAllNotes(requester, mockNoteRepo)
+		notes, err := nsSrv.GetAllNotes(false, requester, mockNoteRepo)
 
 		assert.NotNil(t, err)
 		assert.NotNil(t, notes)
@@ -123,7 +123,7 @@ func TestGetAllNotes(t *testing.T) {
 		mockNoteRepo := new(mocks.MockINoteRepository)
 
 		nsSrv := bl.NoteService{}
-		_, err := nsSrv.GetAllNotes(requester, mockNoteRepo)
+		_, err := nsSrv.GetAllNotes(false, requester, mockNoteRepo)
 
 		assert.NotNil(t, err)
 		assert.Equal(t, bl.ErrAccessDenied, err.ErrNum)

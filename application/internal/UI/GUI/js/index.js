@@ -32,10 +32,14 @@ document.getElementById('submitLogin').addEventListener('click', function() {
                 localStorage.setItem('UserRole', user.role ? 'admin' : 'user');
 
                 // Redirect based on role
-                if (user.role === 1) {
+                if (user.role === 2) {
                     window.location.href = '/admin.html'; // Redirect to admin page if admin
+                } else if (user.role === 1) {
+                    window.location.href = '/author.html'; // Redirect to author dashboard
+                } else if (user.role === 0) {
+                    window.location.href = '/reader.html'
                 } else {
-                    window.location.href = '/user-dashboard.html'; // Redirect to user dashboard
+                    alert(`Unknown role: ${user.role}`);
                 }
             } else {
                 alert('Login failed: ' + user.message);

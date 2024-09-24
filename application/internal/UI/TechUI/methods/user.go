@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"os"
 
-	"notebook_app/internal/UI/TechUI/display"
-	bl "notebook_app/internal/business_logic"
-	"notebook_app/internal/models"
+	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/UI/TechUI/display"
+	bl "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
+	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/models"
 )
 
 func (MenuPoints) DeleteUser(user *models.User, ireps *bl.IRepositories, isvcs *bl.IServices) {
