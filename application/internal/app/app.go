@@ -11,7 +11,7 @@ import (
 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/UI/TechUI"
 	appconfigs "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/app/AppConfigs"
 	bl "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
-	da "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/data_access/postgres"
+	dapostgres "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/data_access/postgres"
 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/database"
 	mylogger "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/logger"
 )
@@ -33,7 +33,7 @@ func initRepositories(config *appconfigs.AppConfigs) {
 	logger.WriteLog("Init services", slog.LevelInfo, nil)
 
 	dbconfigs := config.Configs.DBConfigs
-	config.Repos = new(da.Repositories)
+	config.Repos = new(dapostgres.Repositories)
 
 	config.Repos.ColRepo.DbConfigs = dbconfigs
 	config.Repos.UsrRepo.DbConfigs = dbconfigs
@@ -53,11 +53,11 @@ func initInterfaces(conf *appconfigs.AppConfigs) {
 	logger := conf.Configs.LogConfigs
 
 	conf.IRepos = &bl.IRepositories{
-		IUsrRepo:  &da.UserRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
-		ISecRepo:  &da.SectionRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
-		INoteRepo: &da.NoteRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
-		IColRepo:  &da.CollectionRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
-		ITeamRepo: &da.TeamRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
+		IUsrRepo:  &dapostgres.UserRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
+		ISecRepo:  &dapostgres.SectionRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
+		INoteRepo: &dapostgres.NoteRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
+		IColRepo:  &dapostgres.CollectionRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
+		ITeamRepo: &dapostgres.TeamRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
 	}
 	conf.IServices = &bl.IServices{
 		IUsrSvc:   &bl.UserService{},
