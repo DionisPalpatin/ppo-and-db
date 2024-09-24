@@ -1,4 +1,4 @@
-package postgres
+package clickhouse
 
 import (
 	_ "github.com/lib/pq"

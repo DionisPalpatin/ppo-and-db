@@ -11,6 +11,7 @@ import (
 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/UI/TechUI"
 	appconfigs "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/app/AppConfigs"
 	bl "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
+	daclickhouse "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/data_access/clickhouse"
 	dapostgres "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/data_access/postgres"
 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/database"
 	mylogger "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/logger"
@@ -28,37 +29,28 @@ func initDBConnection(config *config.Configs) error {
 	return err
 }
 
-func initRepositories(config *appconfigs.AppConfigs) {
-	logger := config.Configs.LogConfigs.Logger
-	logger.WriteLog("Init services", slog.LevelInfo, nil)
-
-	dbconfigs := config.Configs.DBConfigs
-	config.Repos = new(dapostgres.Repositories)
-
-	config.Repos.ColRepo.DbConfigs = dbconfigs
-	config.Repos.UsrRepo.DbConfigs = dbconfigs
-	config.Repos.TeamRepo.DbConfigs = dbconfigs
-	config.Repos.NoteRepo.DbConfigs = dbconfigs
-	config.Repos.SecRepo.DbConfigs = dbconfigs
-
-	config.Repos.ColRepo.MyLogger = logger
-	config.Repos.UsrRepo.MyLogger = logger
-	config.Repos.TeamRepo.MyLogger = logger
-	config.Repos.NoteRepo.MyLogger = logger
-	config.Repos.SecRepo.MyLogger = logger
-}
-
 func initInterfaces(conf *appconfigs.AppConfigs) {
 	dbconf := conf.Configs.DBConfigs
 	logger := conf.Configs.LogConfigs
 
-	conf.IRepos = &bl.IRepositories{
-		IUsrRepo:  &dapostgres.UserRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
-		ISecRepo:  &dapostgres.SectionRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
-		INoteRepo: &dapostgres.NoteRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
-		IColRepo:  &dapostgres.CollectionRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
-		ITeamRepo: &dapostgres.TeamRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
+	if dbconf.DriverName == "postgres" {
+		conf.IRepos = &bl.IRepositories{
+			IUsrRepo:  &dapostgres.UserRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
+			ISecRepo:  &dapostgres.SectionRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
+			INoteRepo: &dapostgres.NoteRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
+			IColRepo:  &dapostgres.CollectionRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
+			ITeamRepo: &dapostgres.TeamRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
+		}
+	} else if dbconf.DriverName == "clickhouse" {
+		conf.IRepos = &bl.IRepositories{
+			IUsrRepo:  &daclickhouse.UserRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
+			ISecRepo:  &daclickhouse.SectionRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
+			INoteRepo: &daclickhouse.NoteRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
+			IColRepo:  &daclickhouse.CollectionRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
+			ITeamRepo: &daclickhouse.TeamRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
+		}
 	}
+
 	conf.IServices = &bl.IServices{
 		IUsrSvc:   &bl.UserService{},
 		ISecSvc:   &bl.SectionService{},
@@ -246,7 +238,7 @@ func RunBackend() error {
 		return err
 	}
 
-	initRepositories(appConfigs)
+	// initRepositories(appConfigs)
 	initInterfaces(appConfigs)
 
 	if appConfigs.Configs.Mode == "tech" {
@@ -264,17 +256,10 @@ func RunBackend() error {
 		}
 	} else {
 		initRouter(appConfigs)
-
-		// corsObj := handlers.CORS(
-		// 	handlers.AllowedOrigins([]string{"*"}), // Можно ограничить до нужного домена
-		// 	handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}),
-		// 	handlers.AllowedHeaders([]string{"Content-Type"}),
-		// )
 		port := fmt.Sprintf(":%d", appConfigs.Configs.ServerPort)
 
 		fs := http.FileServer(http.Dir("./static/"))
 		appConfigs.Router.PathPrefix("/").Handler(fs)
-		// appConfigs.Router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", fs))
 
 		http.ListenAndServe(port, appConfigs.Router)
 		appConfigs.Configs.LogConfigs.Logger.WriteLog("Server is running on port 8080", slog.LevelInfo, nil)

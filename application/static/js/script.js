@@ -648,6 +648,7 @@ function renderFindUserForm() {
 
     document.getElementById('submitFindUser').addEventListener('click', function() {
         const userId = document.getElementById('userId').value;
+        console.error(userId)
 
         let apiUrl;
         if (!isNaN(userId)) {
@@ -661,9 +662,9 @@ function renderFindUserForm() {
             .then(user => {
                 contentArea.innerHTML = `
         <h3>Пользователь</h3>
-        <p>ID: ${user.id}</p>
-        <p>ФИО: ${user.fio}</p>
-        <p>Роль: ${user.role}</p>
+        <p>ID: ${user.Id}</p>
+        <p>ФИО: ${user.Fio}</p>
+        <p>Роль: ${user.Role}</p>
       `;
             })
             .catch(error => {
@@ -679,11 +680,12 @@ function fetchUsers(s) {
         .then(response => response.json())
         .then(users => {
             const contentArea = document.getElementById('contentArea');
+            console.error(users)
             contentArea.innerHTML = '<h3>Все Пользователи</h3>';
             const list = document.createElement('ul');
             users.forEach(user => {
                 const listItem = document.createElement('li');
-                listItem.textContent = `${user.id}) ${user.fio}`;
+                listItem.textContent = `${user.Id}) ${user.Fio}`;
                 list.appendChild(listItem);
             });
             contentArea.appendChild(list);

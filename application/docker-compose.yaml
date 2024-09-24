@@ -44,28 +44,44 @@ services:
     restart: unless-stopped  
 
   
-  # note_app_backend:
-  #   container_name: backend_container
-  #   stdin_open: true # docker run -i
-  #   tty: true        # docker run -t
+  note_app_backend:
+    container_name: backend_container
+    stdin_open: true # docker run -i
+    tty: true        # docker run -t
 
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile
-    
-  #   ports:
-  #     - "13338:13338"
-    
-  #   volumes:
-  #     - ./log:/notebookapp/log
-  #     - ./config:/notebookapp/config
-    
-  #   depends_on:
-  #     - postgres
-    
-  #   networks:
-  #     - noteappnetwork
+    build:
+      context: .
+      dockerfile: Dockerfile
 
+    ports:
+     - "13338:13338"
+
+    volumes:
+     - ./log:/notebookapp/log
+     - ./config:/notebookapp/config
+
+    depends_on:
+     - postgres
+
+    networks:
+     - noteappnetwork
+
+  clickhouse_server:
+    image: yandex/clickhouse-server
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+      - "9009:9009"
+
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 262144
+        hard: 262144
+
+  clickhouse_client:
+      image: yandex/clickhouse-client
+      command: [ '--host', 'server' ]
 
 networks:
   noteappnetwork:

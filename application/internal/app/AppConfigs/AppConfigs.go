@@ -15,7 +15,6 @@ import (
 
 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/config"
 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
-	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/data_access/postgres"
 	mylogger "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/logger"
 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/models"
 )
@@ -28,7 +27,6 @@ type AppConfigs struct {
 
 	IServices *bl.IServices
 	IRepos    *bl.IRepositories
-	Repos     *postgres.Repositories
 }
 
 type LoginRequest struct {
@@ -641,7 +639,7 @@ func (app *AppConfigs) DeleteUserHandler(w http.ResponseWriter, r *http.Request)
 
 func (app *AppConfigs) UpdateUserFioHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	userId := vars["id"]
+	userId := vars["userId"]
 	var newFio struct {
 		Fio string `json:"fio"`
 	}
@@ -659,7 +657,7 @@ func (app *AppConfigs) UpdateUserFioHandler(w http.ResponseWriter, r *http.Reque
 		user, myErr = app.IServices.IUsrSvc.GetUser(0, userId, 1, app.CurUser, app.IRepos.IUsrRepo)
 	}
 
-	if myErr != nil {
+	if myErr.ErrNum != bl.AllIsOk {
 		http.Error(w, myErr.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -677,7 +675,7 @@ func (app *AppConfigs) UpdateUserFioHandler(w http.ResponseWriter, r *http.Reque
 
 func (app *AppConfigs) UpdateUserRoleHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	userId := vars["id"]
+	userId := vars["userId"]
 	var newRole struct {
 		Role int `json:"role"`
 	}
@@ -694,7 +692,7 @@ func (app *AppConfigs) UpdateUserRoleHandler(w http.ResponseWriter, r *http.Requ
 		user, myErr = app.IServices.IUsrSvc.GetUser(0, userId, 1, app.CurUser, app.IRepos.IUsrRepo)
 	}
 
-	if myErr != nil {
+	if myErr.ErrNum != bl.AllIsOk {
 		http.Error(w, myErr.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -712,7 +710,9 @@ func (app *AppConfigs) UpdateUserRoleHandler(w http.ResponseWriter, r *http.Requ
 
 func (app *AppConfigs) FindUserHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	userId := vars["id"]
+	userId := vars["userId"]
+
+	app.Configs.LogConfigs.Logger.WriteLog("FindUserHandle get strings: "+userId, slog.LevelInfo, nil)
 
 	var user *models.User
 	var myErr *bl.MyError
@@ -722,7 +722,7 @@ func (app *AppConfigs) FindUserHandler(w http.ResponseWriter, r *http.Request) {
 		user, myErr = app.IServices.IUsrSvc.GetUser(0, userId, 1, app.CurUser, app.IRepos.IUsrRepo)
 	}
 
-	if myErr != nil {
+	if myErr.ErrNum != bl.AllIsOk {
 		http.Error(w, myErr.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -776,14 +776,13 @@ func (app *AppConfigs) DeleteTeamHandler(w http.ResponseWriter, r *http.Request)
 	var team *models.Team
 	var err *bl.MyError
 
-	teamID := vars["id"]
-	teamName := vars["name"]
+	teamID := vars["teamId"]
 
 	if teamID != "" {
 		id, _ := strconv.Atoi(teamID)
 		team, err = app.IServices.ITeamSvc.GetTeam(id, "", 1, app.CurUser, app.IRepos.ITeamRepo)
 	} else {
-		team, err = app.IServices.ITeamSvc.GetTeam(0, teamName, 2, app.CurUser, app.IRepos.ITeamRepo)
+		team, err = app.IServices.ITeamSvc.GetTeam(0, teamID, 2, app.CurUser, app.IRepos.ITeamRepo)
 	}
 
 	if err != nil && err.ErrNum != bl.AllIsOk {
@@ -805,14 +804,13 @@ func (app *AppConfigs) FindTeamHandler(w http.ResponseWriter, r *http.Request) {
 	var team *models.Team
 	var err *bl.MyError
 
-	teamID := vars["id"]
-	teamName := vars["name"]
+	teamID := vars["teamId"]
 
 	if teamID != "" {
 		id, _ := strconv.Atoi(teamID)
 		team, err = app.IServices.ITeamSvc.GetTeam(id, "", 1, app.CurUser, app.IRepos.ITeamRepo)
 	} else {
-		team, err = app.IServices.ITeamSvc.GetTeam(0, teamName, 2, app.CurUser, app.IRepos.ITeamRepo)
+		team, err = app.IServices.ITeamSvc.GetTeam(0, teamID, 2, app.CurUser, app.IRepos.ITeamRepo)
 	}
 
 	if err != nil && err.ErrNum != bl.AllIsOk {
@@ -858,23 +856,21 @@ func (app *AppConfigs) AddUserToTeamHandler(w http.ResponseWriter, r *http.Reque
 	var user *models.User
 	var err *bl.MyError
 
-	teamID := vars["id"]
-	teamName := vars["name"]
-	userID := vars["userID"]
-	userName := vars["userName"]
+	teamID := vars["teamId"]
+	userID := vars["userId"]
 
 	if teamID != "" {
 		id, _ := strconv.Atoi(teamID)
 		team, err = app.IServices.ITeamSvc.GetTeam(id, "", 1, app.CurUser, app.IRepos.ITeamRepo)
 	} else {
-		team, err = app.IServices.ITeamSvc.GetTeam(0, teamName, 2, app.CurUser, app.IRepos.ITeamRepo)
+		team, err = app.IServices.ITeamSvc.GetTeam(0, teamID, 2, app.CurUser, app.IRepos.ITeamRepo)
 	}
 
 	if userID != "" {
 		id, _ := strconv.Atoi(userID)
 		user, err = app.IServices.IUsrSvc.GetUser(id, "", 1, app.CurUser, app.IRepos.IUsrRepo)
 	} else {
-		user, err = app.IServices.IUsrSvc.GetUser(0, userName, 2, app.CurUser, app.IRepos.IUsrRepo)
+		user, err = app.IServices.IUsrSvc.GetUser(0, userID, 2, app.CurUser, app.IRepos.IUsrRepo)
 	}
 
 	if err != nil && err.ErrNum != bl.AllIsOk {
@@ -908,35 +904,46 @@ func (app *AppConfigs) GetAllTeamsHandler(w http.ResponseWriter, r *http.Request
 
 func (app *AppConfigs) DeleteUserFromTeamHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	teamID := vars["teamID"]
-	userID := vars["userID"]
-	teamName := vars["teamName"]
-	userName := vars["userName"]
+	teamID := vars["teamId"]
+	userID := vars["userId"]
 
 	var err *bl.MyError
 
 	// Проверка типа поиска команды и пользователя
-	if teamID != "" && userID != "" {
-		idTeam, _ := strconv.Atoi(teamID)
-		idUser, _ := strconv.Atoi(userID)
+	idTeam, err1 := strconv.Atoi(teamID)
+	idUser, err2 := strconv.Atoi(userID)
+
+	if err1 == nil && err2 == nil {
 		err = app.IServices.ITeamSvc.DeleteUserFromTeam(app.CurUser, idUser, idTeam, app.IRepos.ITeamRepo)
-	} else if teamID != "" && userName != "" {
-		idTeam, _ := strconv.Atoi(teamID)
-		user, err := app.IServices.IUsrSvc.GetUser(0, userName, bl.SearchByString, app.CurUser, app.IRepos.IUsrRepo)
-		if err == nil {
-			err = app.IServices.ITeamSvc.DeleteUserFromTeam(app.CurUser, user.Id, idTeam, app.IRepos.ITeamRepo)
+	} else if err1 != nil && err2 != nil {
+		team, err := app.IServices.ITeamSvc.GetTeam(0, teamID, bl.SearchByString, app.CurUser, app.IRepos.ITeamRepo)
+		if err != nil && err.ErrNum != bl.AllIsOk {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
-	} else if teamName != "" && userID != "" {
-		idUser, _ := strconv.Atoi(userID)
-		team, err := app.IServices.ITeamSvc.GetTeam(0, teamName, bl.SearchByString, app.CurUser, app.IRepos.ITeamRepo)
-		if err == nil {
+
+		user, err := app.IServices.IUsrSvc.GetUser(0, userID, bl.SearchByString, app.CurUser, app.IRepos.IUsrRepo)
+		if err != nil && err.ErrNum != bl.AllIsOk {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		err = app.IServices.ITeamSvc.DeleteUserFromTeam(app.CurUser, user.Id, team.Id, app.IRepos.ITeamRepo)
+	} else if err1 != nil {
+		team, err := app.IServices.ITeamSvc.GetTeam(0, teamID, bl.SearchByString, app.CurUser, app.IRepos.ITeamRepo)
+		if err.ErrNum == bl.AllIsOk {
 			err = app.IServices.ITeamSvc.DeleteUserFromTeam(app.CurUser, idUser, team.Id, app.IRepos.ITeamRepo)
+		} else if err != nil && err.ErrNum != bl.AllIsOk {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
-	} else if teamName != "" && userName != "" {
-		team, err := app.IServices.ITeamSvc.GetTeam(0, teamName, bl.SearchByString, app.CurUser, app.IRepos.ITeamRepo)
-		user, err := app.IServices.IUsrSvc.GetUser(0, userName, bl.SearchByString, app.CurUser, app.IRepos.IUsrRepo)
-		if err == nil {
-			err = app.IServices.ITeamSvc.DeleteUserFromTeam(app.CurUser, user.Id, team.Id, app.IRepos.ITeamRepo)
+	} else {
+		user, err := app.IServices.IUsrSvc.GetUser(0, userID, bl.SearchByString, app.CurUser, app.IRepos.IUsrRepo)
+		if err.ErrNum == bl.AllIsOk {
+			err = app.IServices.ITeamSvc.DeleteUserFromTeam(app.CurUser, user.Id, idTeam, app.IRepos.ITeamRepo)
+		} else if err != nil && err.ErrNum != bl.AllIsOk {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 	}
 
@@ -951,23 +958,24 @@ func (app *AppConfigs) DeleteUserFromTeamHandler(w http.ResponseWriter, r *http.
 
 func (app *AppConfigs) AddSectionHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	teamID := vars["teamID"]
 	teamName := vars["teamName"]
 
 	var section models.Section
 	_ = json.NewDecoder(r.Body).Decode(&section)
 
 	var err *bl.MyError
+	idTeam, err1 := strconv.Atoi(teamName)
 
-	if teamID != "" {
-		idTeam, _ := strconv.Atoi(teamID)
-		team, err := app.IServices.ITeamSvc.GetTeam(idTeam, "", bl.SearchByID, app.CurUser, app.IRepos.ITeamRepo)
-		if err == nil {
+	if err1 == nil {
+		var team *models.Team
+		team, err = app.IServices.ITeamSvc.GetTeam(idTeam, "", bl.SearchByID, app.CurUser, app.IRepos.ITeamRepo)
+		if err.ErrNum == bl.AllIsOk {
 			err = app.IServices.ISecSvc.AddSection(&section, team, app.CurUser, app.IRepos.ISecRepo)
 		}
-	} else if teamName != "" {
-		team, err := app.IServices.ITeamSvc.GetTeam(0, teamName, bl.SearchByString, app.CurUser, app.IRepos.ITeamRepo)
-		if err == nil {
+	} else {
+		var team *models.Team
+		team, err = app.IServices.ITeamSvc.GetTeam(0, teamName, bl.SearchByString, app.CurUser, app.IRepos.ITeamRepo)
+		if err.ErrNum == bl.AllIsOk {
 			err = app.IServices.ISecSvc.AddSection(&section, team, app.CurUser, app.IRepos.ISecRepo)
 		}
 	}
@@ -983,16 +991,16 @@ func (app *AppConfigs) AddSectionHandler(w http.ResponseWriter, r *http.Request)
 
 func (app *AppConfigs) DeleteSectionHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	sectionID := vars["sectionID"]
-	sectionName := vars["sectionName"]
+	teamName := vars["teamName"]
 
 	var err *bl.MyError
+	idSec, err1 := strconv.Atoi(teamName)
 
-	if sectionID != "" {
-		idSec, _ := strconv.Atoi(sectionID)
+	if err1 == nil {
 		err = app.IServices.ISecSvc.DeleteSection(idSec, app.CurUser, app.IRepos.ISecRepo)
-	} else if sectionName != "" {
-		section, err := app.IServices.ISecSvc.GetSection(0, sectionName, app.CurUser, bl.SearchByString, app.IRepos.ISecRepo)
+	} else {
+		var section *models.Section
+		section, err = app.IServices.ISecSvc.GetSection(0, teamName, app.CurUser, bl.SearchByString, app.IRepos.ISecRepo)
 		if err == nil {
 			err = app.IServices.ISecSvc.DeleteSection(section.Id, app.CurUser, app.IRepos.ISecRepo)
 		}
