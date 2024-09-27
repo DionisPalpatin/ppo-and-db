@@ -22,7 +22,7 @@ func (MenuPoints) AddTeam(user *models.User, dateTimeFormat string, ireps *bl.IR
 	itr := ireps.ITeamRepo
 	its := isvcs.ITeamSvc
 
-	team := &models.Team{Name: teamName, RegistrationDate: time.Now().Format(dateTimeFormat)}
+	team := &models.Team{Name: teamName, RegistrationDate: time.Now()}
 
 	myErr := its.AddTeam(user, team, itr)
 	if myErr.ErrNum == bl.ErrAccessDenied {

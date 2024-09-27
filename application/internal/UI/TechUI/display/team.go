@@ -10,7 +10,7 @@ func DisplayTeam(team *models.Team) {
 	if team != nil {
 		fmt.Println("## Команда:")
 		fmt.Printf("ID: %d\n", team.Id)
-		fmt.Printf("Дата регистрации: %s\n", team.RegistrationDate)
+		fmt.Printf("Дата регистрации: %s\n", team.RegistrationDate.Format("2006-01-02"))
 	}
 }
 

@@ -23,7 +23,7 @@ func (MenuPoints) FindNote(user *models.User, ireps *bl.IRepositories, isvcs *bl
 	isr := ireps.ISecRepo
 	itr := ireps.ITeamRepo
 
-	note, data, err := ins.GetNote(0, noteName, bl.SearchByString, user, inr, isr, itr)
+	note, data, _, err := ins.GetNote(0, noteName, bl.SearchByString, user, inr, isr, itr)
 	if err.ErrNum == bl.ErrAccessDenied {
 		display.DisplayError("Ошибка: у Вас нет доступа к данной Записке")
 	} else if err.ErrNum == bl.ErrGetNoteByName {
@@ -108,15 +108,14 @@ func (MenuPoints) DisplayNotesInUserSection(user *models.User, ireps *bl.IReposi
 
 func (MenuPoints) AddNote(user *models.User, configs *config.Configs, ireps *bl.IRepositories, isvcs *bl.IServices) {
 	newNote := models.Note{
-		Id:               0,
-		Access:           0,
-		Name:             "",
-		ContentType:      0,
-		Likes:            0,
-		Dislikes:         0,
-		RegistrationDate: "",
-		OwnerID:          0,
-		SectionID:        0,
+		Id:          0,
+		Access:      0,
+		Name:        "",
+		ContentType: 0,
+		Likes:       0,
+		Dislikes:    0,
+		OwnerID:     0,
+		SectionID:   0,
 	}
 
 	fmt.Print("Название Записки: ")
@@ -150,7 +149,7 @@ func (MenuPoints) AddNote(user *models.User, configs *config.Configs, ireps *bl.
 		newNote.ContentType = bl.RawData
 	}
 
-	newNote.RegistrationDate = time.Now().Format(configs.DateTimeFormat)
+	newNote.RegistrationDate = time.Now()
 	newNote.OwnerID = user.Id
 	newNote.Access = bl.OpenCont
 	newNote.SectionID = -1

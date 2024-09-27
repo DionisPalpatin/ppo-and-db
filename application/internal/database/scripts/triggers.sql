@@ -1,178 +1,45 @@
-create schema if not exists main;
+-- Триггер на автовыдачу прав при регистрастрации или изменении данных пользователя
+CREATE OR REPLACE FUNCTION main.update_user_role()
+    RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.role = 0 THEN
+        -- Роль читателя (reader)
+        EXECUTE format('ALTER ROLE user_%s SET ROLE Reader', NEW.id);
+    ELSIF NEW.role = 1 THEN
+        -- Роль автора (author)
+        EXECUTE format('ALTER ROLE user_%s SET ROLE Author', NEW.id);
+    ELSIF NEW.role = 2 THEN
+        -- Роль администратора (admin)
+        EXECUTE format('ALTER ROLE user_%s SET ROLE Admin', NEW.id);
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
 
-drop table if exists main.note_collections;
-drop table if exists main.team_members;
-drop table if exists main.teams_sections;
 
-drop table if exists main.texts;
-drop table if exists main.images;
-drop table if exists main.raw_datas;
-
-drop table if exists main.notes;
-drop table if exists main.collections;
-drop table if exists main.sections;
-drop table if exists main.teams;
-drop table if exists main.users;
-
-drop table if exists main.stat;
-
-
-create table main.sections (
-   id            serial       primary key,
-   creation_date timestamptz  not null
-);
-
-
-create table main.teams (
-    id                serial       primary key,
-    name              varchar(255) not null unique,
-    registration_date timestamptz  not null
-);
-
-
-create table main.users (
-    id                serial       primary key,
-    fio               varchar(255) not null,
-    registration_date timestamptz  not null,
-    login             varchar(255) not null unique,
-    password          varchar(255) not null unique,
-    role              int          default 0 check (role = 0 or role = 1 or role = 2)
-);
-
-
-create table main.notes (
-    id                serial       primary key,
-    access            int          not null check (access >= 0),
-    name              varchar(255) not null unique,
-    content_type      int          not null check (content_type = 1 OR content_type = 2),
-    likes             int          default 0 check (likes >= 0),
-    dislikes          int          default 0 check (dislikes >= 0),
-    registration_date timestamptz  not null,
-    owner_id          int          not null references main.users(id),
-    section_id        int          not null references main.sections(id)
-);
-
-
-create table main.collections (
-    id            serial       primary key,
-    name          varchar(255) not null,
-    creation_date timestamptz  not null,
-    owner_id      int          not null references main.users(id)
-);
-
-
-create table main.note_collections (
-    note_id       int not null references main.notes(id),
-    collection_id int not null references main.collections(id),
-    primary key (note_id, collection_id)
-);
-
-
-create table main.team_members (
-    team_id int not null references main.teams(id),
-    user_id int not null references main.users(id),
-    primary key (team_id, user_id)
-);
-
-
-create table main.teams_sections (
-    team_id    int not null unique references main.teams(id),
-    section_id int not null unique references main.sections(id),
-    primary key (team_id, section_id)
-);
-
-
-create table main.texts (
-    id       serial     primary key,
-    data     bytea      not null,
-    note_id  int        not null references main.notes(id),
-    file_ext varchar(1) default 'txt'
-);
-
-
-create table main.images (
-    id       serial      primary key,
-    data     bytea       not null,
-    note_id  int         not null references main.notes(id),
-    file_ext varchar(25) not null
-);
-
-
-create table main.raw_datas (
-    id       serial      primary key,
-    data     bytea       not null,
-    note_id  int         not null references main.notes(id),
-    file_ext varchar(25) not null
-);
-
-
-create table main.stat (
-    id                         serial      primary key,
-    total_users                int         default 0,
-    total_readers              int         default 0,
-    total_authors              int         default 0,
-    total_admins               int         default 0,
-    total_collections          int         default 0,
-    total_teams                int         default 0,
-    total_sections             int         default 0,
-    total_notes                int         default 0,
-    total_open_notes           int         default 0,
-    total_close_notes          int         default 0,
-    total_notes_in_collections int         default 0,
-    stat_date                  timestamptz default now()
-);
-
-
-------------------------------------------------------------------------------------------------------------------------
--- Roles
-------------------------------------------------------------------------------------------------------------------------
-
-
-drop role if exists Reader;
-drop role if exists Author;
-drop role if exists Administrator;
-
-create role Reader login;
-create role Author login;
-create role Administrator login;
-
-grant select on main.notes, main.texts, main.images, main.raw_datas, main.teams to Reader;
-grant select on main.teams, main.team_members, main.sections, main.teams_sections to Reader;
-grant select, update, insert, delete on main.collections, main.note_collections to Reader;
-grant usage, select on all sequences in schema main to Reader;
-
-grant select, update, insert, delete on main.notes, main.texts, main.images, main.raw_datas to Author;
-grant select on main.teams, main.team_members, main.sections, main.teams_sections to Author;
-grant select, update, insert, delete on main.collections, main.note_collections to Author;
-grant usage, select on all sequences in schema main to Author;
-
-grant select, update, insert, delete on main.notes, main.texts, main.images, main.raw_datas to Administrator;
-grant select, update, insert, delete on main.collections, main.note_collections to Administrator;
-grant select, update, insert, delete on main.teams_sections to Administrator;
-grant select, update, insert, delete on main.teams to Administrator;
-grant select, update, insert, delete on main.team_members to Administrator;
-grant select, update, insert, delete on main.sections to Administrator;
-grant select, update, insert, delete on main.users to Administrator;
-grant usage, select on all sequences in schema main to Administrator;
-
-
-------------------------------------------------------------------------------------------------------------------------
--- Triggers
-------------------------------------------------------------------------------------------------------------------------
+DROP TRIGGER IF EXISTS update_user_role_trigger ON main.users;
+CREATE TRIGGER update_user_role_trigger
+    AFTER INSERT OR UPDATE ON main.users
+    FOR EACH ROW
+    EXECUTE PROCEDURE main.update_user_role();
 
 
 ------------------------------------------------------------------------------------------------------------------------
 -- Trigger on table users
 ------------------------------------------------------------------------------------------------------------------------
 create or replace function main.func_stat_user_trigger()
-returns trigger as $$
+    returns trigger as $$
 declare
-    cur_date_time timestamptz := now();
+    latest_stat_date timestamptz;
+    current_time timestamptz := now();
 begin
+    -- Получаем максимальную дату из таблицы stat
+    select max(stat_date) into latest_stat_date from main.stat;
+
     -- Копируем последнюю строку из таблицы main.stat
     insert into main.stat (total_users, total_readers, total_authors, total_admins, total_collections, total_teams, total_sections, total_notes, total_open_notes, total_close_notes, total_notes_in_collections, stat_date)
-    select total_users, total_readers, total_authors, total_admins, total_collections, total_teams, total_sections, total_notes, total_open_notes, total_close_notes, total_notes_in_collections, cur_date_time
+    select total_users, total_readers, total_authors, total_admins, total_collections, total_teams, total_sections, total_notes, total_open_notes, total_close_notes, total_notes_in_collections, current_time
     from main.stat
     order by stat_date desc
     limit 1;
@@ -184,7 +51,7 @@ begin
             total_readers = total_readers + case when new.role = 0 then 1 else 0 end,
             total_authors = total_authors + case when new.role = 1 then 1 else 0 end,
             total_admins = total_admins + case when new.role = 2 then 1 else 0 end
-        where stat_date = cur_date_time;
+        where stat_date = latest_stat_date;
 
         return new;
 
@@ -194,7 +61,7 @@ begin
             total_readers = total_readers - case when old.role = 0 then 1 else 0 end,
             total_authors = total_authors - case when old.role = 1 then 1 else 0 end,
             total_admins = total_admins - case when old.role = 2 then 1 else 0 end
-        where stat_date = cur_date_time;
+        where stat_date = latest_stat_date;
 
         return old;
 
@@ -205,7 +72,7 @@ begin
             set total_readers = total_readers + case when new.role = 0 then 1 else 0 end - case when old.role = 0 then 1 else 0 end,
                 total_authors = total_authors + case when new.role = 1 then 1 else 0 end - case when old.role = 1 then 1 else 0 end,
                 total_admins = total_admins + case when new.role = 2 then 1 else 0 end - case when old.role = 2 then 1 else 0 end
-            where stat_date = cur_date_time;
+            where stat_date = latest_stat_date;
 
             return new;
         end if;
@@ -226,13 +93,17 @@ execute function main.func_stat_user_trigger();
 -- Trigger on table notes
 ------------------------------------------------------------------------------------------------------------------------
 create or replace function main.func_stat_note_trigger()
-returns trigger as $$
+    returns trigger as $$
 declare
-    cur_date_time timestamptz := now();
+    latest_stat_date timestamptz;
+    current_time timestamptz := now();
 begin
+    -- Получаем максимальную дату из таблицы stat
+    select max(stat_date) into latest_stat_date from main.stat;
+
     -- Копируем последнюю строку из таблицы main.stat
     insert into main.stat (total_users, total_readers, total_authors, total_admins, total_collections, total_teams, total_sections, total_notes, total_open_notes, total_close_notes, total_notes_in_collections, stat_date)
-    select total_users, total_readers, total_authors, total_admins, total_collections, total_teams, total_sections, total_notes, total_open_notes, total_close_notes, total_notes_in_collections, cur_date_time
+    select total_users, total_readers, total_authors, total_admins, total_collections, total_teams, total_sections, total_notes, total_open_notes, total_close_notes, total_notes_in_collections, current_time
     from main.stat
     order by stat_date desc
     limit 1;
@@ -243,7 +114,7 @@ begin
         set total_notes = total_notes + 1,
             total_open_notes = total_open_notes + case when new.access = 1 then 1 else 0 end,
             total_close_notes = total_close_notes + case when new.access = 0 then 1 else 0 end
-        where stat_date = cur_date_time;
+        where stat_date = latest_stat_date;
 
         return new;
 
@@ -252,7 +123,7 @@ begin
         set total_notes = total_notes - 1,
             total_open_notes = total_open_notes - case when old.access = 1 then 1 else 0 end,
             total_close_notes = total_close_notes - case when old.access = 0 then 1 else 0 end
-        where stat_date = cur_date_time;
+        where stat_date = latest_stat_date;
 
         return old;
 
@@ -262,7 +133,7 @@ begin
             update main.stat
             set total_open_notes = total_open_notes + case when new.access = 1 then 1 else 0 end - case when old.access = 1 then 1 else 0 end,
                 total_close_notes = total_close_notes + case when new.access = 0 then 1 else 0 end - case when old.access = 0 then 1 else 0 end
-            where stat_date = cur_date_time;
+            where stat_date = latest_stat_date;
 
             return new;
         end if;
@@ -283,27 +154,30 @@ execute function main.func_stat_note_trigger();
 -- Trigger on table sections
 ------------------------------------------------------------------------------------------------------------------------
 create or replace function main.func_stat_sections_trigger()
-returns trigger as $$
+    returns trigger as $$
 declare
-    cur_date_time timestamptz := now();
+    latest_stat_date timestamptz;
+    current_time timestamptz := now();
 begin
+    select max(stat_date) into latest_stat_date from main.stat;
+
     insert into main.stat (total_users, total_readers, total_authors, total_admins, total_collections, total_teams, total_sections, total_notes, total_open_notes, total_close_notes, total_notes_in_collections, stat_date)
-    select total_users, total_readers, total_authors, total_admins, total_collections, total_teams, total_sections, total_notes, total_open_notes, total_close_notes, total_notes_in_collections, cur_date_time
+    select total_users, total_readers, total_authors, total_admins, total_collections, total_teams, total_sections, total_notes, total_open_notes, total_close_notes, total_notes_in_collections, current_time
     from main.stat
-    order by stat_date desc
+    where stat_date = latest_stat_date
     limit 1;
 
     if TG_OP = 'INSERT' then
         update main.stat
         set total_sections = total_sections + 1
-        where stat_date = cur_date_time;
+        where stat_date = current_time;
 
         return new;
 
     elsif TG_OP = 'DELETE' then
         update main.stat
         set total_sections = total_sections - 1
-        where stat_date = cur_date_time;
+        where stat_date = current_time;
 
         return old;
 
@@ -324,27 +198,30 @@ execute procedure main.func_stat_sections_trigger();
 -- Trigger on table collections
 ------------------------------------------------------------------------------------------------------------------------
 create or replace function main.func_stat_collections_trigger()
-returns trigger as $$
+    returns trigger as $$
 declare
-    cur_date_time timestamptz := now();
+    latest_stat_date timestamptz;
+    current_time timestamptz := now();
 begin
+    select max(stat_date) into latest_stat_date from main.stat;
+
     insert into main.stat (total_users, total_readers, total_authors, total_admins, total_collections, total_teams, total_sections, total_notes, total_open_notes, total_close_notes, total_notes_in_collections, stat_date)
-    select total_users, total_readers, total_authors, total_admins, total_collections, total_teams, total_sections, total_notes, total_open_notes, total_close_notes, total_notes_in_collections, cur_date_time
+    select total_users, total_readers, total_authors, total_admins, total_collections, total_teams, total_sections, total_notes, total_open_notes, total_close_notes, total_notes_in_collections, current_time
     from main.stat
-    order by stat_date desc
+    where stat_date = latest_stat_date
     limit 1;
 
     if TG_OP = 'INSERT' then
         update main.stat
         set total_collections = total_collections + 1
-        where stat_date = cur_date_time;
+        where stat_date = current_time;
 
         return new;
 
     elsif TG_OP = 'DELETE' then
         update main.stat
         set total_collections = total_collections - 1
-        where stat_date = cur_date_time;
+        where stat_date = current_time;
 
         return old;
 
@@ -365,27 +242,30 @@ execute procedure main.func_stat_collections_trigger();
 -- Trigger on table teams
 ------------------------------------------------------------------------------------------------------------------------
 create or replace function main.func_stat_teams_trigger()
-returns trigger as $$
+    returns trigger as $$
 declare
-    cur_date_time timestamptz := now();
+    latest_stat_date timestamptz;
+    current_time timestamptz := now();
 begin
+    select max(stat_date) into latest_stat_date from main.stat;
+
     insert into main.stat (total_users, total_readers, total_authors, total_admins, total_collections, total_teams, total_sections, total_notes, total_open_notes, total_close_notes, total_notes_in_collections, stat_date)
-    select total_users, total_readers, total_authors, total_admins, total_collections, total_teams, total_sections, total_notes, total_open_notes, total_close_notes, total_notes_in_collections, cur_date_time
+    select total_users, total_readers, total_authors, total_admins, total_collections, total_teams, total_sections, total_notes, total_open_notes, total_close_notes, total_notes_in_collections, current_time
     from main.stat
-    order by stat_date desc
+    where stat_date = latest_stat_date
     limit 1;
 
     if TG_OP = 'INSERT' then
         update main.stat
         set total_teams = total_teams + 1
-        where stat_date = cur_date_time;
+        where stat_date = current_time;
 
         return new;
 
     elsif TG_OP = 'DELETE' then
         update main.stat
         set total_teams = total_teams - 1
-        where stat_date = cur_date_time;
+        where stat_date = current_time;
 
         return old;
 
@@ -406,27 +286,30 @@ execute procedure main.func_stat_teams_trigger();
 -- Trigger on table team_members
 ------------------------------------------------------------------------------------------------------------------------
 create or replace function main.func_stat_team_members_trigger()
-returns trigger as $$
+    returns trigger as $$
 declare
-    cur_date_time timestamptz := now();
+    latest_stat_date timestamptz;
+    current_time timestamptz := now();
 begin
+    select max(stat_date) into latest_stat_date from main.stat;
+
     insert into main.stat (total_users, total_readers, total_authors, total_admins, total_collections, total_teams, total_sections, total_notes, total_open_notes, total_close_notes, total_notes_in_collections, stat_date)
-    select total_users, total_readers, total_authors, total_admins, total_collections, total_teams, total_sections, total_notes, total_open_notes, total_close_notes, total_notes_in_collections, cur_date_time
+    select total_users, total_readers, total_authors, total_admins, total_collections, total_teams, total_sections, total_notes, total_open_notes, total_close_notes, total_notes_in_collections, current_time
     from main.stat
-    order by stat_date desc
+    where stat_date = latest_stat_date
     limit 1;
 
     if TG_OP = 'INSERT' then
         update main.stat
         set total_teams = total_teams + 1
-        where stat_date = cur_date_time;
+        where stat_date = current_time;
 
         return new;
 
     elsif TG_OP = 'DELETE' then
         update main.stat
         set total_teams = total_teams - 1
-        where stat_date = cur_date_time;
+        where stat_date = current_time;
 
         return old;
 
@@ -447,27 +330,30 @@ execute procedure main.func_stat_team_members_trigger();
 -- Trigger on table teams_sections
 ------------------------------------------------------------------------------------------------------------------------
 create or replace function main.func_stat_teams_sections_trigger()
-returns trigger as $$
+    returns trigger as $$
 declare
-    cur_date_time timestamptz := now();
+    latest_stat_date timestamptz;
+    current_time timestamptz := now();
 begin
+    select max(stat_date) into latest_stat_date from main.stat;
+
     insert into main.stat (total_users, total_readers, total_authors, total_admins, total_collections, total_teams, total_sections, total_notes, total_open_notes, total_close_notes, total_notes_in_collections, stat_date)
-    select total_users, total_readers, total_authors, total_admins, total_collections, total_teams, total_sections, total_notes, total_open_notes, total_close_notes, total_notes_in_collections, cur_date_time
+    select total_users, total_readers, total_authors, total_admins, total_collections, total_teams, total_sections, total_notes, total_open_notes, total_close_notes, total_notes_in_collections, current_time
     from main.stat
-    order by stat_date desc
+    where stat_date = latest_stat_date
     limit 1;
 
     if TG_OP = 'INSERT' then
         update main.stat
         set total_sections = total_sections + 1
-        where stat_date = cur_date_time;
+        where stat_date = current_time;
 
         return new;
 
     elsif TG_OP = 'DELETE' then
         update main.stat
         set total_sections = total_sections - 1
-        where stat_date = cur_date_time;
+        where stat_date = current_time;
 
         return old;
 
@@ -488,22 +374,25 @@ execute procedure main.func_stat_teams_sections_trigger();
 -- Trigger on table note_collections
 ------------------------------------------------------------------------------------------------------------------------
 create or replace function main.func_stat_note_collections_trigger()
-returns trigger as $$
+    returns trigger as $$
 declare
-    cur_date_time timestamptz := now();
+    latest_stat_date timestamptz;
+    current_time timestamptz := now();
 begin
+    select max(stat_date) into latest_stat_date from main.stat;
+
     -- Вставляем новую строку в таблицу stat, используя последнюю запись
     insert into main.stat (total_users, total_readers, total_authors, total_admins, total_collections, total_teams, total_sections, total_notes, total_open_notes, total_close_notes, total_notes_in_collections, stat_date)
-    select total_users, total_readers, total_authors, total_admins, total_collections, total_teams, total_sections, total_notes, total_open_notes, total_close_notes, total_notes_in_collections, cur_date_time
+    select total_users, total_readers, total_authors, total_admins, total_collections, total_teams, total_sections, total_notes, total_open_notes, total_close_notes, total_notes_in_collections, current_time
     from main.stat
-    order by stat_date desc
+    where stat_date = latest_stat_date
     limit 1;
 
     if TG_OP = 'INSERT' then
         -- Увеличиваем счетчик total_notes_in_collections на 1
         update main.stat
         set total_notes_in_collections = total_notes_in_collections + 1
-        where stat_date = cur_date_time;
+        where stat_date = current_time;
 
         return new;
 
@@ -511,7 +400,7 @@ begin
         -- Уменьшаем счетчик total_notes_in_collections на 1
         update main.stat
         set total_notes_in_collections = total_notes_in_collections - 1
-        where stat_date = cur_date_time;
+        where stat_date = current_time;
 
         return old;
 
@@ -521,23 +410,7 @@ begin
 end;
 $$ language plpgsql;
 
-
 create trigger stat_note_collections_trigger
     after insert or delete on main.note_collections
     for each row
 execute procedure main.func_stat_note_collections_trigger();
-
-
-------------------------------------------------------------------------------------------------------------------------
--- Necessary inserts
-------------------------------------------------------------------------------------------------------------------------
-
-
-insert into main.users (fio, registration_date, login, password, role) values
-    ('mainadmin', now(), 'mainadminlogin', 'mainadminpassword', 2);
-
-insert into main.sections (creation_date) values
-    (now());
-
-insert into main.stat (total_users, total_readers, total_authors, total_admins, total_collections, total_teams, total_sections, total_notes, total_open_notes, total_close_notes, total_notes_in_collections, stat_date) values
-    (1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, now());

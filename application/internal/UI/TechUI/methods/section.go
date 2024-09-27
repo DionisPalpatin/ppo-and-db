@@ -47,7 +47,7 @@ func (MenuPoints) DeleteSection(user *models.User, ireps *bl.IRepositories, isvc
 func (MenuPoints) AddSection(user *models.User, configs *config.Configs, ireps *bl.IRepositories, isvcs *bl.IServices) {
 	sec := &models.Section{
 		Id:           0,
-		CreationDate: time.Now().Format(configs.DateTimeFormat),
+		CreationDate: time.Now(),
 	}
 	isr := ireps.ISecRepo
 	iss := isvcs.ISecSvc
@@ -94,7 +94,7 @@ func (MenuPoints) AddNoteToSection(user *models.User, ireps *bl.IRepositories, i
 	ins := isvcs.INoteSvc
 	itr := ireps.ITeamRepo
 
-	note, _, myErr := ins.GetNote(noteID, "", bl.SearchByID, user, inr, isr, itr)
+	note, _, _, myErr := ins.GetNote(noteID, "", bl.SearchByID, user, inr, isr, itr)
 	if myErr.ErrNum == bl.ErrAccessDenied {
 		display.DisplayError("Ошибка: у Вас нет прав на выполнение данной операции")
 		return
@@ -137,7 +137,7 @@ func (MenuPoints) DeleteNoteFromSection(user *models.User, ireps *bl.IRepositori
 	ins := isvcs.INoteSvc
 	itr := ireps.ITeamRepo
 
-	note, _, myErr := ins.GetNote(noteID, "", bl.SearchByID, user, inr, isr, itr)
+	note, _, _, myErr := ins.GetNote(noteID, "", bl.SearchByID, user, inr, isr, itr)
 	if myErr.ErrNum == bl.ErrAccessDenied {
 		display.DisplayError("Ошибка: у Вас нет прав на выполнение данной операции")
 		return

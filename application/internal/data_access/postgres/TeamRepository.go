@@ -222,18 +222,7 @@ func (tr *TeamRepository) DeleteTeam(team_id int) *bl.MyError {
 	db := tr.DbConfigs.DB
 	schemaName := tr.DbConfigs.SchemaName
 	ctx := context.Background()
-
-	// Запросы для удаления и изменения всех затрагиваемых таблиц
-	query0 := fmt.Sprintf("SELECT section_id FROM %s.teams_sections WHERE team_id = $1", schemaName)
-	query1 := fmt.Sprintf("UPDATE %s.notes SET section_id = 0 WHERE section_id = $2", schemaName, schemaName)
-	query2 := fmt.Sprintf("DELETE FROM %s.teams_sections WHERE team_id = $1", schemaName)
-	query3 := fmt.Sprintf("DELETE FROM %s.team_members WHERE team_id = $1", schemaName)
-	query4 := fmt.Sprintf("DELETE FROM %s.teams WHERE id = $1", schemaName)
-	query5 := fmt.Sprintf("DELETE FROM %s.sections WHERE id = $1", schemaName)
-	result_query := fmt.Sprintf("%s; %s; %s; %s; %s;", query1, query2, query3, query4, query5)
-
-	sec_id := 0
-	err := db.QueryRowContext(ctx, query0, team_id).Scan(&sec_id)
+	query := fmt.Sprintf("call %s.delete_team($1);", schemaName)
 
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
@@ -247,7 +236,7 @@ func (tr *TeamRepository) DeleteTeam(team_id int) *bl.MyError {
 		}
 	}()
 
-	_, err = tx.ExecContext(ctx, result_query, team_id, sec_id)
+	_, err = tx.ExecContext(ctx, query, team_id)
 	if err != nil {
 		myErr := bl.CreateError(bl.ErrDeleteTeam, err, "DeleteTeam")
 		tr.MyLogger.WriteLog(myErr.Err.Error(), slog.LevelError, nil)

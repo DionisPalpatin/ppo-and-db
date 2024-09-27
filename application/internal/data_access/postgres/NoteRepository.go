@@ -12,12 +12,12 @@ import (
 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/models"
 )
 
-func (nr *NoteRepository) GetNoteByID(id int) (*models.Note, []byte, *bl.MyError) {
+func (nr *NoteRepository) GetNoteByID(id int) (*models.Note, []byte, string, *bl.MyError) {
 	nr.MyLogger.WriteLog("GetNoteByID is called (Repo)", slog.LevelInfo, nil)
 
 	if id < 0 {
 		myErr := bl.CreateError(bl.ErrGetNoteByID, bl.ErrGetNoteByIDError(), "GetNoteByID")
-		return nil, nil, myErr
+		return nil, nil, "", myErr
 	}
 
 	var note models.Note
@@ -41,9 +41,9 @@ func (nr *NoteRepository) GetNoteByID(id int) (*models.Note, []byte, *bl.MyError
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			myErr := bl.CreateError(bl.ErrGetNoteByID, bl.ErrGetNoteByIDError(), "GetNoteByID")
-			return nil, nil, myErr
+			return nil, nil, "", myErr
 		}
-		return nil, nil, bl.CreateError(bl.ErrGetNoteByID, err, "GetNoteByID")
+		return nil, nil, "", bl.CreateError(bl.ErrGetNoteByID, err, "GetNoteByID")
 	}
 
 	if note.ContentType == bl.TextCont {
@@ -56,29 +56,30 @@ func (nr *NoteRepository) GetNoteByID(id int) (*models.Note, []byte, *bl.MyError
 
 	var dataId, noteId int
 	var data []byte
+	var fext string
 
-	err = db.QueryRowContext(ctx, query, note.Id).Scan(&dataId, &data, &noteId)
+	err = db.QueryRowContext(ctx, query, note.Id).Scan(&dataId, &data, &noteId, &fext)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			myErr := bl.CreateError(bl.ErrGetNoteByName, bl.ErrGetNoteByNameError(), "GetNoteByName")
-			return nil, nil, myErr
+			return nil, nil, "", myErr
 		}
 
 		myErr := bl.CreateError(bl.ErrGetNoteByName, err, "GetNoteByName")
-		return nil, nil, myErr
+		return nil, nil, "", myErr
 	}
 
 	myOk := bl.CreateError(bl.AllIsOk, nil, "")
-	return &note, data, myOk
+	return &note, data, fext, myOk
 }
 
-func (nr *NoteRepository) GetNoteByName(name string) (*models.Note, []byte, *bl.MyError) {
+func (nr *NoteRepository) GetNoteByName(name string) (*models.Note, []byte, string, *bl.MyError) {
 	nr.MyLogger.WriteLog("GetNoteByName is called (Repo)", slog.LevelInfo, nil)
 
 	if name == "" {
 		myErr := bl.CreateError(bl.ErrGetNoteByName, bl.ErrGetNoteByNameError(), "GetNoteByName")
-		return nil, nil, myErr
+		return nil, nil, "", myErr
 	}
 
 	var note models.Note
@@ -102,11 +103,11 @@ func (nr *NoteRepository) GetNoteByName(name string) (*models.Note, []byte, *bl.
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			myErr := bl.CreateError(bl.ErrGetNoteByName, bl.ErrGetNoteByNameError(), "GetNoteByName")
-			return nil, nil, myErr
+			return nil, nil, "", myErr
 		}
 
 		myErr := bl.CreateError(bl.ErrGetNoteByName, err, "GetNoteByName")
-		return nil, nil, myErr
+		return nil, nil, "", myErr
 	}
 
 	if note.ContentType == bl.TextCont {
@@ -119,21 +120,22 @@ func (nr *NoteRepository) GetNoteByName(name string) (*models.Note, []byte, *bl.
 
 	var id, noteId int
 	var data []byte
+	var fext string
 
-	err = db.QueryRowContext(ctx, query, note.Id).Scan(&id, &data, &noteId)
+	err = db.QueryRowContext(ctx, query, note.Id).Scan(&id, &data, &noteId, &fext)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			myErr := bl.CreateError(bl.ErrGetNoteByName, bl.ErrGetNoteByNameError(), "GetNoteByName")
-			return nil, nil, myErr
+			return nil, nil, "", myErr
 		}
 
 		myErr := bl.CreateError(bl.ErrGetNoteByName, err, "GetNoteByName")
-		return nil, nil, myErr
+		return nil, nil, "", myErr
 	}
 
 	myOk := bl.CreateError(bl.AllIsOk, nil, "")
-	return &note, data, myOk
+	return &note, data, fext, myOk
 }
 
 func (nr *NoteRepository) GetAllNotes() ([]*models.Note, *bl.MyError) {
@@ -298,12 +300,7 @@ func (nr *NoteRepository) DeleteNote(id int) *bl.MyError {
 	schemaName := nr.DbConfigs.SchemaName
 	ctx := context.Background()
 
-	query1 := fmt.Sprintf("DELETE FROM %s.texts WHERE note_id = $1", schemaName)
-	query2 := fmt.Sprintf("DELETE FROM %s.images WHERE note_id = $1", schemaName)
-	query3 := fmt.Sprintf("DELETE FROM %s.raw_datas WHERE note_id = $1", schemaName)
-	query4 := fmt.Sprintf("DELETE FROM %s.notes_collections WHERE note_id = $1", schemaName)
-	query5 := fmt.Sprintf("DELETE FROM %s.notes WHERE id = $1", schemaName)
-	result_query := fmt.Sprintf("%s; %s; %s; %s; %s;", query1, query2, query3, query4, query5)
+	query := fmt.Sprintf("call %s.delete_note($1);", schemaName)
 
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
@@ -319,7 +316,7 @@ func (nr *NoteRepository) DeleteNote(id int) *bl.MyError {
 		}
 	}()
 
-	_, err = tx.ExecContext(ctx, result_query, id)
+	_, err = tx.ExecContext(ctx, query, id)
 
 	if err != nil {
 		myErr := bl.CreateError(bl.ErrDeleteNote, err, "DeleteNote")
@@ -331,7 +328,7 @@ func (nr *NoteRepository) DeleteNote(id int) *bl.MyError {
 	return myOk
 }
 
-func (nr *NoteRepository) UpdateNoteContentText(reader io.Reader, note *models.Note) *bl.MyError {
+func (nr *NoteRepository) UpdateNoteContentText(reader io.Reader, note *models.Note, fext string) *bl.MyError {
 	nr.MyLogger.WriteLog("UpdateNoteContentText is called (Repo)", slog.LevelInfo, nil)
 
 	if note == nil {
@@ -377,7 +374,7 @@ func (nr *NoteRepository) UpdateNoteContentText(reader io.Reader, note *models.N
 	return myOk
 }
 
-func (nr *NoteRepository) UpdateNoteContentImg(reader io.Reader, note *models.Note) *bl.MyError {
+func (nr *NoteRepository) UpdateNoteContentImg(reader io.Reader, note *models.Note, fext string) *bl.MyError {
 	nr.MyLogger.WriteLog("UpdateNoteContentImg is called (Repo)", slog.LevelInfo, nil)
 
 	if note == nil {
@@ -388,7 +385,7 @@ func (nr *NoteRepository) UpdateNoteContentImg(reader io.Reader, note *models.No
 
 	db := nr.DbConfigs.DB
 	schemaName := nr.DbConfigs.SchemaName
-	query := fmt.Sprintf("INSERT INTO %s.images (data, note_id) VALUES ($1, $2)", schemaName)
+	query := fmt.Sprintf("INSERT INTO %s.images (data, note_id, file_extension) VALUES ($1, $2, $3)", schemaName)
 	ctx := context.Background()
 
 	tx, err := db.BeginTx(ctx, nil)
@@ -412,7 +409,7 @@ func (nr *NoteRepository) UpdateNoteContentImg(reader io.Reader, note *models.No
 		return myErr
 	}
 
-	_, err = tx.ExecContext(ctx, query, data, note.Id)
+	_, err = tx.ExecContext(ctx, query, data, note.Id, fext)
 	if err != nil {
 		myErr := bl.CreateError(bl.ErrUpdateNoteContent, err, "UpdateNoteContentImg")
 		nr.MyLogger.WriteLog(myErr.Err.Error(), slog.LevelError, nil)
@@ -423,7 +420,7 @@ func (nr *NoteRepository) UpdateNoteContentImg(reader io.Reader, note *models.No
 	return myOk
 }
 
-func (nr *NoteRepository) UpdateNoteContentRawData(reader io.Reader, note *models.Note) *bl.MyError {
+func (nr *NoteRepository) UpdateNoteContentRawData(reader io.Reader, note *models.Note, fext string) *bl.MyError {
 	nr.MyLogger.WriteLog("UpdateNoteContentRawData is called (Repo)", slog.LevelInfo, nil)
 
 	if note == nil {
@@ -434,7 +431,7 @@ func (nr *NoteRepository) UpdateNoteContentRawData(reader io.Reader, note *model
 
 	db := nr.DbConfigs.DB
 	schemaName := nr.DbConfigs.SchemaName
-	query := fmt.Sprintf("INSERT INTO %s.raw_datas (data, note_id) VALUES ($1, $2)", schemaName)
+	query := fmt.Sprintf("INSERT INTO %s.raw_datas (data, note_id, file_extension) VALUES ($1, $2, $3)", schemaName)
 	ctx := context.Background()
 
 	tx, err := db.BeginTx(ctx, nil)
@@ -458,7 +455,7 @@ func (nr *NoteRepository) UpdateNoteContentRawData(reader io.Reader, note *model
 		return myErr
 	}
 
-	_, err = tx.ExecContext(ctx, query, data, note.Id)
+	_, err = tx.ExecContext(ctx, query, data, note.Id, fext)
 
 	if err != nil {
 		myErr := bl.CreateError(bl.ErrUpdateNoteContent, err, "UpdateNoteContentRawData")

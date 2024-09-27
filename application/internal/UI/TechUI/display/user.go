@@ -11,7 +11,7 @@ func DisplayUser(user *models.User) {
 		fmt.Println("## Пользователь:")
 		fmt.Printf("ID: %d\n", user.Id)
 		fmt.Printf("ФИО: %s\n", user.Fio)
-		fmt.Printf("Дата регистрации: %s\n", user.RegistrationDate)
+		fmt.Printf("Дата регистрации: %s\n", user.RegistrationDate.Format("2006-01-02"))
 		fmt.Printf("Роль: %d\n", user.Role)
 		fmt.Printf("login: %s\n", user.Login)
 		fmt.Printf("Password: %s\n\n", user.Password)

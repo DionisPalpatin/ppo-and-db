@@ -11,7 +11,7 @@ import (
 // ---------------------------------------------------------------------------------------------------------------------
 
 type INoteService interface {
-	GetNote(id int, name string, searchBy int, requester *models.User, inr INoteRepository, isr ISectionRepository, itr ITeamRepository) (*models.Note, []byte, *MyError)
+	GetNote(id int, name string, searchBy int, requester *models.User, inr INoteRepository, isr ISectionRepository, itr ITeamRepository) (*models.Note, []byte, string, *MyError)
 	GetAllNotes(open bool, requester *models.User, inr INoteRepository) ([]*models.Note, *MyError)
 	AddNote(note *models.Note, requester *models.User, inr INoteRepository) *MyError
 	DeleteNote(id int, requester *models.User, inr INoteRepository) *MyError
@@ -22,15 +22,15 @@ type INoteService interface {
 }
 
 type INoteRepository interface {
-	GetNoteByID(id int) (*models.Note, []byte, *MyError)
-	GetNoteByName(name string) (*models.Note, []byte, *MyError)
+	GetNoteByID(id int) (*models.Note, []byte, string, *MyError)
+	GetNoteByName(name string) (*models.Note, []byte, string, *MyError)
 	GetAllNotes() ([]*models.Note, *MyError)
 	GetAllPublicNotes() ([]*models.Note, *MyError)
 	AddNote(note *models.Note) *MyError
 	DeleteNote(id int) *MyError
-	UpdateNoteContentText(reader io.Reader, note *models.Note) *MyError
-	UpdateNoteContentImg(reader io.Reader, note *models.Note) *MyError
-	UpdateNoteContentRawData(reader io.Reader, note *models.Note) *MyError
+	UpdateNoteContentText(reader io.Reader, note *models.Note, fext string) *MyError
+	UpdateNoteContentImg(reader io.Reader, note *models.Note, fext string) *MyError
+	UpdateNoteContentRawData(reader io.Reader, note *models.Note, fext string) *MyError
 	UpdateNoteInfo(note *models.Note) *MyError
 	AddNoteToCollection(collectionID int, noteID int) *MyError
 	DeleteNoteFromCollection(collectionID int, noteID int) *MyError

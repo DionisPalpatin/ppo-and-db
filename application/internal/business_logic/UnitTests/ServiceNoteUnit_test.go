@@ -24,7 +24,7 @@ func TestGetNote(t *testing.T) {
 		mockSectionRepo.On("GetSectionByID", 1).Return(retSection, retErr)
 
 		nsSrv := bl.NoteService{}
-		note, err := nsSrv.GetNote(1, requester, mockNoteRepo, mockSectionRepo)
+		note, err, _ := nsSrv.GetNote(1, requester, mockNoteRepo, mockSectionRepo)
 
 		assert.NotNil(t, err)
 		assert.NotNil(t, note)
@@ -44,7 +44,7 @@ func TestGetNote(t *testing.T) {
 		mockNoteRepo.On("GetNoteByID", 1).Return(retNote, retErr)
 
 		nsSrv := bl.NoteService{}
-		_, err := nsSrv.GetNote(1, requester, mockNoteRepo, mockSectionRepo)
+		_, err, _ := nsSrv.GetNote(1, requester, mockNoteRepo, mockSectionRepo)
 
 		assert.NotNil(t, err)
 		assert.Equal(t, bl.ErrGetNoteByID, err.ErrNum)
@@ -64,7 +64,7 @@ func TestGetNote(t *testing.T) {
 		mockSectionRepo.On("GetSectionByID", 1).Return(returnSec, retErr)
 
 		nsSrv := bl.NoteService{}
-		_, err := nsSrv.GetNote(1, requester, mockNoteRepo, mockSectionRepo)
+		_, err, _ := nsSrv.GetNote(1, requester, mockNoteRepo, mockSectionRepo)
 
 		assert.NotNil(t, err)
 		assert.Equal(t, bl.ErrGetSectionByID, err.ErrNum)
@@ -85,7 +85,7 @@ func TestGetNote(t *testing.T) {
 		mockSectionRepo.On("GetSectionByID", 1).Return(retSection, retOk)
 
 		nsSrv := bl.NoteService{}
-		_, err := nsSrv.GetNote(1, requester, mockNoteRepo, mockSectionRepo)
+		_, err, _ := nsSrv.GetNote(1, requester, mockNoteRepo, mockSectionRepo)
 
 		assert.NotNil(t, err)
 		assert.Equal(t, bl.ErrAccessDenied, err.ErrNum)

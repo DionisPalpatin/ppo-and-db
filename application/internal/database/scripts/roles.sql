@@ -1,3 +1,7 @@
+drop role if exists Reader;
+drop role if exists Author;
+drop role if exists Administrator;
+
 create role Reader login;
 create role Author login;
 create role Administrator login;

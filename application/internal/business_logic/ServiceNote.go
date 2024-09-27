@@ -2,55 +2,57 @@ package bl
 
 import (
 	"os"
+	"path"
 
 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/models"
 )
 
 type NoteService struct{}
 
-func (NoteService) GetNote(id int, name string, searchBy int, requester *models.User, inr INoteRepository, isr ISectionRepository, itr ITeamRepository) (*models.Note, []byte, *MyError) {
+func (NoteService) GetNote(id int, name string, searchBy int, requester *models.User, inr INoteRepository, isr ISectionRepository, itr ITeamRepository) (*models.Note, []byte, string, *MyError) {
 	var note *models.Note
 	var data []byte
 	var myErr *MyError
+	var fext string
 
 	switch searchBy {
 	case SearchByID:
-		note, data, myErr = inr.GetNoteByID(id)
+		note, data, fext, myErr = inr.GetNoteByID(id)
 
 	case SearchByString:
-		note, data, myErr = inr.GetNoteByName(name)
+		note, data, fext, myErr = inr.GetNoteByName(name)
 
 	default:
 		myErr = CreateError(ErrSearchParameter, ErrSearchParameterError(), "GetUser")
-		return nil, nil, myErr
+		return nil, nil, "", myErr
 	}
 
 	if note.SectionID >= 0 {
 		var section *models.Section
 		section, myErr = isr.GetSectionByID(note.SectionID)
 		if myErr.ErrNum != AllIsOk {
-			return nil, nil, myErr
+			return nil, nil, "", myErr
 		}
 
 		var team *models.Team
 		team, myErr = itr.GetUserTeam(requester)
 		if myErr.ErrNum != AllIsOk {
-			return nil, nil, myErr
+			return nil, nil, "", myErr
 		}
 
 		var sectionTeam *models.Section
 		sectionTeam, myErr = isr.GetSectionByTeamName(team.Name)
 		if myErr.ErrNum != AllIsOk {
-			return nil, nil, myErr
+			return nil, nil, "", myErr
 		}
 
 		if section.Id != sectionTeam.Id {
 			myErr = CreateError(ErrAccessDenied, ErrAccessDeniedError(), "GetNote")
-			return nil, nil, myErr
+			return nil, nil, "", myErr
 		}
 	}
 
-	return note, data, myErr
+	return note, data, fext, myErr
 }
 
 func (NoteService) GetAllNotes(open bool, requester *models.User, inr INoteRepository) ([]*models.Note, *MyError) {
@@ -76,7 +78,7 @@ func (NoteService) AddNote(note *models.Note, requester *models.User, inr INoteR
 
 func (NoteService) DeleteNote(id int, requester *models.User, inr INoteRepository) *MyError {
 	var note *models.Note
-	note, _, err := inr.GetNoteByID(id)
+	note, _, _, err := inr.GetNoteByID(id)
 	if err.ErrNum != AllIsOk {
 		return err
 	}
@@ -90,7 +92,7 @@ func (NoteService) DeleteNote(id int, requester *models.User, inr INoteRepositor
 
 func (NoteService) UpdateNoteContent(noteID int, requester *models.User, filePath string, inr INoteRepository) *MyError {
 	var note *models.Note
-	note, _, err := inr.GetNoteByID(noteID)
+	note, _, _, err := inr.GetNoteByID(noteID)
 	if err.ErrNum != AllIsOk {
 		return err
 	}
@@ -105,13 +107,14 @@ func (NoteService) UpdateNoteContent(noteID int, requester *models.User, filePat
 		err = CreateError(ErrNoFile, ErrNoFileError(), "UpdateNoteContent")
 		return err
 	}
+	ext := path.Ext(filePath)
 
 	if note.ContentType == TextCont {
-		err = inr.UpdateNoteContentText(file, note)
+		err = inr.UpdateNoteContentText(file, note, ext)
 	} else if note.ContentType == ImgCont {
-		err = inr.UpdateNoteContentImg(file, note)
+		err = inr.UpdateNoteContentImg(file, note, ext)
 	} else {
-		err = inr.UpdateNoteContentRawData(file, note)
+		err = inr.UpdateNoteContentRawData(file, note, ext)
 	}
 
 	return err

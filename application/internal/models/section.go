@@ -1,6 +1,8 @@
 package models
 
+import "time"
+
 type Section struct {
 	Id           int
-	CreationDate string
+	CreationDate time.Time
 }

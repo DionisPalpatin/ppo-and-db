@@ -3,7 +3,6 @@ package bl
 import (
 	"time"
 
-	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/config"
 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/models"
 )
 
@@ -20,7 +19,7 @@ func (OAuthService) RegisterUser(fio string, login string, password string, iur 
 		Login:            login,
 		Password:         password,
 		Role:             Reader,
-		RegistrationDate: time.Now().Format(config.Configs{}.DateTimeFormat),
+		RegistrationDate: time.Now(),
 	}
 	return user, iur.AddUser(user)
 }

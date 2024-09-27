@@ -199,16 +199,7 @@ func (ur *UserRepository) DeleteUser(id int) *bl.MyError {
 	db := ur.DbConfigs.DB
 	schemaName := ur.DbConfigs.SchemaName
 	ctx := context.Background()
-
-	query1 := fmt.Sprintf("DELETE FROM %s.notes_collections WHERE collection_id IN (SELECT id FROM %s.collections WHERE owner_id = $1)", schemaName, schemaName)
-	query2 := fmt.Sprintf("DELETE FROM %s.collections WHERE owner_id = $1", schemaName)
-	query3 := fmt.Sprintf("DELETE FROM %s.team_members WHERE user_id = $1", schemaName)
-	query4 := fmt.Sprintf("DELETE FROM %s.texts WHERE note_id IN (SELECT id FROM %s.notes WHERE owner_id = $1)", schemaName, schemaName)
-	query5 := fmt.Sprintf("DELETE FROM %s.images WHERE note_id IN (SELECT id FROM %s.notes WHERE owner_id = $1)", schemaName, schemaName)
-	query6 := fmt.Sprintf("DELETE FROM %s.raw_datas WHERE note_id IN (SELECT id FROM %s.notes WHERE owner_id = $1)", schemaName, schemaName)
-	query7 := fmt.Sprintf("DELETE FROM %s.notes WHERE owner_id = $1", schemaName)
-	query8 := fmt.Sprintf("DELETE FROM %s.users WHERE id = $1", schemaName)
-	result_query := fmt.Sprintf("%s; %s; %s; %s; %s; %s; %s; %s;", query1, query2, query3, query4, query5, query6, query7, query8)
+	query := fmt.Sprintf("call %s.delete_user($1);", schemaName)
 
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
@@ -222,7 +213,7 @@ func (ur *UserRepository) DeleteUser(id int) *bl.MyError {
 		}
 	}()
 
-	_, err = tx.ExecContext(ctx, result_query, id)
+	_, err = tx.ExecContext(ctx, query, id)
 	if err != nil {
 		myErr := bl.CreateError(bl.ErrDeleteUser, err, "DeleteUser")
 		ur.MyLogger.WriteLog(myErr.Err.Error(), slog.LevelError, nil)

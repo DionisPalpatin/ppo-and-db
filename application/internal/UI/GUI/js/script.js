@@ -147,7 +147,7 @@ function renderAddNoteForm() {
     <input class="form-input" type="text" id="noteTitle" placeholder="Введите название записки" required>
     <input class="form-input" type="text" id="noteText" placeholder="Введите текст записки" required>
     <input class="form-input" type="file" id="noteImage" accept="image/png, image/jpeg">
-    <input class="form-input" type="file" id="noteRawData" accept=".bin,.dat">
+    <input class="form-input" type="file" id="noteRawData">
     <button id="submitAddNote">Добавить</button>
     <div id="loadingMessage" style="display: none;">Загрузка...</div>
   `;
@@ -170,14 +170,18 @@ function renderAddNoteForm() {
         const formData = new FormData();
 
         formData.append('title', noteTitle);
-        formData.append('text', noteText);
         formData.append('userId', userId);
         formData.append('userRole', userRole);// Передаем ID текущего пользователя
-        if (noteImage) {
+        if (noteText !== "") {
+            formData.append('text', noteText);
+        } else if (noteImage) {
             formData.append('image', noteImage);
-        }
-        if (noteRawData) {
+            const imageExtension = noteImage.name.split('.').pop();
+            formData.append('imageExtension', imageExtension); // Отправляем расширение изображения
+        } else if (noteRawData) {
             formData.append('rawData', noteRawData);
+            const rawDataExtension = noteRawData.name.split('.').pop();
+            formData.append('rawDataExtension', rawDataExtension); // Отправляем расширение другого файла
         }
 
         // Отображаем сообщение о загрузке
@@ -319,6 +323,24 @@ function renderDeleteNoteForm() {
 }
 
 
+function displayNoteAndText(note, text, contentArea) {
+    contentArea.innerHTML = `
+        <h3>Записка</h3>
+        <p>ID: ${note.id}</p>
+        <p>Название: ${note.name}</p>
+        <p>Текст записки:</p>
+        <pre>${text}</pre>
+    `;
+}
+
+
+function getFileExtensionFromHeaders(headers) {
+    const disposition = headers.get('Content-Disposition');
+    const match = disposition && disposition.match(/filename="note\.(.+)"/);
+    return match ? match[1] : '';
+}
+
+
 // check done
 function renderFindNoteForm() {
     const contentArea = document.getElementById('contentArea');
@@ -338,16 +360,32 @@ function renderFindNoteForm() {
             apiUrl = `/api/notes/name/${noteInput}`;
         }
 
-        fetch(apiUrl, {method: 'GET'})
-            .then(response => response.json())
-            .then(note => {
-                contentArea.innerHTML = `
-        <h3>Записка</h3>
-        <p>ID: ${note.id}</p>
-        <p>Текст: ${note.text}</p>
-        ${note.image ? `<img src="/uploads/${note.image}" alt="Записка Картинка" />` : ''}
-        ${note.rawData ? `<a href="/uploads/${note.rawData}" download>Скачать RAW данные</a>` : ''}
-      `;
+        fetch(apiUrl, { method: 'GET' })
+            .then(response => {
+                const contentType = response.headers.get('Content-Type');
+
+                if (contentType.includes('application/json')) {
+                    return response.json().then(data => {
+                        displayNoteAndText(data.note, data.text, contentArea);
+                    });
+                } else if (contentType.startsWith('image/')) {
+                    return response.blob().then(blob => {
+                        const imgUrl = URL.createObjectURL(blob);
+                        contentArea.innerHTML = `
+                            <h3>Записка</h3>
+                            <p>ID: ${note.id}</p>
+                            <img src="${imgUrl}" alt="Записка Картинка" />
+                        `;
+                    });
+                } else if (contentType === 'application/octet-stream') {
+                    return response.blob().then(blob => {
+                        const downloadUrl = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = downloadUrl;
+                        link.download = 'note.' + getFileExtensionFromHeaders(response.headers);
+                        link.click();
+                    });
+                }
             })
             .catch(error => {
                 console.error('Ошибка:', error);

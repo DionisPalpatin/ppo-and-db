@@ -2,6 +2,7 @@ package appconfigs
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -137,7 +138,7 @@ func (app *AppConfigs) AddNoteHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Получаем файл изображения, если он передан
 	noteImage, _, err := r.FormFile("image")
-	if err != nil && err != http.ErrMissingFile {
+	if err != nil && !errors.Is(err, http.ErrMissingFile) {
 		http.Error(w, "Error while uploading image", http.StatusInternalServerError)
 		return
 	}
@@ -149,7 +150,7 @@ func (app *AppConfigs) AddNoteHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Получаем файл бинарных данных, если он передан
 	noteRawData, _, err := r.FormFile("rawData")
-	if err != nil && err != http.ErrMissingFile {
+	if err != nil && !errors.Is(err, http.ErrMissingFile) {
 		http.Error(w, "Error while uploading raw data", http.StatusInternalServerError)
 		return
 	}
@@ -163,7 +164,7 @@ func (app *AppConfigs) AddNoteHandler(w http.ResponseWriter, r *http.Request) {
 	newNote := &models.Note{
 		Name:             noteTitle,
 		ContentType:      bl.TextCont,
-		RegistrationDate: time.Now().Format("2006-01-02 15:04:05"),
+		RegistrationDate: time.Now(),
 		OwnerID:          app.CurUser.Id,
 		SectionID:        0,
 	}
@@ -172,28 +173,33 @@ func (app *AppConfigs) AddNoteHandler(w http.ResponseWriter, r *http.Request) {
 	filePath := ""
 	if noteText != "" {
 		newNote.ContentType = bl.TextCont
-		err := saveFile(noteImage, "texts/"+newNote.Name+".txt")
+		err = saveFile(noteImage, "texts/"+newNote.Name+".txt")
 		if err != nil {
 			http.Error(w, "Error saving image file", http.StatusInternalServerError)
 			return
 		}
 		filePath = "texts/" + newNote.Name + ".txt"
+
 	} else if noteImage != nil {
 		newNote.ContentType = bl.ImgCont
-		err := saveFile(noteImage, "images/"+newNote.Name+".jpg")
+		ext := r.FormValue("imageExtension")
+		err = saveFile(noteImage, "images/"+newNote.Name+"."+ext)
 		if err != nil {
 			http.Error(w, "Error saving image file", http.StatusInternalServerError)
 			return
 		}
-		filePath = "images/" + newNote.Name + ".jpg"
+		filePath = "images/" + newNote.Name + "." + ext
+
 	} else if noteRawData != nil {
 		newNote.ContentType = bl.RawData
-		err := saveFile(noteRawData, "raw_data/"+newNote.Name+".dat")
+		ext := r.FormValue("rawDataExtension")
+		err = saveFile(noteRawData, "raw_data/"+newNote.Name+"."+ext)
 		if err != nil {
 			http.Error(w, "Error saving raw data file", http.StatusInternalServerError)
 			return
 		}
-		filePath = "raw_data/" + newNote.Name + ".dat"
+		filePath = "raw_data/" + newNote.Name + "." + ext
+
 	} else {
 		http.Error(w, "No content provided", http.StatusBadRequest)
 		return
@@ -207,7 +213,7 @@ func (app *AppConfigs) AddNoteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	note, _, _ := app.IServices.INoteSvc.GetNote(0, noteTitle, bl.SearchByString, app.CurUser, app.IRepos.INoteRepo, app.IRepos.ISecRepo, app.IRepos.ITeamRepo)
+	note, _, _, _ := app.IServices.INoteSvc.GetNote(0, noteTitle, bl.SearchByString, app.CurUser, app.IRepos.INoteRepo, app.IRepos.ISecRepo, app.IRepos.ITeamRepo)
 	if err := app.IServices.INoteSvc.UpdateNoteContent(note.Id, app.CurUser, filePath, app.IRepos.INoteRepo); err.ErrNum != bl.AllIsOk {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -311,9 +317,9 @@ func (app *AppConfigs) DeleteNoteFromSectionHandler(w http.ResponseWriter, r *ht
 	noteID, err := strconv.Atoi(noteIdentifier)
 	if err == nil {
 		// Если это число — получаем записку по ID
-		note, _, myErr = noteSrv.GetNote(noteID, "", bl.SearchByID, app.CurUser, noteRepo, secRepo, teamRepo)
+		note, _, _, myErr = noteSrv.GetNote(noteID, "", bl.SearchByID, app.CurUser, noteRepo, secRepo, teamRepo)
 	} else {
-		note, _, myErr = noteSrv.GetNote(0, noteIdentifier, bl.SearchByString, app.CurUser, noteRepo, secRepo, teamRepo)
+		note, _, _, myErr = noteSrv.GetNote(0, noteIdentifier, bl.SearchByString, app.CurUser, noteRepo, secRepo, teamRepo)
 	}
 
 	// Проверяем, есть ли ошибка при получении записки
@@ -361,9 +367,9 @@ func (app *AppConfigs) AddNoteToSectionHandler(w http.ResponseWriter, r *http.Re
 	var note *models.Note
 	var myErr *bl.MyError
 	if err == nil {
-		note, _, myErr = noteSrv.GetNote(noteID, "", 1, app.CurUser, app.IRepos.INoteRepo, app.IRepos.ISecRepo, app.IRepos.ITeamRepo)
+		note, _, _, myErr = noteSrv.GetNote(noteID, "", 1, app.CurUser, app.IRepos.INoteRepo, app.IRepos.ISecRepo, app.IRepos.ITeamRepo)
 	} else {
-		note, _, myErr = noteSrv.GetNote(0, noteIdentifier, 2, app.CurUser, app.IRepos.INoteRepo, app.IRepos.ISecRepo, app.IRepos.ITeamRepo)
+		note, _, _, myErr = noteSrv.GetNote(0, noteIdentifier, 2, app.CurUser, app.IRepos.INoteRepo, app.IRepos.ISecRepo, app.IRepos.ITeamRepo)
 	}
 
 	if myErr.ErrNum != bl.AllIsOk {
@@ -398,9 +404,9 @@ func (app *AppConfigs) DeleteNoteHandler(w http.ResponseWriter, r *http.Request)
 	var note *models.Note
 	var myErr *bl.MyError
 	if err == nil {
-		note, _, myErr = app.IServices.INoteSvc.GetNote(noteID, "", 1, app.CurUser, app.IRepos.INoteRepo, app.IRepos.ISecRepo, app.IRepos.ITeamRepo)
+		note, _, _, myErr = app.IServices.INoteSvc.GetNote(noteID, "", 1, app.CurUser, app.IRepos.INoteRepo, app.IRepos.ISecRepo, app.IRepos.ITeamRepo)
 	} else {
-		note, _, myErr = app.IServices.INoteSvc.GetNote(0, noteIdentifier, 2, app.CurUser, app.IRepos.INoteRepo, app.IRepos.ISecRepo, app.IRepos.ITeamRepo)
+		note, _, _, myErr = app.IServices.INoteSvc.GetNote(0, noteIdentifier, 2, app.CurUser, app.IRepos.INoteRepo, app.IRepos.ISecRepo, app.IRepos.ITeamRepo)
 	}
 
 	if myErr.ErrNum != bl.AllIsOk {
@@ -419,6 +425,29 @@ func (app *AppConfigs) DeleteNoteHandler(w http.ResponseWriter, r *http.Request)
 	w.Write([]byte("Note deleted successfully"))
 }
 
+// func (app *AppConfigs) FindNoteHandler(w http.ResponseWriter, r *http.Request) {
+// 	vars := mux.Vars(r)
+// 	noteIdentifier := vars["noteInput"]
+//
+// 	// Определяем, является ли noteInput ID или именем
+// 	noteID, err := strconv.Atoi(noteIdentifier)
+// 	var note *models.Note
+// 	var myErr *bl.MyError
+// 	if err == nil {
+// 		note, _, _, myErr = app.IServices.INoteSvc.GetNote(noteID, "", 1, app.CurUser, app.IRepos.INoteRepo, app.IRepos.ISecRepo, app.IRepos.ITeamRepo)
+// 	} else {
+// 		note, _, _, myErr = app.IServices.INoteSvc.GetNote(0, noteIdentifier, 2, app.CurUser, app.IRepos.INoteRepo, app.IRepos.ISecRepo, app.IRepos.ITeamRepo)
+// 	}
+//
+// 	if myErr.ErrNum != bl.AllIsOk {
+// 		http.Error(w, myErr.Error(), http.StatusNotFound)
+// 		return
+// 	}
+//
+// 	w.Header().Set("Content-Type", "application/json")
+// 	json.NewEncoder(w).Encode(note)
+// }
+
 func (app *AppConfigs) FindNoteHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	noteIdentifier := vars["noteInput"]
@@ -426,11 +455,13 @@ func (app *AppConfigs) FindNoteHandler(w http.ResponseWriter, r *http.Request) {
 	// Определяем, является ли noteInput ID или именем
 	noteID, err := strconv.Atoi(noteIdentifier)
 	var note *models.Note
+	var data []byte
+	var extension string
 	var myErr *bl.MyError
 	if err == nil {
-		note, _, myErr = app.IServices.INoteSvc.GetNote(noteID, "", 1, app.CurUser, app.IRepos.INoteRepo, app.IRepos.ISecRepo, app.IRepos.ITeamRepo)
+		note, data, extension, myErr = app.IServices.INoteSvc.GetNote(noteID, "", bl.SearchByID, app.CurUser, app.IRepos.INoteRepo, app.IRepos.ISecRepo, app.IRepos.ITeamRepo)
 	} else {
-		note, _, myErr = app.IServices.INoteSvc.GetNote(0, noteIdentifier, 2, app.CurUser, app.IRepos.INoteRepo, app.IRepos.ISecRepo, app.IRepos.ITeamRepo)
+		note, data, extension, myErr = app.IServices.INoteSvc.GetNote(0, noteIdentifier, bl.SearchByString, app.CurUser, app.IRepos.INoteRepo, app.IRepos.ISecRepo, app.IRepos.ITeamRepo)
 	}
 
 	if myErr.ErrNum != bl.AllIsOk {
@@ -438,8 +469,26 @@ func (app *AppConfigs) FindNoteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(note)
+	// В зависимости от расширения файла, выбираем, как его отправить
+	switch extension {
+	case "txt":
+		// Если это текстовая записка
+		w.Header().Set("Content-Type", "application/json")
+		response := map[string]interface{}{
+			"note": note,
+			"text": string(data), // Преобразуем []byte в строку
+		}
+		json.NewEncoder(w).Encode(response)
+	case "png", "jpg", "jpeg":
+		// Если это изображение
+		w.Header().Set("Content-Type", "image/"+extension)
+		w.Write(data) // Отправляем картинку
+	default:
+		// Для всех остальных файлов
+		w.Header().Set("Content-Type", "application/octet-stream")
+		w.Header().Set("Content-Disposition", "attachment; filename=\"note."+extension+"\"")
+		w.Write(data) // Отправляем файл для скачивания
+	}
 }
 
 func (app *AppConfigs) ShowCollectionNotesHandler(w http.ResponseWriter, r *http.Request) {
@@ -489,9 +538,9 @@ func (app *AppConfigs) AddNoteToCollectionHandler(w http.ResponseWriter, r *http
 	noteID, err := strconv.Atoi(noteIdentifier)
 	var note *models.Note
 	if err == nil {
-		note, _, myErr = app.IServices.INoteSvc.GetNote(noteID, "", 1, app.CurUser, app.IRepos.INoteRepo, app.IRepos.ISecRepo, app.IRepos.ITeamRepo)
+		note, _, _, myErr = app.IServices.INoteSvc.GetNote(noteID, "", 1, app.CurUser, app.IRepos.INoteRepo, app.IRepos.ISecRepo, app.IRepos.ITeamRepo)
 	} else {
-		note, _, myErr = app.IServices.INoteSvc.GetNote(0, noteIdentifier, 2, app.CurUser, app.IRepos.INoteRepo, app.IRepos.ISecRepo, app.IRepos.ITeamRepo)
+		note, _, _, myErr = app.IServices.INoteSvc.GetNote(0, noteIdentifier, 2, app.CurUser, app.IRepos.INoteRepo, app.IRepos.ISecRepo, app.IRepos.ITeamRepo)
 	}
 
 	if myErr.ErrNum != bl.AllIsOk {
@@ -742,7 +791,7 @@ func (app *AppConfigs) AddTeamHandler(w http.ResponseWriter, r *http.Request) {
 
 	team := &models.Team{
 		Name:             newTeam.Name,
-		RegistrationDate: time.Now().Format("2006-01-02"),
+		RegistrationDate: time.Now(),
 	}
 
 	addErr := app.IServices.ITeamSvc.AddTeam(app.CurUser, team, app.IRepos.ITeamRepo)

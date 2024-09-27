@@ -1,5 +1,7 @@
 package models
 
+import "time"
+
 type Note struct {
 	Id               int
 	Access           int
@@ -7,7 +9,7 @@ type Note struct {
 	ContentType      int
 	Likes            int
 	Dislikes         int
-	RegistrationDate string
+	RegistrationDate time.Time
 	OwnerID          int
 	SectionID        int
 }
