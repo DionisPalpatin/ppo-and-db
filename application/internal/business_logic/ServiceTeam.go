@@ -2,92 +2,94 @@ package bl
 
 import "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/models"
 
-type TeamService struct{}
+type TeamService struct {
+	itr ITeamRepository
+}
 
-func (ts TeamService) GetTeam(id int, name string, searchBy int, requester *models.User, itr ITeamRepository) (*models.Team, *MyError) {
-	// if requester.Role != Admin {
-	// 	return nil, CreateError(ErrAccessDenied, ErrAccessDeniedError(), "GetTeam")
-	// }
-
+func (ts *TeamService) GetTeam(id int, name string, searchBy int, requester *models.User) (*models.Team, *MyError) {
 	var team *models.Team
 	var err *MyError
 
+	if requester.Role != Admin {
+		return nil, CreateError(ErrAccessDenied, "GetTeam", "bl")
+	}
+
 	switch searchBy {
 	case SearchByID:
-		team, err = itr.GetTeamByID(id)
+		team, err = ts.itr.GetTeamByID(id)
 
 	case SearchByString:
-		team, err = itr.GetTeamByName(name)
+		team, err = ts.itr.GetTeamByName(name)
 
 	default:
 		team = nil
-		err = CreateError(ErrSearchParameter, ErrSearchParameterError(), "GetTeam")
+		err = CreateError(ErrSearchParameter, "GetTeam", "bl")
 	}
 
 	return team, err
 }
 
-func (ts TeamService) GetAllTeams(requester *models.User, itr ITeamRepository) ([]*models.Team, *MyError) {
+func (ts *TeamService) GetAllTeams(requester *models.User) ([]*models.Team, *MyError) {
 	if requester.Role != Admin {
-		return nil, CreateError(ErrAccessDenied, ErrAccessDeniedError(), "GetAllTeams")
+		return nil, CreateError(ErrAccessDenied, "GetAllTeams", "bl")
 	}
 
-	return itr.GetAllTeams()
+	return ts.itr.GetAllTeams()
 }
 
-func (ts TeamService) UpdateTeam(requester *models.User, team *models.Team, itr ITeamRepository) *MyError {
+func (ts *TeamService) UpdateTeam(requester *models.User, team *models.Team) *MyError {
 	if requester.Role != Admin {
-		return CreateError(ErrAccessDenied, ErrAccessDeniedError(), "UpdateTeam")
+		return CreateError(ErrAccessDenied, "UpdateTeam", "bl")
 	}
 
-	return itr.UpdateTeam(team)
+	return ts.itr.UpdateTeam(team)
 }
 
-func (ts TeamService) DeleteTeam(requester *models.User, id int, itr ITeamRepository) *MyError {
+func (ts *TeamService) DeleteTeam(requester *models.User, id int) *MyError {
 	if requester.Role != Admin {
-		return CreateError(ErrAccessDenied, ErrAccessDeniedError(), "DeleteTeam")
+		return CreateError(ErrAccessDenied, "DeleteTeam", "bl")
 	}
 
-	return itr.DeleteTeam(id)
+	return ts.itr.DeleteTeam(id)
 }
 
-func (ts TeamService) AddTeam(requester *models.User, team *models.Team, itr ITeamRepository) *MyError {
+func (ts *TeamService) AddTeam(requester *models.User, team *models.Team) *MyError {
 	if requester.Role != Admin {
-		return CreateError(ErrAccessDenied, ErrAccessDeniedError(), "AddTeam")
+		return CreateError(ErrAccessDenied, "AddTeam", "bl")
 	}
 
-	return itr.AddTeam(team)
+	return ts.itr.AddTeam(team)
 }
 
-func (ts TeamService) AddUserToTeam(requester *models.User, userID int, teamID int, itr ITeamRepository) *MyError {
+func (ts *TeamService) AddUserToTeam(requester *models.User, userID int, teamID int) *MyError {
 	if requester.Role != Admin {
-		return CreateError(ErrAccessDenied, ErrAccessDeniedError(), "AddUserToTeam")
+		return CreateError(ErrAccessDenied, "AddUserToTeam", "bl")
 	}
 
-	return itr.AddUserToTeam(userID, teamID)
+	return ts.itr.AddUserToTeam(userID, teamID)
 }
 
-func (ts TeamService) DeleteUserFromTeam(requester *models.User, userID int, teamID int, itr ITeamRepository) *MyError {
+func (ts *TeamService) DeleteUserFromTeam(requester *models.User, userID int, teamID int) *MyError {
 	if requester.Role != Admin {
-		return CreateError(ErrAccessDenied, ErrAccessDeniedError(), "AddUserToTeam")
+		return CreateError(ErrAccessDenied, "AddUserToTeam", "bl")
 	}
 
-	return itr.DeleteUserFromTeam(userID, teamID)
+	return ts.itr.DeleteUserFromTeam(userID, teamID)
 }
 
-func (ts TeamService) GetTeamMembers(teamID int, requester *models.User, itr ITeamRepository) ([]*models.User, *MyError) {
+func (ts *TeamService) GetTeamMembers(teamID int, requester *models.User) ([]*models.User, *MyError) {
 	if requester.Role != Admin {
-		return nil, CreateError(ErrAccessDenied, ErrAccessDeniedError(), "GetTeamMembers")
+		return nil, CreateError(ErrAccessDenied, "GetTeamMembers", "bl")
 	}
 
-	_, err := itr.GetTeamByID(teamID)
-	if err.ErrNum != AllIsOk {
+	_, err := ts.itr.GetTeamByID(teamID)
+	if err.ErrNum != Ok {
 		return nil, err
 	}
 
-	return itr.GetTeamMembers(teamID)
+	return ts.itr.GetTeamMembers(teamID)
 }
 
-func (ts TeamService) GetUserTeam(user *models.User, itr ITeamRepository) (*models.Team, *MyError) {
-	return itr.GetUserTeam(user)
+func (ts *TeamService) GetUserTeam(user *models.User) (*models.Team, *MyError) {
+	return ts.itr.GetUserTeam(user)
 }

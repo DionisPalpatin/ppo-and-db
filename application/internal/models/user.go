@@ -10,3 +10,5 @@ type User struct {
 	Password         string
 	Role             int
 }
+
+func (u *User) Build()

@@ -1,15 +1,20 @@
 package bl
 
 import (
+	"io"
 	"os"
 	"path"
 
 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/models"
 )
 
-type NoteService struct{}
+type NoteService struct {
+	inr INoteRepository
+	isr ISectionRepository
+	itr ITeamRepository
+}
 
-func (NoteService) GetNote(id int, name string, searchBy int, requester *models.User, inr INoteRepository, isr ISectionRepository, itr ITeamRepository) (*models.Note, []byte, string, *MyError) {
+func (ns *NoteService) GetNote(id int, name string, searchBy int, requester *models.User) (*models.Note, []byte, string, *MyError) {
 	var note *models.Note
 	var data []byte
 	var myErr *MyError
@@ -17,37 +22,37 @@ func (NoteService) GetNote(id int, name string, searchBy int, requester *models.
 
 	switch searchBy {
 	case SearchByID:
-		note, data, fext, myErr = inr.GetNoteByID(id)
+		note, myErr = ns.inr.GetNoteByID(id)
 
 	case SearchByString:
-		note, data, fext, myErr = inr.GetNoteByName(name)
+		note, myErr = ns.inr.GetNoteByName(name)
 
 	default:
-		myErr = CreateError(ErrSearchParameter, ErrSearchParameterError(), "GetUser")
+		myErr = CreateError(ErrSearchParameter, "GetNote", "bl")
 		return nil, nil, "", myErr
 	}
 
 	if note.SectionID >= 0 {
 		var section *models.Section
-		section, myErr = isr.GetSectionByID(note.SectionID)
-		if myErr.ErrNum != AllIsOk {
+		section, myErr = ns.isr.GetSectionByID(note.SectionID)
+		if myErr.ErrNum != Ok {
 			return nil, nil, "", myErr
 		}
 
 		var team *models.Team
-		team, myErr = itr.GetUserTeam(requester)
-		if myErr.ErrNum != AllIsOk {
+		team, myErr = ns.itr.GetUserTeam(requester)
+		if myErr.ErrNum != Ok {
 			return nil, nil, "", myErr
 		}
 
 		var sectionTeam *models.Section
-		sectionTeam, myErr = isr.GetSectionByTeamName(team.Name)
-		if myErr.ErrNum != AllIsOk {
+		sectionTeam, myErr = ns.isr.GetSectionByTeamName(team.Name)
+		if myErr.ErrNum != Ok {
 			return nil, nil, "", myErr
 		}
 
 		if section.Id != sectionTeam.Id {
-			myErr = CreateError(ErrAccessDenied, ErrAccessDeniedError(), "GetNote")
+			myErr = CreateError(ErrAccessDenied, "GetNote", "bl")
 			return nil, nil, "", myErr
 		}
 	}
@@ -55,83 +60,105 @@ func (NoteService) GetNote(id int, name string, searchBy int, requester *models.
 	return note, data, fext, myErr
 }
 
-func (NoteService) GetAllNotes(open bool, requester *models.User, inr INoteRepository) ([]*models.Note, *MyError) {
+func (ns *NoteService) GetAllNotes(open bool, requester *models.User) ([]*models.Note, *MyError) {
 	if requester.Role != Admin {
-		return nil, CreateError(ErrAccessDenied, ErrAccessDeniedError(), "GetAllTeams")
+		return nil, CreateError(ErrAccessDenied, "GetAllNotes", "bl")
 	}
 
 	if open {
-		return inr.GetAllPublicNotes()
+		return ns.inr.GetAllPublicNotes()
 	} else {
-		return inr.GetAllNotes()
+		return ns.inr.GetAllNotes()
 	}
 
 }
 
-func (NoteService) AddNote(note *models.Note, requester *models.User, inr INoteRepository) *MyError {
+func (ns *NoteService) AddNote(note *models.Note, requester *models.User) *MyError {
 	if requester.Role == Reader {
-		return CreateError(ErrAccessDenied, ErrAccessDeniedError(), "GetAllTeams")
+		return CreateError(ErrAccessDenied, "AddNote", "bl")
 	}
 
-	return inr.AddNote(note)
+	return ns.inr.AddNote(note)
 }
 
-func (NoteService) DeleteNote(id int, requester *models.User, inr INoteRepository) *MyError {
+func (ns *NoteService) DeleteNote(id int, requester *models.User) *MyError {
 	var note *models.Note
-	note, _, _, err := inr.GetNoteByID(id)
-	if err.ErrNum != AllIsOk {
+	note, err := ns.inr.GetNoteByID(id)
+	if err.ErrNum != Ok {
 		return err
 	}
 
 	if requester.Role == Reader || requester.Role == Author && requester.Id != note.OwnerID {
-		return CreateError(ErrAccessDenied, ErrAccessDeniedError(), "GetAllTeams")
+		return CreateError(ErrAccessDenied, "DeleteNote", "bl")
 	}
 
-	return inr.DeleteNote(id)
+	return ns.inr.DeleteNote(id)
 }
 
-func (NoteService) UpdateNoteContent(noteID int, requester *models.User, filePath string, inr INoteRepository) *MyError {
-	var note *models.Note
-	note, _, _, err := inr.GetNoteByID(noteID)
-	if err.ErrNum != AllIsOk {
-		return err
-	}
+func (ns *NoteService) UpdateNote(note *models.Note, requester *models.User, textFilePath string, imgFilePath string, rawFilePath string) *MyError {
+	var myErr *MyError
+	var err error
+	var dataFile *os.File
+	var content models.Content
 
 	if requester.Role == Reader || requester.Role == Author && requester.Id != note.OwnerID {
-		err = CreateError(ErrAccessDenied, ErrAccessDeniedError(), "GetAllTeams")
-		return err
+		myErr = CreateError(ErrAccessDenied, "UpdateNote", "bl")
+		return myErr
 	}
 
-	file, err1 := os.Open(filePath)
-	if err1 != nil {
-		err = CreateError(ErrNoFile, ErrNoFileError(), "UpdateNoteContent")
-		return err
-	}
-	ext := path.Ext(filePath)
-
-	if note.ContentType == TextCont {
-		err = inr.UpdateNoteContentText(file, note, ext)
-	} else if note.ContentType == ImgCont {
-		err = inr.UpdateNoteContentImg(file, note, ext)
+	dataFile, err = os.Open(textFilePath)
+	if err != nil {
+		myErr = CreateError(ErrNoFile, "UpdateNote", "bl")
+		return myErr
 	} else {
-		err = inr.UpdateNoteContentRawData(file, note, ext)
+		content.Text, err = io.ReadAll(dataFile)
+		if err != nil {
+			myErr = CreateError(ErrReadFile, "UpdateNote", "bl")
+			return myErr
+		}
+		content.TextExt = path.Ext(textFilePath)
 	}
 
-	return err
-}
-
-func (NoteService) UpdateNoteInfo(requester *models.User, note *models.Note, inr INoteRepository) *MyError {
-	if requester.Role == Reader || requester.Role == Author && requester.Id != note.OwnerID {
-		return CreateError(ErrAccessDenied, ErrAccessDeniedError(), "GetAllTeams")
+	dataFile, err = os.Open(imgFilePath)
+	if err != nil {
+		myErr = CreateError(ErrNoFile, "UpdateNote", "bl")
+		return myErr
+	} else {
+		content.Img, err = io.ReadAll(dataFile)
+		if err != nil {
+			myErr = CreateError(ErrReadFile, "UpdateNote", "bl")
+			return myErr
+		}
+		content.ImgExt = path.Ext(textFilePath)
 	}
 
-	return inr.UpdateNoteInfo(note)
+	dataFile, err = os.Open(rawFilePath)
+	if err != nil {
+		myErr = CreateError(ErrNoFile, "UpdateNote", "bl")
+		return myErr
+	} else {
+		content.Raw, err = io.ReadAll(dataFile)
+		if err != nil {
+			myErr = CreateError(ErrReadFile, "UpdateNote", "bl")
+			return myErr
+		}
+		content.RawExt = path.Ext(textFilePath)
+	}
+
+	note.Content = content
+
+	myErr = ns.inr.UpdateNoteContent(note)
+	if myErr.ErrNum != Ok {
+		return myErr
+	}
+
+	return ns.inr.UpdateNoteInfo(note)
 }
 
-func (NoteService) AddNoteToCollection(noteID int, collID int, inr INoteRepository) *MyError {
-	return inr.AddNoteToCollection(collID, noteID)
+func (ns *NoteService) AddNoteToCollection(noteID int, collID int) *MyError {
+	return ns.inr.AddNoteToCollection(collID, noteID)
 }
 
-func (NoteService) DeleteNoteFromCollection(noteID int, collID int, inr INoteRepository) *MyError {
-	return inr.DeleteNoteFromCollection(collID, noteID)
+func (ns *NoteService) DeleteNoteFromCollection(noteID int, collID int) *MyError {
+	return ns.inr.DeleteNoteFromCollection(collID, noteID)
 }

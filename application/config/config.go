@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/logger"
+	mylogger "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/logger"
 )
 
 func ReadConfig(filePath string) (*Configs, error) {
@@ -57,6 +57,6 @@ type Configs struct {
 	TextTypes      []string `yaml:"text_types"`
 	ImageTypes     []string `yaml:"image_types"`
 
-	DBConfigs  *DBConfigs     `yaml:"postgres"`
+	DBConfigs  *DBConfigs     `yaml:"database"`
 	LogConfigs *LoggerConfigs `yaml:"logger"`
 }

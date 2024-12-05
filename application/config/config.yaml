@@ -1,5 +1,5 @@
 # PostgreSQL settings
-postgres:
+database:
     psql_host:     localhost
     psql_port:     5432
     psql_user:     postgres
