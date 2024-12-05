@@ -9,7 +9,7 @@ import (
 // ---------------------------------------------------------------------------------------------------------------------
 
 type INoteService interface {
-	GetNote(id int, name string, searchBy int, requester *models.User) (*models.Note, []byte, string, *MyError)
+	GetNote(id int, name string, searchBy int, requester *models.User) (*models.Note, *MyError)
 	GetAllNotes(open bool, requester *models.User) ([]*models.Note, *MyError)
 	AddNote(note *models.Note, requester *models.User) *MyError
 	DeleteNote(id int, requester *models.User) *MyError

@@ -282,7 +282,7 @@ function renderAddNoteToSectionForm() {
         fetch(apiUrl, {
             method: 'POST',
             body: JSON.stringify({ noteId }),
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 'Content-Type': 'application/my_json' }
         }).then(response => response.json()).then(data => {
             alert(data.message || 'Записка добавлена');
         });
@@ -421,7 +421,7 @@ function renderAddNoteToCollectionForm() {
         fetch(apiUrl, {
             method: 'POST',
             body: JSON.stringify({ noteId }),
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 'Content-Type': 'application/my_json' }
         }).then(response => response.json()).then(data => {
             alert(data.message || 'Записка добавлена');
         });
@@ -484,7 +484,7 @@ function renderAddCollectionForm() {
         fetch('/api/collections', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/my_json'
             },
             body: JSON.stringify({ name: collectionName, owner_id: UserID })
         })
@@ -601,7 +601,7 @@ function renderUpdateUserFioForm() {
         fetch(apiUrl, {
             method: 'PATCH',
             body: JSON.stringify({ fio: newFio }),
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 'Content-Type': 'application/my_json' }
         }).then(response => response.json()).then(data => {
             alert(data.message || 'ФИО обновлено');
         });
@@ -633,7 +633,7 @@ function renderUpdateUserRoleForm() {
         fetch(apiUrl, {
             method: 'PATCH',
             body: JSON.stringify({ role: newRole }),
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 'Content-Type': 'application/my_json' }
         }).then(response => response.json()).then(data => {
             alert(data.message || 'Роль обновлена');
         });
@@ -716,7 +716,7 @@ function renderAddTeamForm() {
         fetch('/api/teams', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/my_json'
             },
             body: JSON.stringify({ name: teamName })
         })
@@ -864,7 +864,7 @@ function renderAddUserToTeamForm() {
         fetch(apiUrl, {
             method: 'POST',
             body: JSON.stringify({ userId }),
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 'Content-Type': 'application/my_json' }
         }).then(response => response.json()).then(data => {
             alert(data.message || 'Пользователь добавлен');
         });
@@ -936,7 +936,7 @@ function renderAddSectionForm() {
         fetch(apiUrl, {
             method: 'POST',
             body: JSON.stringify({ name: teamName }),
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 'Content-Type': 'application/my_json' }
         }).then(response => response.json()).then(data => {
             alert(data.message || 'Раздел добавлен');
         });

@@ -12,7 +12,7 @@ drop table if exists test.raw_datas;
 drop table if exists test.notes;
 drop table if exists test.collections;
 drop table if exists test.sections;
-drop table if exists test.teams;
+drop table if exists test.data;
 drop table if exists test.users;
 
 
@@ -22,7 +22,7 @@ create table test.sections (
 );
 
 
-create table test.teams (
+create table test.data (
                             id                serial       primary key,
                             name              varchar(255) not null unique,
                             registration_date varchar(255) not null
@@ -68,14 +68,14 @@ create table test.note_collections (
 
 
 create table test.team_members (
-    team_id int not null references test.teams(id),
+    team_id int not null references test.data(id),
     user_id int not null references test.users(id),
     primary key (team_id, user_id)
 );
 
 
 create table test.teams_sections (
-    team_id    int not null unique references test.teams(id),
+    team_id    int not null unique references test.data(id),
     section_id int not null unique references test.sections(id),
     primary key (team_id, section_id)
 );

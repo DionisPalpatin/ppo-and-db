@@ -14,13 +14,13 @@
 //         const response = await fetch('/api/login', {
 //             method: 'POST',
 //             headers: {
-//                 'Content-Type': 'application/json',
+//                 'Content-Type': 'application/my_json',
 //             },
 //             body: JSON.stringify({ login, password })
 //         });
 //
 //         if (response.ok) {
-//             const data = await response.json();
+//             const data = await response.my_json();
 //             // Если авторизация успешна, показываем меню для Читателя
 //             authForm.classList.add('hidden');
 //             readerMenu.classList.remove('hidden');
@@ -46,7 +46,7 @@
 //     document.getElementById('view-public-notes').addEventListener('click', async function() {
 //         const response = await fetch('/api/notes/public', { method: 'GET' });
 //         if (response.ok) {
-//             const notes = await response.json();
+//             const notes = await response.my_json();
 //             displayList(notes, 'note');
 //         } else {
 //             console.error('Failed to fetch notes');
@@ -57,7 +57,7 @@
 //     document.getElementById('view-collections').addEventListener('click', async function() {
 //         const response = await fetch('/api/collections', { method: 'GET' });
 //         if (response.ok) {
-//             const collections = await response.json();
+//             const collections = await response.my_json();
 //             displayList(collections, 'collection');
 //         } else {
 //             console.error('Failed to fetch collections');
@@ -105,7 +105,7 @@ document.addEventListener("DOMContentLoaded", function() {
         const response = await fetch('/api/login', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/my_json',
             },
             body: JSON.stringify({ login, password })
         });
@@ -137,7 +137,7 @@ document.addEventListener("DOMContentLoaded", function() {
         const response = await fetch('/api/register', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/my_json',
             },
             body: JSON.stringify({ fio, login, password })
         });

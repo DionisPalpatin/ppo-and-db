@@ -10,7 +10,7 @@ import (
 
 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/config"
 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/UI/TechUI"
-	handlers "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/api"
+	handlers "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/api/v2"
 	app "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/app/handlers"
 	appconfigs "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/app/handlers"
 	bl "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"

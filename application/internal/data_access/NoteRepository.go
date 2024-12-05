@@ -83,7 +83,7 @@ func (nr *NoteRepository) GetNoteByID(id int) (*models.Note, *bl.MyError) {
 		return nil, resState
 	}
 
-	resState := bl.CreateError(bl.Ok, "GetNoteByName", "data_access")
+	resState := bl.CreateError(bl.Ok, "GetNoteByID", "data_access")
 	nr.MyLogger.WriteLog(resState.ConcatenateFields(), slog.LevelInfo, nil)
 	return &note, resState
 }

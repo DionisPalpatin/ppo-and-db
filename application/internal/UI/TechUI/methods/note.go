@@ -23,7 +23,7 @@ func (MenuPoints) FindNote(user *models.User, ireps *bl.IRepositories, isvcs *bl
 	isr := ireps.ISecRepo
 	itr := ireps.ITeamRepo
 
-	note, data, _, err := ins.GetNote(0, noteName, bl.SearchByString, user, inr, isr, itr)
+	note, err := ins.GetNote(0, noteName, bl.SearchByString, user, inr, isr, itr)
 	if err.ErrNum == bl.ErrAccessDenied {
 		display.DisplayError("Ошибка: у Вас нет доступа к данной Записке")
 	} else if err.ErrNum == bl.ErrGetNoteByName {

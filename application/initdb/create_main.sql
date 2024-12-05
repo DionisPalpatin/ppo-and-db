@@ -12,7 +12,7 @@ drop table if exists main.raw_datas;
 drop table if exists main.notes;
 drop table if exists main.collections;
 drop table if exists main.sections;
-drop table if exists main.teams;
+drop table if exists main.data;
 drop table if exists main.users;
 
 drop table if exists main.stat;
@@ -24,7 +24,7 @@ create table main.sections (
 );
 
 
-create table main.teams (
+create table main.data (
     id                serial       primary key,
     name              varchar(255) not null unique,
     registration_date timestamptz  not null
@@ -70,14 +70,14 @@ create table main.note_collections (
 
 
 create table main.team_members (
-    team_id int not null references main.teams(id),
+    team_id int not null references main.data(id),
     user_id int not null references main.users(id),
     primary key (team_id, user_id)
 );
 
 
 create table main.teams_sections (
-    team_id    int not null unique references main.teams(id),
+    team_id    int not null unique references main.data(id),
     section_id int not null unique references main.sections(id),
     primary key (team_id, section_id)
 );
@@ -137,20 +137,20 @@ create role Reader login;
 create role Author login;
 create role Administrator login;
 
-grant select on main.notes, main.texts, main.images, main.raw_datas, main.teams to Reader;
-grant select on main.teams, main.team_members, main.sections, main.teams_sections to Reader;
+grant select on main.notes, main.texts, main.images, main.raw_datas, main.data to Reader;
+grant select on main.data, main.team_members, main.sections, main.teams_sections to Reader;
 grant select, update, insert, delete on main.collections, main.note_collections to Reader;
 grant usage, select on all sequences in schema main to Reader;
 
 grant select, update, insert, delete on main.notes, main.texts, main.images, main.raw_datas to Author;
-grant select on main.teams, main.team_members, main.sections, main.teams_sections to Author;
+grant select on main.data, main.team_members, main.sections, main.teams_sections to Author;
 grant select, update, insert, delete on main.collections, main.note_collections to Author;
 grant usage, select on all sequences in schema main to Author;
 
 grant select, update, insert, delete on main.notes, main.texts, main.images, main.raw_datas to Administrator;
 grant select, update, insert, delete on main.collections, main.note_collections to Administrator;
 grant select, update, insert, delete on main.teams_sections to Administrator;
-grant select, update, insert, delete on main.teams to Administrator;
+grant select, update, insert, delete on main.data to Administrator;
 grant select, update, insert, delete on main.team_members to Administrator;
 grant select, update, insert, delete on main.sections to Administrator;
 grant select, update, insert, delete on main.users to Administrator;
@@ -362,7 +362,7 @@ execute procedure main.func_stat_collections_trigger();
 
 
 ------------------------------------------------------------------------------------------------------------------------
--- Trigger on table teams
+-- Trigger on table data
 ------------------------------------------------------------------------------------------------------------------------
 create or replace function main.func_stat_teams_trigger()
 returns trigger as $$
@@ -395,9 +395,9 @@ begin
 end;
 $$ language plpgsql;
 
-drop trigger if exists stat_teams_trigger on main.teams;
+drop trigger if exists stat_teams_trigger on main.data;
 create trigger stat_teams_trigger
-    after insert or update or delete on main.teams
+    after insert or update or delete on main.data
     for each row
 execute procedure main.func_stat_teams_trigger();
 

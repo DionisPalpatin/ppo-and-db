@@ -12,7 +12,7 @@ type Handlers struct {
 	reps *bl.IRepositories
 }
 
-func (h *Handlers) InitInterfaces(svcs *bl.IServices, reps *bl.IRepositories) {
+func (app *App) InitInterfaces(svcs *bl.IServices, reps *bl.IRepositories) {
 	h.svcs = svcs
 	h.reps = reps
 }

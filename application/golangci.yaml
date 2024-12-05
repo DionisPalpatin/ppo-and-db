@@ -35,7 +35,7 @@ run:
 
 # Output configuration options.
 output:
-  # colored-line-number|line-number|json|tab|checkstyle, default is "colored-line-number"
+  # colored-line-number|line-number|my_json|tab|checkstyle, default is "colored-line-number"
   format: colored-line-number
 
   # Print lines of code with issue, default is true.

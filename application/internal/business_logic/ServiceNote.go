@@ -14,11 +14,9 @@ type NoteService struct {
 	itr ITeamRepository
 }
 
-func (ns *NoteService) GetNote(id int, name string, searchBy int, requester *models.User) (*models.Note, []byte, string, *MyError) {
+func (ns *NoteService) GetNote(id int, name string, searchBy int, requester *models.User) (*models.Note, *MyError) {
 	var note *models.Note
-	var data []byte
 	var myErr *MyError
-	var fext string
 
 	switch searchBy {
 	case SearchByID:
@@ -29,35 +27,35 @@ func (ns *NoteService) GetNote(id int, name string, searchBy int, requester *mod
 
 	default:
 		myErr = CreateError(ErrSearchParameter, "GetNote", "bl")
-		return nil, nil, "", myErr
+		return nil, myErr
 	}
 
 	if note.SectionID >= 0 {
 		var section *models.Section
 		section, myErr = ns.isr.GetSectionByID(note.SectionID)
 		if myErr.ErrNum != Ok {
-			return nil, nil, "", myErr
+			return nil, myErr
 		}
 
 		var team *models.Team
 		team, myErr = ns.itr.GetUserTeam(requester)
 		if myErr.ErrNum != Ok {
-			return nil, nil, "", myErr
+			return nil, myErr
 		}
 
 		var sectionTeam *models.Section
 		sectionTeam, myErr = ns.isr.GetSectionByTeamName(team.Name)
 		if myErr.ErrNum != Ok {
-			return nil, nil, "", myErr
+			return nil, myErr
 		}
 
 		if section.Id != sectionTeam.Id {
 			myErr = CreateError(ErrAccessDenied, "GetNote", "bl")
-			return nil, nil, "", myErr
+			return nil, myErr
 		}
 	}
 
-	return note, data, fext, myErr
+	return note, myErr
 }
 
 func (ns *NoteService) GetAllNotes(open bool, requester *models.User) ([]*models.Note, *MyError) {

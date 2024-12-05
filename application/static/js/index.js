@@ -22,7 +22,7 @@ document.getElementById('submitLogin').addEventListener('click', function() {
     fetch('/api/login', {
         method: 'POST',
         body: JSON.stringify({ username, password }),
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/my_json' }
     })
         .then(response => response.json())
         .then(user => {
@@ -61,7 +61,7 @@ document.getElementById('submitRegister').addEventListener('click', function() {
     fetch('/api/register', {
         method: 'POST',
         body: JSON.stringify({ fio, username, password }),
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/my_json' }
     })
         .then(response => response.json())
         .then(user => {

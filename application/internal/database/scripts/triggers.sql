@@ -239,7 +239,7 @@ execute procedure main.func_stat_collections_trigger();
 
 
 ------------------------------------------------------------------------------------------------------------------------
--- Trigger on table teams
+-- Trigger on table data
 ------------------------------------------------------------------------------------------------------------------------
 create or replace function main.func_stat_teams_trigger()
     returns trigger as $$
@@ -275,9 +275,9 @@ begin
 end;
 $$ language plpgsql;
 
-drop trigger if exists stat_teams_trigger on main.teams;
+drop trigger if exists stat_teams_trigger on main.data;
 create trigger stat_teams_trigger
-    after insert or update or delete on main.teams
+    after insert or update or delete on main.data
     for each row
 execute procedure main.func_stat_teams_trigger();
 

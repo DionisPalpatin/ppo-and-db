@@ -106,6 +106,7 @@ func (ur *UserRepository) GetAllUsers() ([]*models.User, *bl.MyError) {
 	query := fmt.Sprintf(getAllUsersQuery, schemaName)
 	rows, err := db.QueryContext(ctx, query)
 	defer rows.Close()
+
 	if err != nil {
 		resState := bl.CreateError(bl.DatabaseError, "GetAllUsers", "data_access")
 		ur.MyLogger.WriteLog(resState.ConcatenateFields(), slog.LevelError, mylogger.LogCallerInfo())

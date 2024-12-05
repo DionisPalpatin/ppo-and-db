@@ -4,16 +4,16 @@ import (
 	"net/http"
 )
 
-func (h *Handlers) GetTeamHandler(w http.ResponseWriter, r *http.Request) {}
+func (app *App) GetTeamHandler(w http.ResponseWriter, r *http.Request) {}
 
-func (h *Handlers) GetAllTeamsHandler(w http.ResponseWriter, r *http.Request) {}
+func (app *App) GetAllTeamsHandler(w http.ResponseWriter, r *http.Request) {}
 
-func (h *Handlers) AddTeamHandler(w http.ResponseWriter, r *http.Request) {}
+func (app *App) AddTeamHandler(w http.ResponseWriter, r *http.Request) {}
 
-func (h *Handlers) DeleteTeamHandler(w http.ResponseWriter, r *http.Request) {}
+func (app *App) DeleteTeamHandler(w http.ResponseWriter, r *http.Request) {}
 
-func (h *Handlers) UpdateTeamHandler(w http.ResponseWriter, r *http.Request) {}
+func (app *App) UpdateTeamHandler(w http.ResponseWriter, r *http.Request) {}
 
-func (h *Handlers) AddUserToTeamHandler(w http.ResponseWriter, r *http.Request) {}
+func (app *App) AddUserToTeamHandler(w http.ResponseWriter, r *http.Request) {}
 
-func (h *Handlers) GetTeamMembersHandler(w http.ResponseWriter, r *http.Request) {}
+func (app *App) GetTeamMembersHandler(w http.ResponseWriter, r *http.Request) {}

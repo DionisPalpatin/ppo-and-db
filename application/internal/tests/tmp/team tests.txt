@@ -13,14 +13,14 @@ func TestGetAllTeams(t *testing.T) {
   mockTeamRepo.On("GetAllTeams").Return(returnTeams, retErr)
 
   tsSrv := bl.TeamService{}
-  teams, err := tsSrv.GetAllTeams(1, mockTeamRepo, mockUserRepo)
+  data, err := tsSrv.GetAllTeams(1, mockTeamRepo, mockUserRepo)
 
   assert.Nil(t, err)
-  assert.Len(t, teams, 2)
-  assert.Equal(t, 1, teams[0].Id)
-  assert.Equal(t, "Team 1", teams[0].Name)
-  assert.Equal(t, 2, teams[1].Id)
-  assert.Equal(t, "Team 2", teams[1].Name)
+  assert.Len(t, data, 2)
+  assert.Equal(t, 1, data[0].Id)
+  assert.Equal(t, "Team 1", data[0].Name)
+  assert.Equal(t, 2, data[1].Id)
+  assert.Equal(t, "Team 2", data[1].Name)
 
   mockUserRepo.AssertExpectations(t)
   mockTeamRepo.AssertExpectations(t)

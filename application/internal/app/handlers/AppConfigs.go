@@ -30,15 +30,15 @@ type App struct {
 }
 
 type RegisterRequest struct {
-	Fio      string `json:"fio"`
-	Login    string `json:"username"`
-	Password string `json:"password"`
+	Fio      string `my_json:"fio"`
+	Login    string `my_json:"username"`
+	Password string `my_json:"password"`
 }
 
 type RegisterResponse struct {
-	Success bool   `json:"success"`
-	Message string `json:"message,omitempty"`
-	UserID  int    `json:"id,omitempty"`
+	Success bool   `my_json:"success"`
+	Message string `my_json:"message,omitempty"`
+	UserID  int    `my_json:"id,omitempty"`
 }
 
 // Функция для сохранения файлов на сервере
@@ -148,7 +148,7 @@ func (app *App) AddNoteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	note, _, _, _ := app.IServices.INoteSvc.GetNote(0, noteTitle, bl.SearchByString, app.CurUser, app.IRepos.INoteRepo, app.IRepos.ISecRepo, app.IRepos.ITeamRepo)
+	note, _ := app.IServices.INoteSvc.GetNote(0, noteTitle, bl.SearchByString, app.CurUser, app.IRepos.INoteRepo, app.IRepos.ISecRepo, app.IRepos.ITeamRepo)
 	if err := app.IServices.INoteSvc.UpdateNoteContent(note.Id, app.CurUser, filePath, app.IRepos.INoteRepo); err.ErrNum != bl.Ok {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -158,7 +158,7 @@ func (app *App) AddNoteHandler(w http.ResponseWriter, r *http.Request) {
 	response := map[string]string{
 		"message": "Note added successfully!",
 	}
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/my_json")
 	json.NewEncoder(w).Encode(response)
 }
 
@@ -179,7 +179,7 @@ func (app *App) GetAllNotesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Устанавливаем заголовки ответа
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/my_json")
 	w.WriteHeader(http.StatusOK)
 
 	// Преобразуем список записок в JSON и отправляем ответ
@@ -212,7 +212,7 @@ func (app *App) GetAllNotesInTeamSectionHandler(w http.ResponseWriter, r *http.R
 		}
 
 		// Устанавливаем заголовки ответа
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", "application/my_json")
 		w.WriteHeader(http.StatusOK)
 
 		// Преобразуем список записок в JSON и отправляем ответ
@@ -252,9 +252,9 @@ func (app *App) DeleteNoteFromSectionHandler(w http.ResponseWriter, r *http.Requ
 	noteID, err := strconv.Atoi(noteIdentifier)
 	if err == nil {
 		// Если это число — получаем записку по ID
-		note, _, _, myErr = noteSrv.GetNote(noteID, "", bl.SearchByID, app.CurUser, noteRepo, secRepo, teamRepo)
+		note, myErr = noteSrv.GetNote(noteID, "", bl.SearchByID, app.CurUser, noteRepo, secRepo, teamRepo)
 	} else {
-		note, _, _, myErr = noteSrv.GetNote(0, noteIdentifier, bl.SearchByString, app.CurUser, noteRepo, secRepo, teamRepo)
+		note, myErr = noteSrv.GetNote(0, noteIdentifier, bl.SearchByString, app.CurUser, noteRepo, secRepo, teamRepo)
 	}
 
 	// Проверяем, есть ли ошибка при получении записки
@@ -277,7 +277,7 @@ func (app *App) DeleteNoteFromSectionHandler(w http.ResponseWriter, r *http.Requ
 	}
 
 	// Формируем успешный ответ
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/my_json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Note successfully deleted from section"})
 }
@@ -302,9 +302,9 @@ func (app *App) AddNoteToSectionHandler(w http.ResponseWriter, r *http.Request) 
 	var note *models.Note
 	var myErr *bl.MyError
 	if err == nil {
-		note, _, _, myErr = noteSrv.GetNote(noteID, "", 1, app.CurUser, app.IRepos.INoteRepo, app.IRepos.ISecRepo, app.IRepos.ITeamRepo)
+		note, myErr = noteSrv.GetNote(noteID, "", 1, app.CurUser, app.IRepos.INoteRepo, app.IRepos.ISecRepo, app.IRepos.ITeamRepo)
 	} else {
-		note, _, _, myErr = noteSrv.GetNote(0, noteIdentifier, 2, app.CurUser, app.IRepos.INoteRepo, app.IRepos.ISecRepo, app.IRepos.ITeamRepo)
+		note, myErr = noteSrv.GetNote(0, noteIdentifier, 2, app.CurUser, app.IRepos.INoteRepo, app.IRepos.ISecRepo, app.IRepos.ITeamRepo)
 	}
 
 	if myErr.ErrNum != bl.Ok {
@@ -325,7 +325,7 @@ func (app *App) AddNoteToSectionHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/my_json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Note added to section successfully"})
 }
@@ -339,9 +339,9 @@ func (app *App) DeleteNoteHandler(w http.ResponseWriter, r *http.Request) {
 	var note *models.Note
 	var myErr *bl.MyError
 	if err == nil {
-		note, _, _, myErr = app.IServices.INoteSvc.GetNote(noteID, "", 1, app.CurUser, app.IRepos.INoteRepo, app.IRepos.ISecRepo, app.IRepos.ITeamRepo)
+		note, myErr = app.IServices.INoteSvc.GetNote(noteID, "", 1, app.CurUser, app.IRepos.INoteRepo, app.IRepos.ISecRepo, app.IRepos.ITeamRepo)
 	} else {
-		note, _, _, myErr = app.IServices.INoteSvc.GetNote(0, noteIdentifier, 2, app.CurUser, app.IRepos.INoteRepo, app.IRepos.ISecRepo, app.IRepos.ITeamRepo)
+		note, myErr = app.IServices.INoteSvc.GetNote(0, noteIdentifier, 2, app.CurUser, app.IRepos.INoteRepo, app.IRepos.ISecRepo, app.IRepos.ITeamRepo)
 	}
 
 	if myErr.ErrNum != bl.Ok {
@@ -379,8 +379,8 @@ func (app *App) DeleteNoteHandler(w http.ResponseWriter, r *http.Request) {
 // 		return
 // 	}
 //
-// 	w.Header().Set("Content-Type", "application/json")
-// 	json.NewEncoder(w).Encode(note)
+// 	w.Header().Set("Content-Type", "application/my_json")
+// 	my_json.NewEncoder(w).Encode(note)
 // }
 
 func (app *App) FindNoteHandler(w http.ResponseWriter, r *http.Request) {
@@ -394,9 +394,9 @@ func (app *App) FindNoteHandler(w http.ResponseWriter, r *http.Request) {
 	var extension string
 	var myErr *bl.MyError
 	if err == nil {
-		note, data, extension, myErr = app.IServices.INoteSvc.GetNote(noteID, "", bl.SearchByID, app.CurUser, app.IRepos.INoteRepo, app.IRepos.ISecRepo, app.IRepos.ITeamRepo)
+		note, myErr = app.IServices.INoteSvc.GetNote(noteID, "", bl.SearchByID, app.CurUser, app.IRepos.INoteRepo, app.IRepos.ISecRepo, app.IRepos.ITeamRepo)
 	} else {
-		note, data, extension, myErr = app.IServices.INoteSvc.GetNote(0, noteIdentifier, bl.SearchByString, app.CurUser, app.IRepos.INoteRepo, app.IRepos.ISecRepo, app.IRepos.ITeamRepo)
+		note, myErr = app.IServices.INoteSvc.GetNote(0, noteIdentifier, bl.SearchByString, app.CurUser, app.IRepos.INoteRepo, app.IRepos.ISecRepo, app.IRepos.ITeamRepo)
 	}
 
 	if myErr.ErrNum != bl.Ok {
@@ -408,7 +408,7 @@ func (app *App) FindNoteHandler(w http.ResponseWriter, r *http.Request) {
 	switch extension {
 	case "txt":
 		// Если это текстовая записка
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", "application/my_json")
 		response := map[string]interface{}{
 			"note": note,
 			"text": string(data), // Преобразуем []byte в строку
@@ -451,7 +451,7 @@ func (app *App) ShowCollectionNotesHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/my_json")
 	json.NewEncoder(w).Encode(notes)
 }
 
@@ -473,9 +473,9 @@ func (app *App) AddNoteToCollectionHandler(w http.ResponseWriter, r *http.Reques
 	noteID, err := strconv.Atoi(noteIdentifier)
 	var note *models.Note
 	if err == nil {
-		note, _, _, myErr = app.IServices.INoteSvc.GetNote(noteID, "", 1, app.CurUser, app.IRepos.INoteRepo, app.IRepos.ISecRepo, app.IRepos.ITeamRepo)
+		note, myErr = app.IServices.INoteSvc.GetNote(noteID, "", 1, app.CurUser, app.IRepos.INoteRepo, app.IRepos.ISecRepo, app.IRepos.ITeamRepo)
 	} else {
-		note, _, _, myErr = app.IServices.INoteSvc.GetNote(0, noteIdentifier, 2, app.CurUser, app.IRepos.INoteRepo, app.IRepos.ISecRepo, app.IRepos.ITeamRepo)
+		note, myErr = app.IServices.INoteSvc.GetNote(0, noteIdentifier, 2, app.CurUser, app.IRepos.INoteRepo, app.IRepos.ISecRepo, app.IRepos.ITeamRepo)
 	}
 
 	if myErr.ErrNum != bl.Ok {
@@ -490,7 +490,7 @@ func (app *App) AddNoteToCollectionHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/my_json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Note added to collection successfully"})
 }
@@ -625,7 +625,7 @@ func (app *App) UpdateUserFioHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	userId := vars["userId"]
 	var newFio struct {
-		Fio string `json:"fio"`
+		Fio string `my_json:"fio"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&newFio); err != nil {
 		http.Error(w, "Invalid input", http.StatusBadRequest)
@@ -661,7 +661,7 @@ func (app *App) UpdateUserRoleHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	userId := vars["userId"]
 	var newRole struct {
-		Role int `json:"role"`
+		Role int `my_json:"role"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&newRole); err != nil {
 		http.Error(w, "Invalid input", http.StatusBadRequest)
@@ -694,7 +694,7 @@ func (app *App) UpdateUserRoleHandler(w http.ResponseWriter, r *http.Request) {
 
 func (app *App) AddTeamHandler(w http.ResponseWriter, r *http.Request) {
 	var newTeam struct {
-		Name string `json:"name"`
+		Name string `my_json:"name"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&newTeam); err != nil {
@@ -728,7 +728,7 @@ func (app *App) GetAllUsersHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", "application/my_json")
 		json.NewEncoder(w).Encode(users)
 	}
 }
@@ -859,7 +859,7 @@ func (app *App) GetAllTeamsHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", "application/my_json")
 		json.NewEncoder(w).Encode(teams)
 	}
 }
@@ -1000,6 +1000,6 @@ func (app *App) GetFullStatHendler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/my_json")
 	json.NewEncoder(w).Encode(stat)
 }

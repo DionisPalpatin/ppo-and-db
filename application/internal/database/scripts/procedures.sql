@@ -33,7 +33,7 @@ begin
 	delete from main.teams_sections where team_id = deleted_team_id;
 	delete from main.team_members where team_id = deleted_team_id;
 	delete from main.sections where id = team_sec_id;
-	delete from main.teams where id = deleted_team_id;
+	delete from main.data where id = deleted_team_id;
 end;
 $$ language plpgsql;
 

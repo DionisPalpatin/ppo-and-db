@@ -7,7 +7,7 @@ type UserService struct {
 }
 
 func (us *UserService) GetUser(id int, login string, searchBy int, requester *models.User) (*models.User, *MyError) {
-	if requester.Role != Admin {
+	if requester.Role != Admin && requester.Id != id {
 		err := CreateError(ErrAccessDenied, "GetUser", "")
 		return nil, err
 	}
