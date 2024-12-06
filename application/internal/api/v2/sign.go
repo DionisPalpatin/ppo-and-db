@@ -106,8 +106,10 @@ func (app *App) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	convToken := converters.ToTransportToken(token)
+
 	w.Header().Set("Content-Type", "application/my_json")
-	err = json.NewEncoder(w).Encode(models.Token{AccessToken: token})
+	err = json.NewEncoder(w).Encode(convToken)
 
 	if err != nil {
 		app.Configs.LogConfigs.Logger.WriteLog("Error checking user existence", slog.LevelError, nil)

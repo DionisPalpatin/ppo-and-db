@@ -13,7 +13,7 @@ type OAuthService struct {
 func (oas *OAuthService) RegisterUser(fio string, login string, password string) (*models.User, *MyError) {
 	user, err := oas.iur.GetUserByLogin(login)
 	if err.ErrNum == Ok {
-		return nil, CreateError(ErrRegisterUser, "RegisterUse", "bl")
+		return nil, CreateError(UserExists, "RegisterUse", "bl")
 	}
 
 	user = &models.User{
@@ -34,7 +34,7 @@ func (oas *OAuthService) SignInUser(login string, password string) (*models.Toke
 		return nil, myErr
 	}
 	if user.Password != password {
-		myErr := CreateError(ErrSignInUser, "SignInUser", "bl")
+		myErr := CreateError(AuthenticationError, "SignInUser", "bl")
 		return nil, myErr
 	}
 

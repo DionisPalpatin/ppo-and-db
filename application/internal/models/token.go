@@ -1,11 +1,14 @@
 package models
 
-import "github.com/golang-jwt/jwt/v5"
+import (
+	"github.com/golang-jwt/jwt/v5"
+	"time"
+)
 
 type Token struct {
-	AccessToken string `my_json:"access_token"`
-	TokenType   string `my_json:"token_type"`
-	ExpiresIn   int64  `my_json:"expires_in"`
+	AccessToken string    `my_json:"access_token"`
+	TokenType   string    `my_json:"token_type"`
+	ExpiresAt   time.Time `json:"exp"`
 }
 
 type CustomClaims struct {

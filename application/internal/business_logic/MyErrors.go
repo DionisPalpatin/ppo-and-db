@@ -13,6 +13,9 @@ type MyError struct {
 const (
 	Ok = iota
 
+	UserExists          = iota
+	AuthenticationError = iota
+
 	NoSuchUser = iota
 	NoSuchTeam = iota
 	NoSuchNote = iota

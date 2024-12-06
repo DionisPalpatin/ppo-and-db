@@ -140,7 +140,7 @@ type IUserRepository interface {
 
 type IOAuthService interface {
 	RegisterUser(fio string, login string, password string) (*models.User, *MyError)
-	SignInUser(login string, password string) (string, *MyError)
+	SignInUser(login string, password string) (*models.Token, *MyError)
 }
 
 // ---------------------------------------------------------------------------------------------------------------------

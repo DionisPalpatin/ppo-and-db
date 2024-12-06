@@ -31,7 +31,7 @@ func generateToken(userID int, userRole string) (*models.Token, error) {
 	return &models.Token{
 		AccessToken: signedToken,
 		TokenType:   "Bearer",
-		ExpiresIn:   int64(expirationTime.Sub(time.Now()).Seconds()),
+		ExpiresAt:   expirationTime,
 	}, nil
 }
 
