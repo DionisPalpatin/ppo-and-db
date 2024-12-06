@@ -6,55 +6,53 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/gorilla/mux"
-
 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/config"
-	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/UI/TechUI"
+	//"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/UI/TechUI"
 	handlers "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/api/v2"
-	app "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/app/handlers"
-	appconfigs "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/app/handlers"
 	bl "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
-	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/database"
+	//"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/database"
 	mylogger "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/logger"
 )
 
 func initDBConnection(config *config.Configs) error {
-	logger := config.LogConfigs.Logger
-	logger.WriteLog("Init DB connection", slog.LevelInfo, nil)
+	//logger := config.LogConfigs.Logger
+	//logger.WriteLog("Init DB connection", slog.LevelInfo, nil)
+	//
+	//err := database.Connect(config.LogConfigs.Logger, config.DBConfigs)
+	//if err != nil {
+	//	logger.WriteLog("Unable to init db connection", slog.LevelError, nil)
+	//}
+	//
+	//return err
 
-	err := database.Connect(config.LogConfigs.Logger, config.DBConfigs)
-	if err != nil {
-		logger.WriteLog("Unable to init db connection", slog.LevelError, nil)
-	}
-
-	return err
+	return nil
 }
 
 // Структура для общей конфигурации приложения
 type App struct {
-	Configs *config.Configs
-	Router  *mux.Router
+	Configs  *config.Configs
+	handlers *handlers.HandlersStruct
 
 	IServices *bl.IServices
 	IRepos    *bl.IRepositories
 }
 
-func initInterfaces(conf *app.App) {
-	dbconf := conf.Configs.DBConfigs
-	logger := conf.Configs.LogConfigs
+func initInterfaces(appStruct *App) {
+	dbconf := appStruct.Configs.DBConfigs
+	logger := appStruct.Configs.LogConfigs
 
 	if dbconf.DriverName == "postgres" {
-		conf.IRepos = &bl.IRepositories{
+		appStruct.IRepos = &bl.IRepositories{
 			IUsrRepo:  &dapostgres.UserRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
 			ISecRepo:  &dapostgres.SectionRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
 			INoteRepo: &dapostgres.NoteRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
 			IColRepo:  &dapostgres.CollectionRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
 			ITeamRepo: &dapostgres.TeamRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
-			IStatRepo: &dapostgres.StatisticRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
+			//IStatRepo: &dapostgres.StatisticRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
 		}
 	}
 	// } else if dbconf.DriverName == "clickhouse" {
-	// 	conf.IRepos = &bl.IRepositories{
+	// 	appStruct.IRepos = &bl.IRepositories{
 	// 		IUsrRepo:  &daclickhouse.UserRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
 	// 		ISecRepo:  &daclickhouse.SectionRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
 	// 		INoteRepo: &daclickhouse.NoteRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
@@ -64,28 +62,47 @@ func initInterfaces(conf *app.App) {
 	// 	}
 	// }
 
-	conf.IServices = &bl.IServices{
+	appStruct.IServices = &bl.IServices{
 		IUsrSvc:   &bl.UserService{},
 		ISecSvc:   &bl.SectionService{},
 		INoteSvc:  &bl.NoteService{},
 		IColSvc:   &bl.CollectionService{},
 		ITeamSvc:  &bl.TeamService{},
 		IOAuthSvc: &bl.OAuthService{},
-		IStatSvc:  &bl.StatService{},
+		//IStatSvc:  &bl.StatService{},
+	}
+
+	appStruct.handlers = &handlers.HandlersStruct{}
+	appStruct.handlers.IServices = &bl.IServices{
+		IUsrSvc:   &bl.UserService{},
+		ISecSvc:   &bl.SectionService{},
+		INoteSvc:  &bl.NoteService{},
+		IColSvc:   &bl.CollectionService{},
+		ITeamSvc:  &bl.TeamService{},
+		IOAuthSvc: &bl.OAuthService{},
+		//IStatSvc:  &bl.StatService{},
+	}
+	appStruct.handlers.IRepos = &bl.IRepositories{
+		IUsrRepo:  &dapostgres.UserRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
+		ISecRepo:  &dapostgres.SectionRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
+		INoteRepo: &dapostgres.NoteRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
+		IColRepo:  &dapostgres.CollectionRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
+		ITeamRepo: &dapostgres.TeamRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
+		//IStatRepo: &dapostgres.StatisticRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
 	}
 }
 
 func RunBackend() error {
 	configFile := "./config/config.yaml"
 
-	app := new(App)
+	appStruct := new(App)
 	var err error
 
-	app.Configs, err = config.ReadConfig(configFile)
+	appStruct.Configs, err = config.ReadConfig(configFile)
 	if err != nil {
 		return err
 	}
-	configs := app.Configs
+	configs := appStruct.Configs
 	configs.LogConfigs.Logger = new(mylogger.MyLogger)
 
 	logFile := configs.LogConfigs.LogFile
@@ -100,32 +117,41 @@ func RunBackend() error {
 		return err
 	}
 
-	// initRepositories(app)
-	initInterfaces((*appconfigs.App)(app))
+	// initRepositories(appStruct)
+	initInterfaces(appStruct)
 
-	if app.Configs.Mode == "tech" {
-		for {
-			user := TechUI.AuthorizationMenu(configs, app.IRepos, app.IServices)
-			if user == nil {
-				break
-			} else if user.Role == bl.Reader {
-				TechUI.ReaderMenu(user, configs, app.IRepos, app.IServices)
-			} else if user.Role == bl.Author {
-				TechUI.AuthorMenu(user, configs, app.IRepos, app.IServices)
-			} else if user.Role == bl.Admin {
-				TechUI.AdminMenu(user, configs, app.IRepos, app.IServices)
-			}
-		}
-	} else {
-		handlers.InitRouter(&app.Router)
-		port := fmt.Sprintf(":%d", app.Configs.ServerPort)
+	//if appStruct.Configs.Mode == "tech" {
+	//	for {
+	//		user := TechUI.AuthorizationMenu(configs, appStruct.IRepos, appStruct.IServices)
+	//		if user == nil {
+	//			break
+	//		} else if user.Role == bl.Reader {
+	//			TechUI.ReaderMenu(user, configs, appStruct.IRepos, appStruct.IServices)
+	//		} else if user.Role == bl.Author {
+	//			TechUI.AuthorMenu(user, configs, appStruct.IRepos, appStruct.IServices)
+	//		} else if user.Role == bl.Admin {
+	//			TechUI.AdminMenu(user, configs, appStruct.IRepos, appStruct.IServices)
+	//		}
+	//	}
+	//} else {
+	//	handlers.InitRouter(appStruct.handlers)
+	//	port := fmt.Sprintf(":%d", appStruct.Configs.ServerPort)
+	//
+	//	fs := http.FileServer(http.Dir("./static/"))
+	//	appStruct.handlers.Router.PathPrefix("/").Handler(fs)
+	//
+	//	http.ListenAndServe(port, appStruct.handlers.Router)
+	//	appStruct.Configs.LogConfigs.Logger.WriteLog("Server is running on port 8080", slog.LevelInfo, nil)
+	//}
 
-		fs := http.FileServer(http.Dir("./static/"))
-		app.Router.PathPrefix("/").Handler(fs)
+	handlers.InitRouter(appStruct.handlers)
+	port := fmt.Sprintf(":%d", appStruct.Configs.ServerPort)
 
-		http.ListenAndServe(port, app.Router)
-		app.Configs.LogConfigs.Logger.WriteLog("Server is running on port 8080", slog.LevelInfo, nil)
-	}
+	fs := http.FileServer(http.Dir("./static/"))
+	appStruct.handlers.Router.PathPrefix("/").Handler(fs)
+
+	http.ListenAndServe(port, appStruct.handlers.Router)
+	appStruct.Configs.LogConfigs.Logger.WriteLog("Server is running on port 8080", slog.LevelInfo, nil)
 
 	return nil
 }

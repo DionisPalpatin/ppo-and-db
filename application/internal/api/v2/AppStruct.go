@@ -6,7 +6,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type App struct {
+type HandlersStruct struct {
 	Configs *config.Configs
 	Router  *mux.Router
 

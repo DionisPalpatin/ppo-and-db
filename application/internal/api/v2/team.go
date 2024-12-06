@@ -12,19 +12,19 @@ import (
 	"strconv"
 )
 
-func (app *App) GetAllTeamsHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, app.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) GetAllTeamsHandler(w http.ResponseWriter, r *http.Request) {
+	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
 
-	data, myErr := app.IServices.ITeamSvc.GetAllTeams(reqUser)
+	data, myErr := hs.IServices.ITeamSvc.GetAllTeams(reqUser)
 	if myErr == nil {
-		app.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	} else if myErr.ErrNum == bl.ErrAccessDenied {
-		app.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
 		http.Error(w, "Insufficient permissions", http.StatusForbidden)
 		return
 	} else if myErr.ErrNum != bl.Ok {
@@ -46,8 +46,8 @@ func (app *App) GetAllTeamsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (app *App) GetTeamHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, app.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) GetTeamHandler(w http.ResponseWriter, r *http.Request) {
+	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
@@ -59,13 +59,13 @@ func (app *App) GetTeamHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	srcData, myErr := app.IServices.ITeamSvc.GetTeam(targetID, "", bl.SearchByID, reqUser)
+	srcData, myErr := hs.IServices.ITeamSvc.GetTeam(targetID, "", bl.SearchByID, reqUser)
 	if myErr == nil {
-		app.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	} else if myErr.ErrNum == bl.ErrAccessDenied {
-		app.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
 		http.Error(w, "Insufficient permissions", http.StatusForbidden)
 		return
 	} else if myErr.ErrNum == bl.NoSuchTeam {
@@ -87,8 +87,8 @@ func (app *App) GetTeamHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (app *App) AddTeamHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, app.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) AddTeamHandler(w http.ResponseWriter, r *http.Request) {
+	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
@@ -97,7 +97,7 @@ func (app *App) AddTeamHandler(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&teamInfo)
 
 	if err != nil {
-		app.Configs.LogConfigs.Logger.WriteLog("Invalid request payload", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Invalid request payload", slog.LevelError, nil)
 		http.Error(w, "Invalid request payload", http.StatusUnprocessableEntity)
 		return
 	}
@@ -105,7 +105,7 @@ func (app *App) AddTeamHandler(w http.ResponseWriter, r *http.Request) {
 	var validate = validator.New()
 
 	if err := validate.Struct(&teamInfo); err != nil {
-		app.Configs.LogConfigs.Logger.WriteLog("Invalid request payload", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Invalid request payload", slog.LevelError, nil)
 		http.Error(w, "Invalid request payload", http.StatusUnprocessableEntity)
 		return
 	}
@@ -113,18 +113,18 @@ func (app *App) AddTeamHandler(w http.ResponseWriter, r *http.Request) {
 	convertedData := converters.FromTeamInfo(&teamInfo)
 	var idStruct teamIDStruct
 	var myErr *bl.MyError
-	idStruct.TeamID, myErr = app.IServices.ITeamSvc.AddTeam(reqUser, &convertedData)
+	idStruct.TeamID, myErr = hs.IServices.ITeamSvc.AddTeam(reqUser, &convertedData)
 
 	if myErr == nil {
-		app.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	} else if myErr.ErrNum == bl.NoSuchTeam {
-		app.Configs.LogConfigs.Logger.WriteLog("Team not found", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Team not found", slog.LevelError, nil)
 		http.Error(w, "Team not found", http.StatusNotFound)
 		return
 	} else if myErr.ErrNum != bl.Ok {
-		app.Configs.LogConfigs.Logger.WriteLog("Error checking user existence", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Error checking user existence", slog.LevelError, nil)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
@@ -138,8 +138,8 @@ func (app *App) AddTeamHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (app *App) DeleteTeamHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, app.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) DeleteTeamHandler(w http.ResponseWriter, r *http.Request) {
+	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
@@ -151,9 +151,9 @@ func (app *App) DeleteTeamHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	myErr := app.IServices.ITeamSvc.DeleteTeam(reqUser, targetID)
+	myErr := hs.IServices.ITeamSvc.DeleteTeam(reqUser, targetID)
 	if myErr.ErrNum == bl.ErrAccessDenied {
-		app.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
 		http.Error(w, "Insufficient permissions", http.StatusForbidden)
 		return
 	} else if myErr.ErrNum == bl.OperationError {
@@ -167,8 +167,8 @@ func (app *App) DeleteTeamHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (app *App) UpdateTeamHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, app.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) UpdateTeamHandler(w http.ResponseWriter, r *http.Request) {
+	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
@@ -181,7 +181,7 @@ func (app *App) UpdateTeamHandler(w http.ResponseWriter, r *http.Request) {
 
 	var validate = validator.New()
 	if err := validate.Struct(&data); err != nil {
-		app.Configs.LogConfigs.Logger.WriteLog("Invalid request payload", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Invalid request payload", slog.LevelError, nil)
 		http.Error(w, "Invalid request payload", http.StatusUnprocessableEntity)
 		return
 	}
@@ -195,10 +195,10 @@ func (app *App) UpdateTeamHandler(w http.ResponseWriter, r *http.Request) {
 
 	convData := converters.FromTeamInfo(&data)
 	convData.Id = targetID
-	myErr := app.IServices.ITeamSvc.UpdateTeam(reqUser, &convData)
+	myErr := hs.IServices.ITeamSvc.UpdateTeam(reqUser, &convData)
 
 	if myErr.ErrNum == bl.ErrAccessDenied {
-		app.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
 		http.Error(w, "Insufficient permissions", http.StatusForbidden)
 		return
 	} else if myErr.ErrNum == bl.OperationError {
@@ -212,8 +212,8 @@ func (app *App) UpdateTeamHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (app *App) AddUserToTeamHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, app.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) AddUserToTeamHandler(w http.ResponseWriter, r *http.Request) {
+	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
@@ -226,7 +226,7 @@ func (app *App) AddUserToTeamHandler(w http.ResponseWriter, r *http.Request) {
 
 	var validate = validator.New()
 	if err := validate.Struct(&data); err != nil {
-		app.Configs.LogConfigs.Logger.WriteLog("Invalid request payload", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Invalid request payload", slog.LevelError, nil)
 		http.Error(w, "Invalid request payload", http.StatusUnprocessableEntity)
 		return
 	}
@@ -238,10 +238,10 @@ func (app *App) AddUserToTeamHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	myErr := app.IServices.ITeamSvc.AddUserToTeam(reqUser, data.UserID, targetID)
+	myErr := hs.IServices.ITeamSvc.AddUserToTeam(reqUser, data.UserID, targetID)
 
 	if myErr.ErrNum == bl.ErrAccessDenied {
-		app.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
 		http.Error(w, "Insufficient permissions", http.StatusForbidden)
 		return
 	} else if myErr.ErrNum == bl.OperationError {
@@ -255,8 +255,8 @@ func (app *App) AddUserToTeamHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (app *App) DeleteUserFromTeamHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, app.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) DeleteUserFromTeamHandler(w http.ResponseWriter, r *http.Request) {
+	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
@@ -273,10 +273,10 @@ func (app *App) DeleteUserFromTeamHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	myErr := app.IServices.ITeamSvc.DeleteUserFromTeam(reqUser, userID, teamID)
+	myErr := hs.IServices.ITeamSvc.DeleteUserFromTeam(reqUser, userID, teamID)
 
 	if myErr.ErrNum == bl.ErrAccessDenied {
-		app.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
 		http.Error(w, "Insufficient permissions", http.StatusForbidden)
 		return
 	} else if myErr.ErrNum == bl.OperationError {
@@ -290,8 +290,8 @@ func (app *App) DeleteUserFromTeamHandler(w http.ResponseWriter, r *http.Request
 	w.WriteHeader(http.StatusOK)
 }
 
-func (app *App) GetTeamMembersHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, app.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) GetTeamMembersHandler(w http.ResponseWriter, r *http.Request) {
+	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
@@ -303,9 +303,9 @@ func (app *App) GetTeamMembersHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data, myErr := app.IServices.ITeamSvc.GetTeamMembers(teamID, reqUser)
+	data, myErr := hs.IServices.ITeamSvc.GetTeamMembers(teamID, reqUser)
 	if myErr.ErrNum == bl.ErrAccessDenied {
-		app.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
 		http.Error(w, "Insufficient permissions", http.StatusForbidden)
 		return
 	} else if myErr.ErrNum == bl.OperationError {

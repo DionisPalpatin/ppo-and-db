@@ -12,8 +12,8 @@ import (
 	"strconv"
 )
 
-func (app *App) GetSectionHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, app.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) GetSectionHandler(w http.ResponseWriter, r *http.Request) {
+	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
@@ -25,13 +25,13 @@ func (app *App) GetSectionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	srcData, myErr := app.IServices.ISecSvc.GetSection(targetID, "", reqUser, bl.SearchByID)
+	srcData, myErr := hs.IServices.ISecSvc.GetSection(targetID, "", reqUser, bl.SearchByID)
 	if myErr == nil {
-		app.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	} else if myErr.ErrNum == bl.ErrAccessDenied {
-		app.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
 		http.Error(w, "Insufficient permissions", http.StatusForbidden)
 		return
 	} else if myErr.ErrNum == bl.NoSuchColl {
@@ -42,13 +42,13 @@ func (app *App) GetSectionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	team, myErr := app.IServices.ITeamSvc.GetSectionTeam(srcData.Id, reqUser)
+	team, myErr := hs.IServices.ITeamSvc.GetSectionTeam(srcData.Id, reqUser)
 	if myErr == nil {
-		app.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	} else if myErr.ErrNum == bl.ErrAccessDenied {
-		app.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
 		http.Error(w, "Insufficient permissions", http.StatusForbidden)
 		return
 	} else if myErr.ErrNum == bl.NoSuchColl {
@@ -70,19 +70,19 @@ func (app *App) GetSectionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (app *App) GetAllSectionsHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, app.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) GetAllSectionsHandler(w http.ResponseWriter, r *http.Request) {
+	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
 
-	data, myErr := app.IServices.ISecSvc.GetAllSections(reqUser)
+	data, myErr := hs.IServices.ISecSvc.GetAllSections(reqUser)
 	if myErr == nil {
-		app.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	} else if myErr.ErrNum == bl.ErrAccessDenied {
-		app.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
 		http.Error(w, "Insufficient permissions", http.StatusForbidden)
 		return
 	} else if myErr.ErrNum != bl.Ok {
@@ -92,14 +92,14 @@ func (app *App) GetAllSectionsHandler(w http.ResponseWriter, r *http.Request) {
 
 	dataConverted := make([]transport_models.SectionInfo, 0, len(data))
 	for _, el := range data {
-		team, myErr := app.IServices.ITeamSvc.GetSectionTeam(el.Id, reqUser)
+		team, myErr := hs.IServices.ITeamSvc.GetSectionTeam(el.Id, reqUser)
 
 		if myErr == nil {
-			app.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
+			hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		} else if myErr.ErrNum == bl.ErrAccessDenied {
-			app.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
+			hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
 			http.Error(w, "Insufficient permissions", http.StatusForbidden)
 			return
 		} else if myErr.ErrNum == bl.NoSuchColl {
@@ -122,8 +122,8 @@ func (app *App) GetAllSectionsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (app *App) AddSectionHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, app.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) AddSectionHandler(w http.ResponseWriter, r *http.Request) {
+	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
@@ -132,7 +132,7 @@ func (app *App) AddSectionHandler(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&srcData)
 
 	if err != nil {
-		app.Configs.LogConfigs.Logger.WriteLog("Invalid request payload", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Invalid request payload", slog.LevelError, nil)
 		http.Error(w, "Invalid request payload", http.StatusUnprocessableEntity)
 		return
 	}
@@ -140,21 +140,21 @@ func (app *App) AddSectionHandler(w http.ResponseWriter, r *http.Request) {
 	var validate = validator.New()
 
 	if err := validate.Struct(&srcData); err != nil {
-		app.Configs.LogConfigs.Logger.WriteLog("Invalid request payload", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Invalid request payload", slog.LevelError, nil)
 		http.Error(w, "Invalid request payload", http.StatusUnprocessableEntity)
 		return
 	}
 
 	convertedData, teamID := converters.FromSectionInfo(&srcData)
 
-	team, myErr := app.IServices.ITeamSvc.GetTeam(teamID, "", bl.SearchByID, reqUser)
+	team, myErr := hs.IServices.ITeamSvc.GetTeam(teamID, "", bl.SearchByID, reqUser)
 
 	if myErr == nil {
-		app.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	} else if myErr.ErrNum == bl.ErrAccessDenied {
-		app.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
 		http.Error(w, "Insufficient permissions", http.StatusForbidden)
 		return
 	} else if myErr.ErrNum == bl.NoSuchColl {
@@ -166,18 +166,18 @@ func (app *App) AddSectionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var idStruct sectionIDStruct
-	idStruct.SecID, myErr = app.IServices.ISecSvc.AddSection(&convertedData, team, reqUser)
+	idStruct.SecID, myErr = hs.IServices.ISecSvc.AddSection(&convertedData, team, reqUser)
 
 	if myErr == nil {
-		app.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	} else if myErr.ErrNum == bl.NoSuchTeam {
-		app.Configs.LogConfigs.Logger.WriteLog("Team not found", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Team not found", slog.LevelError, nil)
 		http.Error(w, "Note not found", http.StatusNotFound)
 		return
 	} else if myErr.ErrNum != bl.Ok {
-		app.Configs.LogConfigs.Logger.WriteLog("Error checking user existence", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Error checking user existence", slog.LevelError, nil)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
@@ -191,8 +191,8 @@ func (app *App) AddSectionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (app *App) DeleteSectionHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, app.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) DeleteSectionHandler(w http.ResponseWriter, r *http.Request) {
+	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
@@ -204,9 +204,9 @@ func (app *App) DeleteSectionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	myErr := app.IServices.ISecSvc.DeleteSection(targetID, reqUser)
+	myErr := hs.IServices.ISecSvc.DeleteSection(targetID, reqUser)
 	if myErr.ErrNum == bl.ErrAccessDenied {
-		app.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
 		http.Error(w, "Insufficient permissions", http.StatusForbidden)
 		return
 	} else if myErr.ErrNum == bl.OperationError {
@@ -220,8 +220,8 @@ func (app *App) DeleteSectionHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (app *App) UpdateSectionHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, app.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) UpdateSectionHandler(w http.ResponseWriter, r *http.Request) {
+	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
@@ -235,7 +235,7 @@ func (app *App) UpdateSectionHandler(w http.ResponseWriter, r *http.Request) {
 	var validate = validator.New()
 
 	if err := validate.Struct(&data); err != nil {
-		app.Configs.LogConfigs.Logger.WriteLog("Invalid request payload", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Invalid request payload", slog.LevelError, nil)
 		http.Error(w, "Invalid request payload", http.StatusUnprocessableEntity)
 		return
 	}
@@ -249,10 +249,10 @@ func (app *App) UpdateSectionHandler(w http.ResponseWriter, r *http.Request) {
 
 	convData, _ := converters.FromSectionInfo(&data)
 	convData.Id = targetID
-	myErr := app.IServices.ISecSvc.UpdateSection(&convData, reqUser)
+	myErr := hs.IServices.ISecSvc.UpdateSection(&convData, reqUser)
 
 	if myErr.ErrNum == bl.ErrAccessDenied {
-		app.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
 		http.Error(w, "Insufficient permissions", http.StatusForbidden)
 		return
 	} else if myErr.ErrNum == bl.OperationError {
@@ -266,8 +266,8 @@ func (app *App) UpdateSectionHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (app *App) GetAllNotesInSectionHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, app.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) GetAllNotesInSectionHandler(w http.ResponseWriter, r *http.Request) {
+	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
@@ -279,13 +279,13 @@ func (app *App) GetAllNotesInSectionHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	data, myErr := app.IServices.ISecSvc.GetAllNotesInSection(targetID, reqUser)
+	data, myErr := hs.IServices.ISecSvc.GetAllNotesInSection(targetID, reqUser)
 	if myErr == nil {
-		app.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	} else if myErr.ErrNum == bl.ErrAccessDenied {
-		app.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
 		http.Error(w, "Insufficient permissions", http.StatusForbidden)
 		return
 	} else if myErr.ErrNum == bl.NoSuchColl {
@@ -310,8 +310,8 @@ func (app *App) GetAllNotesInSectionHandler(w http.ResponseWriter, r *http.Reque
 	}
 }
 
-func (app *App) AddNoteToSectionHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, app.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) AddNoteToSectionHandler(w http.ResponseWriter, r *http.Request) {
+	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
@@ -324,7 +324,7 @@ func (app *App) AddNoteToSectionHandler(w http.ResponseWriter, r *http.Request) 
 
 	var validate = validator.New()
 	if err := validate.Struct(&data); err != nil {
-		app.Configs.LogConfigs.Logger.WriteLog("Invalid request payload", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Invalid request payload", slog.LevelError, nil)
 		http.Error(w, "Invalid request payload", http.StatusUnprocessableEntity)
 		return
 	}
@@ -336,13 +336,13 @@ func (app *App) AddNoteToSectionHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	section, myErr := app.IServices.ISecSvc.GetSection(targetID, "", reqUser, bl.SearchByID)
+	section, myErr := hs.IServices.ISecSvc.GetSection(targetID, "", reqUser, bl.SearchByID)
 	if myErr == nil {
-		app.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	} else if myErr.ErrNum == bl.ErrAccessDenied {
-		app.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
 		http.Error(w, "Insufficient permissions", http.StatusForbidden)
 		return
 	} else if myErr.ErrNum == bl.NoSuchColl {
@@ -353,13 +353,13 @@ func (app *App) AddNoteToSectionHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	note, myErr := app.IServices.INoteSvc.GetNote(targetID, "", bl.SearchByID, reqUser)
+	note, myErr := hs.IServices.INoteSvc.GetNote(targetID, "", bl.SearchByID, reqUser)
 	if myErr == nil {
-		app.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	} else if myErr.ErrNum == bl.ErrAccessDenied {
-		app.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
 		http.Error(w, "Insufficient permissions", http.StatusForbidden)
 		return
 	} else if myErr.ErrNum == bl.NoSuchColl {
@@ -370,10 +370,10 @@ func (app *App) AddNoteToSectionHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	myErr = app.IServices.ISecSvc.AddNoteToSection(section, note, reqUser)
+	myErr = hs.IServices.ISecSvc.AddNoteToSection(section, note, reqUser)
 
 	if myErr.ErrNum == bl.ErrAccessDenied {
-		app.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
 		http.Error(w, "Insufficient permissions", http.StatusForbidden)
 		return
 	} else if myErr.ErrNum == bl.OperationError {
@@ -387,8 +387,8 @@ func (app *App) AddNoteToSectionHandler(w http.ResponseWriter, r *http.Request) 
 	w.WriteHeader(http.StatusOK)
 }
 
-func (app *App) DeleteNoteFromSectionHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, app.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) DeleteNoteFromSectionHandler(w http.ResponseWriter, r *http.Request) {
+	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
@@ -401,7 +401,7 @@ func (app *App) DeleteNoteFromSectionHandler(w http.ResponseWriter, r *http.Requ
 
 	var validate = validator.New()
 	if err := validate.Struct(&data); err != nil {
-		app.Configs.LogConfigs.Logger.WriteLog("Invalid request payload", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Invalid request payload", slog.LevelError, nil)
 		http.Error(w, "Invalid request payload", http.StatusUnprocessableEntity)
 		return
 	}
@@ -413,13 +413,13 @@ func (app *App) DeleteNoteFromSectionHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	section, myErr := app.IServices.ISecSvc.GetSection(targetID, "", reqUser, bl.SearchByID)
+	section, myErr := hs.IServices.ISecSvc.GetSection(targetID, "", reqUser, bl.SearchByID)
 	if myErr == nil {
-		app.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	} else if myErr.ErrNum == bl.ErrAccessDenied {
-		app.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
 		http.Error(w, "Insufficient permissions", http.StatusForbidden)
 		return
 	} else if myErr.ErrNum == bl.NoSuchColl {
@@ -430,13 +430,13 @@ func (app *App) DeleteNoteFromSectionHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	note, myErr := app.IServices.INoteSvc.GetNote(targetID, "", bl.SearchByID, reqUser)
+	note, myErr := hs.IServices.INoteSvc.GetNote(targetID, "", bl.SearchByID, reqUser)
 	if myErr == nil {
-		app.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	} else if myErr.ErrNum == bl.ErrAccessDenied {
-		app.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
 		http.Error(w, "Insufficient permissions", http.StatusForbidden)
 		return
 	} else if myErr.ErrNum == bl.NoSuchColl {
@@ -447,10 +447,10 @@ func (app *App) DeleteNoteFromSectionHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	myErr = app.IServices.ISecSvc.DeleteNoteFromSection(section, note, reqUser)
+	myErr = hs.IServices.ISecSvc.DeleteNoteFromSection(section, note, reqUser)
 
 	if myErr.ErrNum == bl.ErrAccessDenied {
-		app.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
 		http.Error(w, "Insufficient permissions", http.StatusForbidden)
 		return
 	} else if myErr.ErrNum == bl.OperationError {

@@ -12,8 +12,8 @@ import (
 	"strconv"
 )
 
-func (app *App) GetUserHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, app.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) GetUserHandler(w http.ResponseWriter, r *http.Request) {
+	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
@@ -25,13 +25,13 @@ func (app *App) GetUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, myErr := app.IServices.IUsrSvc.GetUser(targetUserID, "", bl.SearchByID, reqUser)
+	user, myErr := hs.IServices.IUsrSvc.GetUser(targetUserID, "", bl.SearchByID, reqUser)
 	if myErr == nil {
-		app.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	} else if myErr.ErrNum == bl.ErrAccessDenied {
-		app.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
 		http.Error(w, "Insufficient permissions", http.StatusForbidden)
 		return
 	} else if myErr.ErrNum == bl.NoSuchUser {
@@ -53,19 +53,19 @@ func (app *App) GetUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (app *App) GetAllUsersHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, app.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) GetAllUsersHandler(w http.ResponseWriter, r *http.Request) {
+	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
 
-	users, myErr := app.IServices.IUsrSvc.GetAllUsers(reqUser)
+	users, myErr := hs.IServices.IUsrSvc.GetAllUsers(reqUser)
 	if myErr == nil {
-		app.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	} else if myErr.ErrNum == bl.ErrAccessDenied {
-		app.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
 		http.Error(w, "Insufficient permissions", http.StatusForbidden)
 		return
 	} else if myErr.ErrNum != bl.Ok {
@@ -87,8 +87,8 @@ func (app *App) GetAllUsersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (app *App) DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, app.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
+	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
@@ -100,9 +100,9 @@ func (app *App) DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	myErr := app.IServices.IUsrSvc.DeleteUser(reqUser, targetUserID)
+	myErr := hs.IServices.IUsrSvc.DeleteUser(reqUser, targetUserID)
 	if myErr.ErrNum == bl.ErrAccessDenied {
-		app.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
 		http.Error(w, "Insufficient permissions", http.StatusForbidden)
 		return
 	} else if myErr.ErrNum == bl.OperationError {
@@ -116,8 +116,8 @@ func (app *App) DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (app *App) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, app.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
+	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
@@ -130,7 +130,7 @@ func (app *App) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	var validate = validator.New()
 	if err := validate.Struct(&userInfo); err != nil {
-		app.Configs.LogConfigs.Logger.WriteLog("Invalid request payload", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Invalid request payload", slog.LevelError, nil)
 		http.Error(w, "Invalid request payload", http.StatusUnprocessableEntity)
 		return
 	}
@@ -145,10 +145,10 @@ func (app *App) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 	user := converters.FromUserPrivateInfo(&userInfo)
 	userInfo.ID = targetUserID
 
-	myErr := app.IServices.IUsrSvc.UpdateUser(reqUser, &user)
+	myErr := hs.IServices.IUsrSvc.UpdateUser(reqUser, &user)
 
 	if myErr.ErrNum == bl.ErrAccessDenied {
-		app.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
 		http.Error(w, "Insufficient permissions", http.StatusForbidden)
 		return
 	} else if myErr.ErrNum == bl.OperationError {

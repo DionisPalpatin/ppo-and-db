@@ -12,8 +12,8 @@ import (
 	"strconv"
 )
 
-func (app *App) GetNoteHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, app.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) GetNoteHandler(w http.ResponseWriter, r *http.Request) {
+	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
@@ -25,13 +25,13 @@ func (app *App) GetNoteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	srcData, myErr := app.IServices.INoteSvc.GetNote(targetID, "", bl.SearchByID, reqUser)
+	srcData, myErr := hs.IServices.INoteSvc.GetNote(targetID, "", bl.SearchByID, reqUser)
 	if myErr == nil {
-		app.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	} else if myErr.ErrNum == bl.ErrAccessDenied {
-		app.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
 		http.Error(w, "Insufficient permissions", http.StatusForbidden)
 		return
 	} else if myErr.ErrNum == bl.NoSuchNote {
@@ -53,8 +53,8 @@ func (app *App) GetNoteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (app *App) GetAllNotesHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, app.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) GetAllNotesHandler(w http.ResponseWriter, r *http.Request) {
+	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
@@ -70,13 +70,13 @@ func (app *App) GetAllNotesHandler(w http.ResponseWriter, r *http.Request) {
 		open = true
 	}
 
-	data, myErr := app.IServices.INoteSvc.GetAllNotes(open, reqUser)
+	data, myErr := hs.IServices.INoteSvc.GetAllNotes(open, reqUser)
 	if myErr == nil {
-		app.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	} else if myErr.ErrNum == bl.ErrAccessDenied {
-		app.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
 		http.Error(w, "Insufficient permissions", http.StatusForbidden)
 		return
 	} else if myErr.ErrNum != bl.Ok {
@@ -98,8 +98,8 @@ func (app *App) GetAllNotesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (app *App) AddNoteHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, app.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) AddNoteHandler(w http.ResponseWriter, r *http.Request) {
+	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
@@ -108,7 +108,7 @@ func (app *App) AddNoteHandler(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&srcData)
 
 	if err != nil {
-		app.Configs.LogConfigs.Logger.WriteLog("Invalid request payload", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Invalid request payload", slog.LevelError, nil)
 		http.Error(w, "Invalid request payload", http.StatusUnprocessableEntity)
 		return
 	}
@@ -116,7 +116,7 @@ func (app *App) AddNoteHandler(w http.ResponseWriter, r *http.Request) {
 	var validate = validator.New()
 
 	if err := validate.Struct(&srcData); err != nil {
-		app.Configs.LogConfigs.Logger.WriteLog("Invalid request payload", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Invalid request payload", slog.LevelError, nil)
 		http.Error(w, "Invalid request payload", http.StatusUnprocessableEntity)
 		return
 	}
@@ -124,18 +124,18 @@ func (app *App) AddNoteHandler(w http.ResponseWriter, r *http.Request) {
 	convertedData, err := converters.FromNoteFullData(&srcData)
 	var idStruct teamIDStruct
 	var myErr *bl.MyError
-	idStruct.TeamID, myErr = app.IServices.INoteSvc.AddNote(&convertedData, reqUser)
+	idStruct.TeamID, myErr = hs.IServices.INoteSvc.AddNote(&convertedData, reqUser)
 
 	if myErr == nil {
-		app.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	} else if myErr.ErrNum == bl.NoSuchTeam {
-		app.Configs.LogConfigs.Logger.WriteLog("Team not found", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Team not found", slog.LevelError, nil)
 		http.Error(w, "Note not found", http.StatusNotFound)
 		return
 	} else if myErr.ErrNum != bl.Ok {
-		app.Configs.LogConfigs.Logger.WriteLog("Error checking user existence", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Error checking user existence", slog.LevelError, nil)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
@@ -149,8 +149,8 @@ func (app *App) AddNoteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (app *App) DeleteNoteHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, app.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) DeleteNoteHandler(w http.ResponseWriter, r *http.Request) {
+	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
@@ -162,9 +162,9 @@ func (app *App) DeleteNoteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	myErr := app.IServices.INoteSvc.DeleteNote(targetID, reqUser)
+	myErr := hs.IServices.INoteSvc.DeleteNote(targetID, reqUser)
 	if myErr.ErrNum == bl.ErrAccessDenied {
-		app.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
 		http.Error(w, "Insufficient permissions", http.StatusForbidden)
 		return
 	} else if myErr.ErrNum == bl.OperationError {
@@ -178,8 +178,8 @@ func (app *App) DeleteNoteHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (app *App) UpdateNoteHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, app.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) UpdateNoteHandler(w http.ResponseWriter, r *http.Request) {
+	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
@@ -192,7 +192,7 @@ func (app *App) UpdateNoteHandler(w http.ResponseWriter, r *http.Request) {
 
 	var validate = validator.New()
 	if err := validate.Struct(&data); err != nil {
-		app.Configs.LogConfigs.Logger.WriteLog("Invalid request payload", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Invalid request payload", slog.LevelError, nil)
 		http.Error(w, "Invalid request payload", http.StatusUnprocessableEntity)
 		return
 	}
@@ -206,13 +206,13 @@ func (app *App) UpdateNoteHandler(w http.ResponseWriter, r *http.Request) {
 
 	convData, err := converters.FromNoteFullData(&data)
 	convData.Id = targetID
-	myErr := app.IServices.INoteSvc.UpdateNote(&convData, reqUser,
+	myErr := hs.IServices.INoteSvc.UpdateNote(&convData, reqUser,
 		"/tmp/tmp."+convData.Content.TextExt,
 		"/tmp/tmp."+convData.Content.ImgExt,
 		"/tmp/tmp."+convData.Content.RawExt)
 
 	if myErr.ErrNum == bl.ErrAccessDenied {
-		app.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
 		http.Error(w, "Insufficient permissions", http.StatusForbidden)
 		return
 	} else if myErr.ErrNum == bl.OperationError {
