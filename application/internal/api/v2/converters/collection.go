@@ -13,6 +13,14 @@ func ToCollectionInfo(collection *models.Collection) transport_models.Collection
 	}
 }
 
+func ToCollectionAddInfo(collection *models.Collection) transport_models.CollectionAddInfo {
+	return transport_models.CollectionAddInfo{
+		ID:      collection.Id,
+		Name:    collection.Name,
+		OwnerID: collection.OwnerID,
+	}
+}
+
 func ToCollectionFullInfo(collection *models.Collection) transport_models.CollectionFullInfo {
 	return transport_models.CollectionFullInfo{
 		ID:               collection.Id,
@@ -22,14 +30,22 @@ func ToCollectionFullInfo(collection *models.Collection) transport_models.Collec
 	}
 }
 
-func FromCollectionInfo(collectionInfo transport_models.CollectionInfo) models.Collection {
+func FromCollectionInfo(collectionInfo *transport_models.CollectionInfo) models.Collection {
 	return models.Collection{
 		Id:   collectionInfo.ID,
 		Name: collectionInfo.Name,
 	}
 }
 
-func FromCollectionFullInfo(collectionFullInfo transport_models.CollectionFullInfo) (models.Collection, error) {
+func FromCollectionAddInfo(collectionInfo *transport_models.CollectionAddInfo) models.Collection {
+	return models.Collection{
+		Id:      collectionInfo.ID,
+		Name:    collectionInfo.Name,
+		OwnerID: collectionInfo.OwnerID,
+	}
+}
+
+func FromCollectionFullInfo(collectionFullInfo *transport_models.CollectionFullInfo) (models.Collection, error) {
 	parsedTime, err := time.Parse(collectionFullInfo.RegistrationDate, "2006-01-02 15:04:05-07")
 	if err != nil {
 		return models.Collection{}, err

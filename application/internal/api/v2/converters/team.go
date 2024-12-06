@@ -21,14 +21,14 @@ func ToTeamFullInfo(team *models.Team) transport_models.TeamFullInfo {
 	}
 }
 
-func FromTeamInfo(teamInfo transport_models.TeamInfo) models.Team {
+func FromTeamInfo(teamInfo *transport_models.TeamInfo) models.Team {
 	return models.Team{
 		Id:   teamInfo.ID,
 		Name: teamInfo.Name,
 	}
 }
 
-func FromTeamFullInfo(teamFullInfo transport_models.TeamFullInfo) (models.Team, error) {
+func FromTeamFullInfo(teamFullInfo *transport_models.TeamFullInfo) (models.Team, error) {
 	parsedTime, err := time.Parse("2006-01-02 15:04:05-07", teamFullInfo.RegistrationDate)
 	if err != nil {
 		return models.Team{}, err

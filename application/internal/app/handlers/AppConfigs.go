@@ -143,7 +143,7 @@ func (app *App) AddNoteHandler(w http.ResponseWriter, r *http.Request) {
 	// Remove saved file
 	removeFileAfterTime(filePath, 10*time.Minute, app.Configs.LogConfigs.Logger)
 
-	if err := app.IServices.INoteSvc.AddNote(newNote, app.CurUser, app.IRepos.INoteRepo); err.ErrNum != bl.Ok {
+	if _, err := app.IServices.INoteSvc.AddNote(newNote, app.CurUser, app.IRepos.INoteRepo); err.ErrNum != bl.Ok {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -541,7 +541,7 @@ func (app *App) AddCollectionHandler(w http.ResponseWriter, r *http.Request) {
 	// Устанавливаем владельца
 	newCollection.OwnerID = app.CurUser.Id
 
-	myErr := app.IServices.IColSvc.AddCollection(&newCollection, app.IRepos.IColRepo)
+	_, myErr := app.IServices.IColSvc.AddCollection(&newCollection, app.IRepos.IColRepo)
 	if myErr != nil && myErr.ErrNum != bl.Ok {
 		http.Error(w, myErr.Error(), http.StatusInternalServerError)
 		return
@@ -707,7 +707,7 @@ func (app *App) AddTeamHandler(w http.ResponseWriter, r *http.Request) {
 		RegistrationDate: time.Now(),
 	}
 
-	addErr := app.IServices.ITeamSvc.AddTeam(app.CurUser, team, app.IRepos.ITeamRepo)
+	_, addErr := app.IServices.ITeamSvc.AddTeam(app.CurUser, team, app.IRepos.ITeamRepo)
 	if addErr != nil {
 		http.Error(w, addErr.Error(), http.StatusInternalServerError)
 		return
@@ -932,13 +932,13 @@ func (app *App) AddSectionHandler(w http.ResponseWriter, r *http.Request) {
 		var team *models.Team
 		team, err = app.IServices.ITeamSvc.GetTeam(idTeam, "", bl.SearchByID, app.CurUser, app.IRepos.ITeamRepo)
 		if err.ErrNum == bl.Ok {
-			err = app.IServices.ISecSvc.AddSection(&section, team, app.CurUser, app.IRepos.ISecRepo)
+			_, err = app.IServices.ISecSvc.AddSection(&section, team, app.CurUser, app.IRepos.ISecRepo)
 		}
 	} else {
 		var team *models.Team
 		team, err = app.IServices.ITeamSvc.GetTeam(0, teamName, bl.SearchByString, app.CurUser, app.IRepos.ITeamRepo)
 		if err.ErrNum == bl.Ok {
-			err = app.IServices.ISecSvc.AddSection(&section, team, app.CurUser, app.IRepos.ISecRepo)
+			_, err = app.IServices.ISecSvc.AddSection(&section, team, app.CurUser, app.IRepos.ISecRepo)
 		}
 	}
 

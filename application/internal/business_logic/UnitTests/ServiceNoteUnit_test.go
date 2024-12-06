@@ -140,7 +140,7 @@ func TestAddNote(t *testing.T) {
 		mockNoteRepo.On("AddNote", retNote).Return(retErr)
 
 		nsSrv := bl.NoteService{}
-		err := nsSrv.AddNote(retNote, requester, mockNoteRepo)
+		_, err := nsSrv.AddNote(retNote, requester, mockNoteRepo)
 
 		assert.NotNil(t, err)
 		assert.Equal(t, err.ErrNum, bl.Ok)
@@ -155,7 +155,7 @@ func TestAddNote(t *testing.T) {
 		mockNoteRepo := new(v1.MockINoteRepository)
 
 		nsSrv := bl.NoteService{}
-		err := nsSrv.AddNote(retNote, requester, mockNoteRepo)
+		_, err := nsSrv.AddNote(retNote, requester, mockNoteRepo)
 
 		assert.NotNil(t, err)
 		assert.Equal(t, bl.ErrAccessDenied, err.ErrNum)

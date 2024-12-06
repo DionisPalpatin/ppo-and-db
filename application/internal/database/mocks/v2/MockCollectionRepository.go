@@ -23,7 +23,7 @@ func (_m *MockCollectionRepository) EXPECT() *MockCollectionRepository_Expecter 
 }
 
 // AddCollection provides a mock function with given fields: collection
-func (_m *MockCollectionRepository) AddCollection(collection *models.Collection) *bl.MyError {
+func (_m *MockCollectionRepository) AddCollection(collection *models.Collection) (int, *bl.MyError) {
 	ret := _m.Called(collection)
 
 	if len(ret) == 0 {
@@ -39,7 +39,7 @@ func (_m *MockCollectionRepository) AddCollection(collection *models.Collection)
 		}
 	}
 
-	return r0
+	return 0, r0
 }
 
 // MockCollectionRepository_AddCollection_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AddCollection'

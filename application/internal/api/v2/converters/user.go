@@ -6,23 +6,19 @@ import (
 	"time"
 )
 
-func ToRegistrationInfo(user *models.User) transport_models.UserRegistrationInfo {
-	scheme := transport_models.UserRegistrationInfo{
-		FIO:      user.Fio,
+func FromRegistrationInfo(user *transport_models.UserRegistrationInfo) models.User {
+	return models.User{
+		Fio:      user.FIO,
 		Login:    user.Login,
 		Password: user.Password,
 	}
-
-	return scheme
 }
 
-func ToLoginInfo(user *models.User) transport_models.UserLoginInfo {
-	scheme := transport_models.UserLoginInfo{
+func FromLoginInfo(user *transport_models.UserLoginInfo) models.User {
+	return models.User{
 		Login:    user.Login,
 		Password: user.Password,
 	}
-
-	return scheme
 }
 
 func ToUserPublicInfo(user *models.User) transport_models.UserPublicInfo {
@@ -60,7 +56,7 @@ func ToUserFullInfo(user *models.User) transport_models.UserFullInfo {
 	return scheme
 }
 
-func FromUserPublicInfo(user transport_models.UserPublicInfo) models.User {
+func FromUserPublicInfo(user *transport_models.UserPublicInfo) models.User {
 	scheme := models.User{
 		Id:   user.ID,
 		Fio:  user.FIO,
@@ -70,7 +66,7 @@ func FromUserPublicInfo(user transport_models.UserPublicInfo) models.User {
 	return scheme
 }
 
-func FromUserPrivateInfo(user transport_models.UserPrivateInfo) models.User {
+func FromUserPrivateInfo(user *transport_models.UserPrivateInfo) models.User {
 	scheme := models.User{
 		Id:       user.ID,
 		Fio:      user.FIO,
@@ -82,7 +78,7 @@ func FromUserPrivateInfo(user transport_models.UserPrivateInfo) models.User {
 	return scheme
 }
 
-func FromUserFullInfo(user transport_models.UserFullInfo) (models.User, error) {
+func FromUserFullInfo(user *transport_models.UserFullInfo) (models.User, error) {
 	t, err := time.Parse(user.RegistrationDate, "2006-01-02 15:04:05-07")
 	if err != nil {
 		return models.User{}, err

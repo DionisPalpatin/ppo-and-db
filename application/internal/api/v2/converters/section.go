@@ -21,13 +21,13 @@ func ToSectionFullInfo(section *models.Section, team *models.Team) transport_mod
 	}
 }
 
-func FromSectionInfo(sectionInfo transport_models.SectionInfo) (models.Section, int) {
+func FromSectionInfo(sectionInfo *transport_models.SectionInfo) (models.Section, int) {
 	return models.Section{
 		Id: sectionInfo.ID,
 	}, sectionInfo.TeamID
 }
 
-func FromSectionFullInfo(sectionFullInfo transport_models.SectionFullInfo) (models.Section, int, error) {
+func FromSectionFullInfo(sectionFullInfo *transport_models.SectionFullInfo) (models.Section, int, error) {
 	parsedTime, err := time.Parse(sectionFullInfo.RegistrationDate, "2006-01-02 15:04:05-07")
 	if err != nil {
 		return models.Section{}, -1, err

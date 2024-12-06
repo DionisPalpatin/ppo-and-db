@@ -276,13 +276,13 @@ func (nr *NoteRepository) GetAllPublicNotes() ([]*models.Note, *bl.MyError) {
 	return notes, resState
 }
 
-func (nr *NoteRepository) AddNote(note *models.Note) *bl.MyError {
+func (nr *NoteRepository) AddNote(note *models.Note) (int, *bl.MyError) {
 	nr.MyLogger.WriteLog("AddNote is called (Repo)", slog.LevelInfo, nil)
 
 	if note == nil {
 		resState := bl.CreateError(bl.ErrInParameter, "AddNote", "data_access")
 		nr.MyLogger.WriteLog(resState.ConcatenateFields(), slog.LevelError, mylogger.LogCallerInfo())
-		return resState
+		return 0, resState
 	}
 
 	db := nr.DbConfigs.DB
@@ -302,7 +302,7 @@ func (nr *NoteRepository) AddNote(note *models.Note) *bl.MyError {
 			nr.MyLogger.WriteLog(resState.ConcatenateWithExternalErr(err), slog.LevelError, mylogger.LogCallerInfo())
 		}
 
-		return resState
+		return 0, resState
 	}
 
 	if len(note.Content.Text) != 0 {
@@ -319,7 +319,7 @@ func (nr *NoteRepository) AddNote(note *models.Note) *bl.MyError {
 				nr.MyLogger.WriteLog(resState.ConcatenateWithExternalErr(err), slog.LevelError, mylogger.LogCallerInfo())
 			}
 
-			return resState
+			return 0, resState
 		}
 	}
 
@@ -337,7 +337,7 @@ func (nr *NoteRepository) AddNote(note *models.Note) *bl.MyError {
 				nr.MyLogger.WriteLog(resState.ConcatenateWithExternalErr(err), slog.LevelError, mylogger.LogCallerInfo())
 			}
 
-			return resState
+			return 0, resState
 		}
 	}
 
@@ -355,13 +355,13 @@ func (nr *NoteRepository) AddNote(note *models.Note) *bl.MyError {
 				nr.MyLogger.WriteLog(resState.ConcatenateWithExternalErr(err), slog.LevelError, mylogger.LogCallerInfo())
 			}
 
-			return resState
+			return 0, resState
 		}
 	}
 
 	resState := bl.CreateError(bl.Ok, "AddNote", "data_access")
 	nr.MyLogger.WriteLog(resState.ConcatenateFields(), slog.LevelInfo, nil)
-	return resState
+	return note.Id, resState
 }
 
 func (nr *NoteRepository) DeleteNote(id int) *bl.MyError {

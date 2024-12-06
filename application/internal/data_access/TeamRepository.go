@@ -184,13 +184,13 @@ func (tr *TeamRepository) GetAllTeams() ([]*models.Team, *bl.MyError) {
 	return teams, resState
 }
 
-func (tr *TeamRepository) AddTeam(team *models.Team) *bl.MyError {
+func (tr *TeamRepository) AddTeam(team *models.Team) (int, *bl.MyError) {
 	tr.MyLogger.WriteLog("AddTeam is called (Repo)", slog.LevelInfo, nil)
 
 	if team == nil {
 		resState := bl.CreateError(bl.ErrInParameter, "AddTeam", "data_access")
 		tr.MyLogger.WriteLog(resState.ConcatenateFields(), slog.LevelError, mylogger.LogCallerInfo())
-		return resState
+		return 0, resState
 	}
 
 	db := tr.DbConfigs.DB
@@ -202,14 +202,14 @@ func (tr *TeamRepository) AddTeam(team *models.Team) *bl.MyError {
 	if err != nil {
 		resState := bl.CreateError(bl.DatabaseError, "AddTeam", "data_access")
 		tr.MyLogger.WriteLog(resState.ConcatenateWithExternalErr(err), slog.LevelError, mylogger.LogCallerInfo())
-		return resState
+		return 0, resState
 	}
 	defer deferTransaction(err, tx)
 
-	_, err = tx.ExecContext(ctx, query,
+	err = tx.QueryRowContext(ctx, query,
 		team.Name,
 		team.RegistrationDate,
-	)
+	).Scan(team.Id)
 
 	if err != nil {
 		var resState *bl.MyError
@@ -222,12 +222,12 @@ func (tr *TeamRepository) AddTeam(team *models.Team) *bl.MyError {
 			tr.MyLogger.WriteLog(resState.ConcatenateWithExternalErr(err), slog.LevelError, mylogger.LogCallerInfo())
 		}
 
-		return resState
+		return 0, resState
 	}
 
 	resState := bl.CreateError(bl.Ok, "AddTeam", "data_access")
 	tr.MyLogger.WriteLog(resState.ConcatenateFields(), slog.LevelInfo, nil)
-	return resState
+	return team.Id, resState
 }
 
 func (tr *TeamRepository) DeleteTeam(teamID int) *bl.MyError {

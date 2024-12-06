@@ -53,9 +53,9 @@ func (ts *TeamService) DeleteTeam(requester *models.User, id int) *MyError {
 	return ts.itr.DeleteTeam(id)
 }
 
-func (ts *TeamService) AddTeam(requester *models.User, team *models.Team) *MyError {
+func (ts *TeamService) AddTeam(requester *models.User, team *models.Team) (int, *MyError) {
 	if requester.Role != Admin {
-		return CreateError(ErrAccessDenied, "AddTeam", "bl")
+		return 0, CreateError(ErrAccessDenied, "AddTeam", "bl")
 	}
 
 	return ts.itr.AddTeam(team)
@@ -92,4 +92,12 @@ func (ts *TeamService) GetTeamMembers(teamID int, requester *models.User) ([]*mo
 
 func (ts *TeamService) GetUserTeam(user *models.User) (*models.Team, *MyError) {
 	return ts.itr.GetUserTeam(user)
+}
+
+func (ts *TeamService) GetSectionTeam(secID int, requester *models.User) (*models.Team, *MyError) {
+	if requester.Role != Admin {
+		return nil, CreateError(ErrAccessDenied, "GetSectionTeam", "bl")
+	}
+
+	return ts.itr.GetTeamBySectionID(secID)
 }

@@ -12,10 +12,6 @@ import (
 	"strconv"
 )
 
-type requestUserIDBody struct {
-	UserID int `json:"userID" validate:"required"`
-}
-
 func (app *App) GetAllTeamsHandler(w http.ResponseWriter, r *http.Request) {
 	reqUser := getRequester(r, w, app.Configs.LogConfigs.Logger)
 	if reqUser == nil {
@@ -114,8 +110,10 @@ func (app *App) AddTeamHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	convertedData := converters.FromTeamInfo(teamInfo)
-	myErr := app.IServices.ITeamSvc.AddTeam(reqUser, &convertedData)
+	convertedData := converters.FromTeamInfo(&teamInfo)
+	var idStruct teamIDStruct
+	var myErr *bl.MyError
+	idStruct.TeamID, myErr = app.IServices.ITeamSvc.AddTeam(reqUser, &convertedData)
 
 	if myErr == nil {
 		app.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
@@ -131,7 +129,13 @@ func (app *App) AddTeamHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/my_json")
+	err = json.NewEncoder(w).Encode(idStruct)
+
+	if err != nil {
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (app *App) DeleteTeamHandler(w http.ResponseWriter, r *http.Request) {
@@ -189,7 +193,7 @@ func (app *App) UpdateTeamHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	convData := converters.FromTeamInfo(data)
+	convData := converters.FromTeamInfo(&data)
 	convData.Id = targetID
 	myErr := app.IServices.ITeamSvc.UpdateTeam(reqUser, &convData)
 
@@ -214,7 +218,7 @@ func (app *App) AddUserToTeamHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var data requestUserIDBody
+	var data userIDStruct
 	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return

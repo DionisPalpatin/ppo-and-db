@@ -18,7 +18,8 @@ const (
 	`
 	addUserQuery = `
 	INSERT INTO %s.users (fio, registration_date, login, password, role) VALUES
-	($1, $2, $3, $4, $5);
+		($1, $2, $3, $4, $5)
+	returning id;
 	`
 	deleteUserQuery = `
 	call %s.delete_user($1);
@@ -52,7 +53,8 @@ const (
 	`
 	addTeamQuery = `
 	INSERT INTO %s.teams (name, registration_date) VALUES 
-	($1, $2);
+		($1, $2)
+	returning id;
 	`
 	deleteTeamQuery = `
 	call %s.delete_team($1);
@@ -121,7 +123,7 @@ const (
 	`
 	addNoteInfoQuery = `
 	INSERT INTO %s.notes (access, name, likes, dislikes, registration_date, owner_id, section_id) VALUES
-	($1, $2, $3, $4, $5, $6, $7)
+		($1, $2, $3, $4, $5, $6, $7)
 	RETURNING id;
 	`
 	addNoteTextQuery = `
@@ -133,7 +135,7 @@ const (
 	($1, $2, $3);
 	`
 	addNoteRawDataQuery = `
-	INSERT INTO %s.raw_datas (data, file_extension, note_id) VALUES
+		INSERT INTO %s.raw_datas (data, file_extension, note_id) VALUES
 	($1, $2, $3);
 	`
 	deleteNoteQuery = `
@@ -165,7 +167,7 @@ const (
 	`
 	addNoteToCollectionQuery = `
 	INSERT INTO %s.note_collections (note_id, collection_id) VALUES
-	($1, $2);
+		($1, $2);
 	`
 	deleteNoteFromCollectionQuery = `
 	DELETE FROM %s.note_collections
@@ -197,7 +199,8 @@ const (
 `
 	addCollectionQuery = `
 	INSERT INTO %s.collections (name, creation_date) VALUES
-	($1, $2);
+		($1, $2)
+	returning id;
 `
 	deleteCollectionQuery = `
 	DELETE FROM %s.notes_collections
@@ -236,7 +239,10 @@ const (
 	FROM %s.sections;
 `
 	addSectionQuery = `
-	INSERT INTO %s.sections (creation_date) VALUES ($1);
+	INSERT INTO %s.sections (creation_date) VALUES ($1)
+	returning id;
+`
+	addSectionToTeamQuery = `
 	INSERT INTO %s.teams_sections (team_id, section_id) VALUES
 		($2, $3);
 `

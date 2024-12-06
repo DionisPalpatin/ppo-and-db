@@ -72,7 +72,7 @@ func (_c *MockSectionRepository_AddNoteToSection_Call) RunAndReturn(run func(*mo
 }
 
 // AddSection provides a mock function with given fields: section, team
-func (_m *MockSectionRepository) AddSection(section *models.Section, team *models.Team) *bl.MyError {
+func (_m *MockSectionRepository) AddSection(section *models.Section, team *models.Team) (int, *bl.MyError) {
 	ret := _m.Called(section, team)
 
 	if len(ret) == 0 {
@@ -88,7 +88,7 @@ func (_m *MockSectionRepository) AddSection(section *models.Section, team *model
 		}
 	}
 
-	return r0
+	return 0, r0
 }
 
 // MockSectionRepository_AddSection_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AddSection'

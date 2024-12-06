@@ -11,7 +11,7 @@ type MockNoteRepository interface {
 	GetNoteByName(name string) (*models.Note, *bl.MyError)
 	GetAllNotes() ([]*models.Note, *bl.MyError)
 	GetAllPublicNotes() ([]*models.Note, *bl.MyError)
-	AddNote(note *models.Note) *bl.MyError
+	AddNote(note *models.Note) (int, *bl.MyError)
 	DeleteNote(id int) *bl.MyError
 	UpdateNoteContent(note *models.Note) *bl.MyError
 	UpdateNoteInfo(note *models.Note) *bl.MyError

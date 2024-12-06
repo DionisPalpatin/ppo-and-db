@@ -142,7 +142,7 @@ func (app *App) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := converters.FromUserPrivateInfo(userInfo)
+	user := converters.FromUserPrivateInfo(&userInfo)
 	userInfo.ID = targetUserID
 
 	myErr := app.IServices.IUsrSvc.UpdateUser(reqUser, &user)

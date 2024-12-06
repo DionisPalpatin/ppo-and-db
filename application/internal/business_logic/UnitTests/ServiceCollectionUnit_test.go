@@ -127,7 +127,7 @@ func TestAddCollection(t *testing.T) {
 		mockCollectionRepo.On("AddCollection", retCollection).Return(retErr)
 
 		csSrv := bl.CollectionService{}
-		err := csSrv.AddCollection(retCollection, mockCollectionRepo)
+		_, err := csSrv.AddCollection(retCollection, mockCollectionRepo)
 
 		assert.NotNil(t, err)
 		assert.Equal(t, err.ErrNum, bl.Ok)

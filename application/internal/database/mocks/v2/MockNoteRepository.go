@@ -23,7 +23,7 @@ func (_m *MockNoteRepository) EXPECT() *MockNoteRepository_Expecter {
 }
 
 // AddNote provides a mock function with given fields: note
-func (_m *MockNoteRepository) AddNote(note *models.Note) *bl.MyError {
+func (_m *MockNoteRepository) AddNote(note *models.Note) (int, *bl.MyError) {
 	ret := _m.Called(note)
 
 	if len(ret) == 0 {
@@ -39,7 +39,7 @@ func (_m *MockNoteRepository) AddNote(note *models.Note) *bl.MyError {
 		}
 	}
 
-	return r0
+	return 0, r0
 }
 
 // MockNoteRepository_AddNote_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AddNote'

@@ -11,7 +11,7 @@ type MockCollectionRepository interface {
 	GetCollectionByName(name string) (*models.Collection, *bl.MyError)
 	GetAllCollections() ([]*models.Collection, *bl.MyError)
 	GetAllUserCollections(user *models.User) ([]*models.Collection, *bl.MyError)
-	AddCollection(collection *models.Collection) *bl.MyError
+	AddCollection(collection *models.Collection) (int, *bl.MyError)
 	DeleteCollection(id int) *bl.MyError
 	UpdateCollection(collection *models.Collection) *bl.MyError
 	GetAllNotesInCollection(collection *models.Collection) ([]*models.Note, *bl.MyError)

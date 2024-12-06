@@ -122,7 +122,9 @@ func (app *App) AddNoteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	convertedData, err := converters.FromNoteFullData(&srcData)
-	myErr := app.IServices.INoteSvc.AddNote(&convertedData, reqUser)
+	var idStruct teamIDStruct
+	var myErr *bl.MyError
+	idStruct.TeamID, myErr = app.IServices.INoteSvc.AddNote(&convertedData, reqUser)
 
 	if myErr == nil {
 		app.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
@@ -138,7 +140,13 @@ func (app *App) AddNoteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/my_json")
+	err = json.NewEncoder(w).Encode(idStruct)
+
+	if err != nil {
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (app *App) DeleteNoteHandler(w http.ResponseWriter, r *http.Request) {

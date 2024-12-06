@@ -135,29 +135,37 @@ func (sr *SectionRepository) GetAllSections() ([]*models.Section, *bl.MyError) {
 	return sections, resState
 }
 
-func (sr *SectionRepository) AddSection(section *models.Section, team *models.Team) *bl.MyError {
+func (sr *SectionRepository) AddSection(section *models.Section, team *models.Team) (int, *bl.MyError) {
 	sr.MyLogger.WriteLog("AddSection is called (Repo)", slog.LevelInfo, nil)
 
 	if section == nil {
 		resState := bl.CreateError(bl.ErrInParameter, "AddSection", "data_access")
 		sr.MyLogger.WriteLog(resState.ConcatenateFields(), slog.LevelError, mylogger.LogCallerInfo())
-		return resState
+		return 0, resState
 	}
 
 	db := sr.DbConfigs.DB
 	schemaName := sr.DbConfigs.SchemaName
-	query := fmt.Sprintf(addSectionQuery, schemaName, schemaName)
 	ctx := context.Background()
 
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		resState := bl.CreateError(bl.DatabaseError, "AddSection", "data_access")
 		sr.MyLogger.WriteLog(resState.ConcatenateWithExternalErr(err), slog.LevelError, mylogger.LogCallerInfo())
-		return resState
+		return 0, resState
 	}
-	defer deferTransaction(err, tx)
+	defer tx.Rollback()
 
-	_, err = tx.ExecContext(ctx, query, section.CreationDate, team.Id, section.Id)
+	query := fmt.Sprintf(addSectionQuery, schemaName)
+	stmt, err := tx.PrepareContext(ctx, query)
+	if err != nil {
+		resState := bl.CreateError(bl.DatabaseError, "AddSection", "data_access")
+		sr.MyLogger.WriteLog(resState.ConcatenateWithExternalErr(err), slog.LevelError, mylogger.LogCallerInfo())
+		return 0, resState
+	}
+	defer stmt.Close()
+
+	err = stmt.QueryRowContext(ctx, section.CreationDate).Scan(section.Id)
 
 	if err != nil {
 		var resState *bl.MyError
@@ -170,12 +178,28 @@ func (sr *SectionRepository) AddSection(section *models.Section, team *models.Te
 			sr.MyLogger.WriteLog(resState.ConcatenateWithExternalErr(err), slog.LevelError, mylogger.LogCallerInfo())
 		}
 
-		return resState
+		return 0, resState
+	}
+
+	query = fmt.Sprintf(addSectionToTeamQuery, schemaName)
+	_, err = tx.ExecContext(ctx, query, team.Id, section.Id)
+
+	if err != nil {
+		resState := bl.CreateError(bl.DatabaseError, "AddSection", "data_access")
+		sr.MyLogger.WriteLog(resState.ConcatenateWithExternalErr(err), slog.LevelError, mylogger.LogCallerInfo())
+		return 0, resState
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		resState := bl.CreateError(bl.DatabaseError, "AddSection", "data_access")
+		sr.MyLogger.WriteLog(resState.ConcatenateWithExternalErr(err), slog.LevelError, mylogger.LogCallerInfo())
+		return 0, resState
 	}
 
 	resState := bl.CreateError(bl.Ok, "AddSection", "data_access")
 	sr.MyLogger.WriteLog(resState.ConcatenateFields(), slog.LevelInfo, nil)
-	return resState
+	return section.Id, resState
 }
 
 func (sr *SectionRepository) DeleteSection(id int) *bl.MyError {

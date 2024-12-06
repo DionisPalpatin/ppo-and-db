@@ -23,7 +23,7 @@ func (_m *MockTeamRepository) EXPECT() *MockTeamRepository_Expecter {
 }
 
 // AddTeam provides a mock function with given fields: team
-func (_m *MockTeamRepository) AddTeam(team *models.Team) *bl.MyError {
+func (_m *MockTeamRepository) AddTeam(team *models.Team) (int, *bl.MyError) {
 	ret := _m.Called(team)
 
 	if len(ret) == 0 {
@@ -39,7 +39,7 @@ func (_m *MockTeamRepository) AddTeam(team *models.Team) *bl.MyError {
 		}
 	}
 
-	return r0
+	return 0, r0
 }
 
 // MockTeamRepository_AddTeam_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AddTeam'

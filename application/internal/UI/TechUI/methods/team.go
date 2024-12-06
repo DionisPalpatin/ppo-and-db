@@ -24,7 +24,7 @@ func (MenuPoints) AddTeam(user *models.User, dateTimeFormat string, ireps *bl.IR
 
 	team := &models.Team{Name: teamName, RegistrationDate: time.Now()}
 
-	myErr := its.AddTeam(user, team, itr)
+	_, myErr := its.AddTeam(user, team, itr)
 	if myErr.ErrNum == bl.ErrAccessDenied {
 		display.DisplayError("Ошибка: у Вас нет прав на выполнение данной операции")
 	} else if myErr.ErrNum == bl.ErrDeleteTeam {

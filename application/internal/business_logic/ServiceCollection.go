@@ -30,7 +30,7 @@ func (cs *CollectionService) GetAllUsersCollections(user *models.User) ([]*model
 	return cs.icr.GetAllUserCollections(user)
 }
 
-func (cs *CollectionService) AddCollection(coll *models.Collection) *MyError {
+func (cs *CollectionService) AddCollection(coll *models.Collection) (int, *MyError) {
 	return cs.icr.AddCollection(coll)
 }
 

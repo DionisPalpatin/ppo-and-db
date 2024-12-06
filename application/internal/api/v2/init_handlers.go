@@ -3,160 +3,74 @@ package handlersv2
 import (
 	"net/http"
 
-	bl "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
 	"github.com/gorilla/mux"
 )
 
-type Handlers struct {
-	svcs *bl.IServices
-	reps *bl.IRepositories
-}
+func InitRouter(app *App) {
+	app.Router = mux.NewRouter()
+	router := *app.Router
 
-func (app *App) InitInterfaces(svcs *bl.IServices, reps *bl.IRepositories) {
-	h.svcs = svcs
-	h.reps = reps
-}
-
-func InitRouter(router **mux.Router) {
-	*router = mux.NewRouter()
-
-	(*router).HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "static/index.html")
 	})
 
-	(*router).HandleFunc("/api/login", LoginHandler).Methods("POST")
-	(*router).HandleFunc("/api/register", RegisterHandler).Methods("POST")
+	// -----------------------------------------------------------------------------------------------------------------
+	// Authorisation handlers
+	// -----------------------------------------------------------------------------------------------------------------
+	router.HandleFunc("/login", app.LoginHandler).Methods("POST")
+	router.HandleFunc("/register", app.RegisterHandler).Methods("POST")
 
-	(*router).HandleFunc("/api/notes", AddNoteHandler).Methods("POST")
+	// -----------------------------------------------------------------------------------------------------------------
+	// User handlers
+	// -----------------------------------------------------------------------------------------------------------------
+	router.HandleFunc("/users", app.GetAllUsersHandler).Methods("GET")
+	router.HandleFunc("/users/{id}", app.GetUserHandler).Methods("GET")
+	router.HandleFunc("/users/{id}", app.DeleteUserHandler).Methods("DELETE")
+	router.HandleFunc("/users/{id}", app.UpdateUserHandler).Methods("PATCH")
 
-	(*router).HandleFunc("/api/notes/id/{noteId}", DeleteNoteHandler).Methods("DELETE")
-	(*router).HandleFunc("/api/notes/name/{noteId}", DeleteNoteHandler).Methods("DELETE")
+	// -----------------------------------------------------------------------------------------------------------------
+	// Team handlers
+	// -----------------------------------------------------------------------------------------------------------------
+	router.HandleFunc("/teams", app.GetAllTeamsHandler).Methods("GET")
+	router.HandleFunc("/teams", app.AddTeamHandler).Methods("POST")
+	router.HandleFunc("/teams/{id}", app.GetTeamHandler).Methods("GET")
+	router.HandleFunc("/teams/{id}", app.DeleteTeamHandler).Methods("DELETE")
+	router.HandleFunc("/teams/{id}", app.UpdateTeamHandler).Methods("PATCH")
+	router.HandleFunc("/teams/{id}/members", app.GetTeamMembersHandler).Methods("GET")
+	router.HandleFunc("/teams/{id}/members", app.AddUserToTeamHandler).Methods("POST")
+	router.HandleFunc("/teams/{teamID}/members/{userID}", app.DeleteUserFromTeamHandler).Methods("DELETE")
 
-	(*router).HandleFunc("/api/notes/id/{noteInput}", FindNoteHandler).Methods("GET")
-	(*router).HandleFunc("/api/notes/name/{noteInput}", FindNoteHandler).Methods("GET")
+	// -----------------------------------------------------------------------------------------------------------------
+	// Note handlers
+	// -----------------------------------------------------------------------------------------------------------------
+	router.HandleFunc("/notes", app.GetAllNotesHandler).Methods("GET")
+	router.HandleFunc("/notes", app.AddNoteHandler).Methods("POST")
+	router.HandleFunc("/notes/{id}", app.GetNoteHandler).Methods("GET")
+	router.HandleFunc("/notes/{id}", app.DeleteNoteHandler).Methods("DELETE")
+	router.HandleFunc("/notes/{id}", app.UpdateNoteHandler).Methods("PATCH")
 
-	(*router).HandleFunc("/api/notes", GetAllNotesHandler).Methods("GET")
+	// -----------------------------------------------------------------------------------------------------------------
+	// Collection handlers
+	// -----------------------------------------------------------------------------------------------------------------
+	router.HandleFunc("/collections", app.GetAllCollectionsHandler).Methods("GET")
+	router.HandleFunc("/collections", app.AddCollectionHandler).Methods("POST")
+	router.HandleFunc("/collections/users/{id}", app.GetAllUsersCollectionsHandler).Methods("GET")
+	router.HandleFunc("/collections/{id}", app.GetCollectionHandler).Methods("GET")
+	router.HandleFunc("/collections/{id}", app.DeleteCollectionHandler).Methods("DELETE")
+	router.HandleFunc("/collections/{id}", app.UpdateCollectionHandler).Methods("PATCH")
+	router.HandleFunc("/collections/{id}/notes", app.GetAllNotesInCollectionHandler).Methods("GET")
+	router.HandleFunc("/collections/{id}/notes", app.AddNoteToSectionHandler).Methods("POST")
+	router.HandleFunc("/collections/{collID}/members/{noteID}", app.DeleteNoteFromCollectionHandler).Methods("DELETE")
 
-	(*router).HandleFunc("/api/collections/id/{collectionId}/notes", ShowCollectionNotesHandler).Methods("GET")
-	(*router).HandleFunc("/api/collections/name/{collectionId}/notes", ShowCollectionNotesHandler).Methods("GET")
-
-	(*router).HandleFunc("/api/notes", GetAllNotesInTeamSectionHandler).Methods("GET")
-	/* TODO */ /* fetchNotes */ // conf.(*router).HandleFunc("/api/notes?s=allteams", conf.GetAllNotesHandler).Methods("GET")
-
-	/* check renderAddCollectionForm */
-	(*router).HandleFunc("/api/collections", AddCollectionHandler).Methods("POST")
-
-	/* check renderDeleteCollectionForm */
-	(*router).HandleFunc("/api/collections/id/{collectionId}", DeleteCollectionHandler).Methods("DELETE")
-
-	/* check fetchCollections */
-	(*router).HandleFunc("/api/collections", GetAllCollectionsHandler).Methods("GET")
-	/* check fetchCollections */
-	(*router).HandleFunc("/api/collections", GetAllCollectionsHandler).Methods("GET")
-
-	/* check renderAddNoteToCollectionForm */
-	(*router).HandleFunc("/api/collections/id/{collectionId}/notes/id/{noteId}", AddNoteToCollectionHandler).Methods("POST")
-	/* check renderAddNoteToCollectionForm */
-	(*router).HandleFunc("/api/collections/name/{collectionId}/notes/id/{noteId}", AddNoteToCollectionHandler).Methods("POST")
-	/* check renderAddNoteToCollectionForm */
-	(*router).HandleFunc("/api/collections/id/{collectionId}/notes/name/{noteId}", AddNoteToCollectionHandler).Methods("POST")
-	/* check renderAddNoteToCollectionForm */
-	(*router).HandleFunc("/api/collections/name/{collectionId}/notes/name/{noteId}", AddNoteToCollectionHandler).Methods("POST")
-
-	/* check renderDeleteNoteFromCollectionForm */
-	(*router).HandleFunc("/api/collections/{sectionId}/notes/id/{noteId}", DeleteNoteFromCollectionHandler).Methods("DELETE")
-	/* check renderDeleteNoteFromCollectionForm */
-	(*router).HandleFunc("/api/collections/{sectionId}/notes/name/{noteId}", DeleteNoteFromSectionHandler).Methods("DELETE")
-	/* check renderDeleteNoteFromCollectionForm */
-	(*router).HandleFunc("/api/collections/{sectionId}/notes/id/{noteId}", DeleteNoteFromCollectionHandler).Methods("DELETE")
-	/* check renderDeleteNoteFromCollectionForm */
-	(*router).HandleFunc("/api/collections/{sectionId}/notes/name/{noteId}", DeleteNoteFromCollectionHandler).Methods("DELETE")
-
-	/* check renderDeleteUserForm */
-	(*router).HandleFunc("/api/users/id/{userId}", DeleteUserHandler).Methods("DELETE")
-	/* check renderDeleteUserForm */
-	(*router).HandleFunc("/api/users/name/{userId}", DeleteUserHandler).Methods("DELETE")
-
-	/* check renderUpdateUserFioForm */
-	(*router).HandleFunc("/api/users/id/{userId}/fio", UpdateUserFioHandler).Methods("PATCH")
-	/* check renderUpdateUserFioForm */
-	(*router).HandleFunc("/api/users/name/{userId}/fio", UpdateUserFioHandler).Methods("PATCH")
-
-	/* check renderUpdateUserRoleForm */
-	(*router).HandleFunc("/api/users/id/{userId}/role", UpdateUserRoleHandler).Methods("PATCH")
-	/* check renderUpdateUserRoleForm */
-	(*router).HandleFunc("/api/users/name/{userId}/role", UpdateUserRoleHandler).Methods("PATCH")
-
-	/* check renderFindUserForm */
-	(*router).HandleFunc("/api/users/id/{userId}", FindUserHandler).Methods("GET")
-	/* check renderFindUserForm */
-	(*router).HandleFunc("/api/users/name/{userId}", FindUserHandler).Methods("GET")
-
-	/* check fetchUsers */
-	(*router).HandleFunc("/api/users", GetAllUsersHandler).Methods("GET")
-
-	/* check renderAddTeamForm */
-	(*router).HandleFunc("/api/teams", AddTeamHandler).Methods("POST")
-
-	/* check renderDeleteTeamForm */
-	(*router).HandleFunc("/api/teams/id/{teamId}", DeleteTeamHandler).Methods("DELETE")
-	/* check renderDeleteTeamForm */
-	(*router).HandleFunc("/api/teams/name/{teamId}", DeleteTeamHandler).Methods("DELETE")
-
-	/* check renderFindTeamForm */
-	(*router).HandleFunc("/api/teams/id/{teamIdOrName}", FindTeamHandler).Methods("GET")
-	/* check renderFindTeamForm */
-	(*router).HandleFunc("/api/teams/id/{teamIdOrName}", FindTeamHandler).Methods("GET")
-
-	/* check renderShowTeamMembersForm */
-	(*router).HandleFunc("/api/teams/id/{teamId}/members", ShowTeamMembersHandler).Methods("GET")
-	/* check renderShowTeamMembersForm */
-	(*router).HandleFunc("/api/teams/name/{teamId}/members", ShowTeamMembersHandler).Methods("GET")
-
-	/* check fetchTeams */
-	(*router).HandleFunc("/api/teams", GetAllTeamsHandler).Methods("GET")
-
-	/* check renderAddUserToTeamForm */
-	(*router).HandleFunc("/api/teams/id/{teamId}/members/id/{userId}", AddUserToTeamHandler).Methods("POST")
-	/* check renderAddUserToTeamForm */
-	(*router).HandleFunc("/api/teams/name/{teamId}/members/id/{userId}", AddUserToTeamHandler).Methods("POST")
-	/* check renderAddUserToTeamForm */
-	(*router).HandleFunc("/api/teams/id/{teamId}/members/name/{userId}", AddUserToTeamHandler).Methods("POST")
-	/* check renderAddUserToTeamForm */
-	(*router).HandleFunc("/api/teams/name/{teamId}/members/name/{userId}", AddUserToTeamHandler).Methods("POST")
-
-	/* check renderDeleteUserFromTeamForm */
-	(*router).HandleFunc("/api/teams/id/{teamId}/members/id/{userId}", DeleteUserFromTeamHandler).Methods("DELETE")
-	/* check renderDeleteUserFromTeamForm */
-	(*router).HandleFunc("/api/teams/id/{teamId}/members/name/{userId}", DeleteUserFromTeamHandler).Methods("DELETE")
-	/* check renderDeleteUserFromTeamForm */
-	(*router).HandleFunc("/api/teams/name/{teamId}/members/id/{userId}", DeleteUserFromTeamHandler).Methods("DELETE")
-	/* check renderDeleteUserFromTeamForm */
-	(*router).HandleFunc("/api/teams/name/{teamId}/members/name/{userId}", DeleteUserFromTeamHandler).Methods("DELETE")
-
-	/* check renderAddSectionForm */
-	(*router).HandleFunc("/api/sections/id/{teamName}", AddSectionHandler).Methods("POST")
-	/* check renderAddSectionForm */
-	(*router).HandleFunc("/api/sections/name/{teamName}", AddSectionHandler).Methods("POST")
-
-	/* check renderDeleteSectionForm */
-	(*router).HandleFunc("/api/sections/id/{teamName}", DeleteSectionHandler).Methods("DELETE")
-	/* check renderDeleteSectionForm */
-	(*router).HandleFunc("/api/sections/name/{teamName}", DeleteSectionHandler).Methods("DELETE")
-
-	/* check fetchSections */
-	(*router).HandleFunc("/api/sections", GetAllSectionsHandler).Methods("GET")
-
-	/* check renderAddNoteToSectionForm */
-	(*router).HandleFunc("/api/sections/{sectionId}/notes/id/{noteId}", AddNoteToSectionHandler).Methods("POST")
-	/* check renderAddNoteToSectionForm */
-	(*router).HandleFunc("/api/sections/{sectionId}/notes/name/{noteId}", AddNoteToSectionHandler).Methods("POST")
-
-	/* check renderDeleteNoteFromSectionForm */
-	(*router).HandleFunc("/api/sections/{sectionId}/notes/id/{noteId}", DeleteNoteFromSectionHandler).Methods("DELETE")
-	/* check renderDeleteNoteFromSectionForm */
-	(*router).HandleFunc("/api/sections/{sectionId}/notes/name/{noteId}", DeleteNoteFromSectionHandler).Methods("DELETE")
-
-	(*router).HandleFunc("/api/stat", GetFullStatHendler).Methods("GET")
-
+	// -----------------------------------------------------------------------------------------------------------------
+	// Section handlers
+	// -----------------------------------------------------------------------------------------------------------------
+	router.HandleFunc("/sections", app.GetAllSectionsHandler).Methods("GET")
+	router.HandleFunc("/sections", app.AddSectionHandler).Methods("POST")
+	router.HandleFunc("/sections/{id}", app.GetSectionHandler).Methods("GET")
+	router.HandleFunc("/sections/{id}", app.DeleteSectionHandler).Methods("DELETE")
+	router.HandleFunc("/sections/{id}", app.UpdateSectionHandler).Methods("PATCH")
+	router.HandleFunc("/sections/{id}/notes", app.GetAllNotesInSectionHandler).Methods("GET")
+	router.HandleFunc("/sections/{id}/notes", app.AddNoteToSectionHandler).Methods("POST")
+	router.HandleFunc("/sections/{secID}/members/{noteID}", app.DeleteNoteFromSectionHandler).Methods("DELETE")
 }

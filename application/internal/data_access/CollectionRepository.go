@@ -204,13 +204,13 @@ func (cr *CollectionRepository) GetAllUserCollections(user *models.User) ([]*mod
 	return collections, resState
 }
 
-func (cr *CollectionRepository) AddCollection(collection *models.Collection) *bl.MyError {
+func (cr *CollectionRepository) AddCollection(collection *models.Collection) (int, *bl.MyError) {
 	cr.MyLogger.WriteLog("AddCollection is called (Repo)", slog.LevelInfo, nil)
 
 	if collection == nil {
 		resState := bl.CreateError(bl.ErrInParameter, "AddCollection", "data_access")
 		cr.MyLogger.WriteLog(resState.ConcatenateFields(), slog.LevelError, mylogger.LogCallerInfo())
-		return resState
+		return 0, resState
 	}
 
 	db := cr.DbConfigs.DB
@@ -223,11 +223,11 @@ func (cr *CollectionRepository) AddCollection(collection *models.Collection) *bl
 	if err != nil {
 		resState := bl.CreateError(bl.DatabaseError, "AddCollection", "data_access")
 		cr.MyLogger.WriteLog(resState.ConcatenateWithExternalErr(err), slog.LevelError, mylogger.LogCallerInfo())
-		return resState
+		return 0, resState
 	}
 	defer deferTransaction(err, tx)
 
-	_, err = tx.ExecContext(ctx, query, collection.Name, collection.CreationDate)
+	err = tx.QueryRowContext(ctx, query, collection.Name, collection.CreationDate).Scan(collection.Id)
 
 	if err != nil {
 		var resState *bl.MyError
@@ -240,12 +240,12 @@ func (cr *CollectionRepository) AddCollection(collection *models.Collection) *bl
 			cr.MyLogger.WriteLog(resState.ConcatenateWithExternalErr(err), slog.LevelError, mylogger.LogCallerInfo())
 		}
 
-		return resState
+		return 0, resState
 	}
 
 	resState := bl.CreateError(bl.Ok, "AddCollection", "data_access")
 	cr.MyLogger.WriteLog(resState.ConcatenateFields(), slog.LevelInfo, nil)
-	return resState
+	return collection.Id, resState
 }
 
 func (cr *CollectionRepository) DeleteCollection(id int) *bl.MyError {

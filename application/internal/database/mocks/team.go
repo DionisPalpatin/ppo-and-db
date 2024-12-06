@@ -11,7 +11,7 @@ type MockTeamRepository interface {
 	GetTeamByName(name string) (*models.Team, *bl.MyError)
 	GetTeamBySectionID(id int) (*models.Team, *bl.MyError)
 	GetAllTeams() ([]*models.Team, *bl.MyError)
-	AddTeam(team *models.Team) *bl.MyError
+	AddTeam(team *models.Team) (int, *bl.MyError)
 	DeleteTeam(id int) *bl.MyError
 	AddUserToTeam(userID int, teamID int) *bl.MyError
 	DeleteUserFromTeam(uid int, tid int) *bl.MyError

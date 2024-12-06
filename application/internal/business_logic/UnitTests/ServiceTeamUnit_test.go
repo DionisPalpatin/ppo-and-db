@@ -265,7 +265,7 @@ func TestAddTeam(t *testing.T) {
 		mockTeamRepo.On("AddTeam", returnTeam).Return(retErr)
 
 		tsSrv := bl.TeamService{}
-		err := tsSrv.AddTeam(reqUser, returnTeam, mockTeamRepo)
+		_, err := tsSrv.AddTeam(reqUser, returnTeam, mockTeamRepo)
 
 		assert.NotNil(t, err)
 		assert.Equal(t, err.ErrNum, bl.Ok)
@@ -279,7 +279,7 @@ func TestAddTeam(t *testing.T) {
 		mockRepo := new(v1.MockITeamRepository)
 
 		tsSrv := bl.TeamService{}
-		err := tsSrv.AddTeam(reqUser, nil, mockRepo)
+		_, err := tsSrv.AddTeam(reqUser, nil, mockRepo)
 
 		assert.NotNil(t, err)
 		assert.Equal(t, bl.ErrAccessDenied, err.ErrNum)
@@ -296,7 +296,7 @@ func TestAddTeam(t *testing.T) {
 		mockTeamRepo.On("AddTeam", returnTeam).Return(retErr)
 
 		tsSrv := bl.TeamService{}
-		err := tsSrv.AddTeam(reqUser, returnTeam, mockTeamRepo)
+		_, err := tsSrv.AddTeam(reqUser, returnTeam, mockTeamRepo)
 
 		assert.NotNil(t, err)
 		assert.Equal(t, bl.ErrAddTeam, err.ErrNum)

@@ -31,9 +31,9 @@ func (m *MockICollectionRepository) GetAllUserCollections(user *models.User) ([]
 	return args.Get(0).([]*models.Collection), args.Get(1).(*bl.MyError)
 }
 
-func (m *MockICollectionRepository) AddCollection(collection *models.Collection) *bl.MyError {
+func (m *MockICollectionRepository) AddCollection(collection *models.Collection) (int, *bl.MyError) {
 	args := m.Called(collection)
-	return args.Get(0).(*bl.MyError)
+	return 0, args.Get(0).(*bl.MyError)
 }
 
 func (m *MockICollectionRepository) DeleteCollection(id int) *bl.MyError {

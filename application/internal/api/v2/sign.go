@@ -2,6 +2,7 @@ package handlersv2
 
 import (
 	"encoding/json"
+	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/api/v2/converters"
 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/api/v2/transport_models"
 	bl "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/models"
@@ -41,7 +42,8 @@ func (app *App) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, myErr = app.IServices.IOAuthSvc.RegisterUser(userRegInfo.FIO, userRegInfo.Login, userRegInfo.Password)
+	user := converters.FromRegistrationInfo(&userRegInfo)
+	_, myErr = app.IServices.IOAuthSvc.RegisterUser(user.Fio, user.Login, user.Password)
 
 	if myErr.ErrNum != bl.Ok {
 		app.Configs.LogConfigs.Logger.WriteLog("Registration error", slog.LevelError, nil)
@@ -71,7 +73,8 @@ func (app *App) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, myErr := app.IServices.IUsrSvc.GetUser(-1, userLoginInfo.Login, bl.SearchByString, &models.User{Role: bl.Admin})
+	user := converters.FromLoginInfo(&userLoginInfo)
+	_, myErr := app.IServices.IUsrSvc.GetUser(-1, user.Login, bl.SearchByString, &models.User{Role: bl.Admin})
 
 	if myErr == nil {
 		app.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
@@ -87,7 +90,7 @@ func (app *App) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, myErr := app.IServices.IOAuthSvc.SignInUser(userLoginInfo.Login, userLoginInfo.Password)
+	token, myErr := app.IServices.IOAuthSvc.SignInUser(user.Login, user.Password)
 
 	if myErr == nil {
 		app.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)

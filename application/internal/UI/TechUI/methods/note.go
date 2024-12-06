@@ -156,7 +156,7 @@ func (MenuPoints) AddNote(user *models.User, configs *config.Configs, ireps *bl.
 
 	ins := isvcs.INoteSvc
 	inr := ireps.INoteRepo
-	myErr := ins.AddNote(&newNote, user, inr)
+	_, myErr := ins.AddNote(&newNote, user, inr)
 	if myErr.ErrNum == bl.ErrAccessDenied {
 		display.DisplayError("Ошибка: у Вас нет прав на выполнение данной операции")
 	} else if myErr.ErrNum == bl.ErrGetNoteByName {

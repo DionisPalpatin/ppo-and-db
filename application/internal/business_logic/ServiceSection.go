@@ -102,9 +102,9 @@ func (ss *SectionService) DeleteNoteFromSection(section *models.Section, note *m
 	return ss.isr.DeleteNoteFromSection(note, section)
 }
 
-func (ss *SectionService) AddSection(section *models.Section, team *models.Team, user *models.User) *MyError {
+func (ss *SectionService) AddSection(section *models.Section, team *models.Team, user *models.User) (int, *MyError) {
 	if user.Role != Admin {
-		return CreateError(ErrAccessDenied, "AddSection", "bl")
+		return 0, CreateError(ErrAccessDenied, "AddSection", "bl")
 	}
 
 	return ss.isr.AddSection(section, team)

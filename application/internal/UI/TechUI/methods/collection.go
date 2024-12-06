@@ -24,7 +24,7 @@ func (MenuPoints) AddCollection(user *models.User, dateTimeFormat string, ireps 
 
 	collection := &models.Collection{Name: collName, CreationDate: time.Now(), OwnerID: user.Id}
 
-	myErr := ics.AddCollection(collection, icr)
+	_, myErr := ics.AddCollection(collection, icr)
 	if myErr.ErrNum == bl.ErrAccessDenied {
 		display.DisplayError("Ошибка: у Вас нет прав на выполнение данной операции")
 	} else if myErr.ErrNum == bl.ErrDeleteTeam {

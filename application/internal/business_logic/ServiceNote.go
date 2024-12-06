@@ -71,9 +71,9 @@ func (ns *NoteService) GetAllNotes(open bool, requester *models.User) ([]*models
 
 }
 
-func (ns *NoteService) AddNote(note *models.Note, requester *models.User) *MyError {
+func (ns *NoteService) AddNote(note *models.Note, requester *models.User) (int, *MyError) {
 	if requester.Role == Reader {
-		return CreateError(ErrAccessDenied, "AddNote", "bl")
+		return 0, CreateError(ErrAccessDenied, "AddNote", "bl")
 	}
 
 	return ns.inr.AddNote(note)

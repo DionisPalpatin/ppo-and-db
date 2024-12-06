@@ -67,7 +67,7 @@ func (MenuPoints) AddSection(user *models.User, configs *config.Configs, ireps *
 	} else if myErr.ErrNum == bl.ErrAddSection {
 		display.DisplayError("Ошибка: попробуйте еще раз")
 	} else {
-		myErr = iss.AddSection(sec, team, user, isr)
+		_, myErr = iss.AddSection(sec, team, user, isr)
 		if myErr.ErrNum == bl.ErrAccessDenied {
 			display.DisplayError("Ошибка: у Вас нет доступа к данной команде")
 		} else if myErr.ErrNum == bl.ErrAddSection {
