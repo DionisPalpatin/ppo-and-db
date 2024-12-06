@@ -2,11 +2,9 @@ package app
 
 import (
 	"fmt"
+	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/config"
 	dapostgres "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/data_access"
 	"log/slog"
-	"net/http"
-
-	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/config"
 	//"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/UI/TechUI"
 	handlers "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/api/v2"
 	bl "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
@@ -147,10 +145,10 @@ func RunBackend() error {
 	handlers.InitRouter(appStruct.handlers)
 	port := fmt.Sprintf(":%d", appStruct.Configs.ServerPort)
 
-	fs := http.FileServer(http.Dir("./static/"))
-	appStruct.handlers.Router.PathPrefix("/").Handler(fs)
-
-	http.ListenAndServe(port, appStruct.handlers.Router)
+	err = appStruct.handlers.Router.Run(port)
+	if err != nil {
+		appStruct.Configs.LogConfigs.Logger.WriteLog("Fail run server", slog.LevelError, nil)
+	}
 	appStruct.Configs.LogConfigs.Logger.WriteLog("Server is running on port 8080", slog.LevelInfo, nil)
 
 	return nil

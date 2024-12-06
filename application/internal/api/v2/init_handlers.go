@@ -1,76 +1,96 @@
 package handlersv2
 
 import (
+	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/config"
+	//_ "github.com/DionisPalpatin/ppo-and-db/tree/master/application/docs"
+	bl "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
 	"net/http"
 
-	"github.com/gorilla/mux"
+	"github.com/gin-gonic/gin"
 )
 
-func InitRouter(hs *HandlersStruct) {
-	hs.Router = mux.NewRouter()
-	router := *hs.Router
+type HandlersStruct struct {
+	Configs *config.Configs
+	Router  *gin.Engine
 
-	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "static/index.html")
-	})
+	IServices *bl.IServices
+	IRepos    *bl.IRepositories
+}
+
+func InitRouter(hs *HandlersStruct) {
+	hs.Router = gin.Default()
+	router := hs.Router
+
+	adapter := func(handler func(http.ResponseWriter, *http.Request)) gin.HandlerFunc {
+		return func(c *gin.Context) {
+			handler(c.Writer, c.Request)
+		}
+	}
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// Authorisation handlers
 	// -----------------------------------------------------------------------------------------------------------------
-	router.HandleFunc("/login", hs.LoginHandler).Methods("POST")
-	router.HandleFunc("/register", hs.RegisterHandler).Methods("POST")
+	router.POST("/login", adapter(hs.LoginHandler))
+	router.POST("/register", adapter(hs.RegisterHandler))
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// User handlers
 	// -----------------------------------------------------------------------------------------------------------------
-	router.HandleFunc("/users", hs.GetAllUsersHandler).Methods("GET")
-	router.HandleFunc("/users/{id}", hs.GetUserHandler).Methods("GET")
-	router.HandleFunc("/users/{id}", hs.DeleteUserHandler).Methods("DELETE")
-	router.HandleFunc("/users/{id}", hs.UpdateUserHandler).Methods("PATCH")
+	router.GET("/users", adapter(hs.GetAllUsersHandler))
+	router.GET("/users/:id", adapter(hs.GetUserHandler))
+	router.DELETE("/users/:id", adapter(hs.DeleteUserHandler))
+	router.PATCH("/users/:id", adapter(hs.UpdateUserHandler))
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// Team handlers
 	// -----------------------------------------------------------------------------------------------------------------
-	router.HandleFunc("/teams", hs.GetAllTeamsHandler).Methods("GET")
-	router.HandleFunc("/teams", hs.AddTeamHandler).Methods("POST")
-	router.HandleFunc("/teams/{id}", hs.GetTeamHandler).Methods("GET")
-	router.HandleFunc("/teams/{id}", hs.DeleteTeamHandler).Methods("DELETE")
-	router.HandleFunc("/teams/{id}", hs.UpdateTeamHandler).Methods("PATCH")
-	router.HandleFunc("/teams/{id}/members", hs.GetTeamMembersHandler).Methods("GET")
-	router.HandleFunc("/teams/{id}/members", hs.AddUserToTeamHandler).Methods("POST")
-	router.HandleFunc("/teams/{teamID}/members/{userID}", hs.DeleteUserFromTeamHandler).Methods("DELETE")
+	router.GET("/teams", adapter(hs.GetAllTeamsHandler))
+	router.POST("/teams", adapter(hs.AddTeamHandler))
+	router.DELETE("/teams/:teamID/members/:userID", adapter(hs.DeleteUserFromTeamHandler))
+	router.GET("/teams/:teamID/members", adapter(hs.GetTeamMembersHandler))
+	router.POST("/teams/:teamID/members", adapter(hs.AddUserToTeamHandler))
+	router.GET("/teams/:teamID", adapter(hs.GetTeamHandler))
+	router.DELETE("/teams/:teamID", adapter(hs.DeleteTeamHandler))
+	router.PATCH("/teams/:teamID", adapter(hs.UpdateTeamHandler))
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// Note handlers
 	// -----------------------------------------------------------------------------------------------------------------
-	router.HandleFunc("/notes", hs.GetAllNotesHandler).Methods("GET")
-	router.HandleFunc("/notes", hs.AddNoteHandler).Methods("POST")
-	router.HandleFunc("/notes/{id}", hs.GetNoteHandler).Methods("GET")
-	router.HandleFunc("/notes/{id}", hs.DeleteNoteHandler).Methods("DELETE")
-	router.HandleFunc("/notes/{id}", hs.UpdateNoteHandler).Methods("PATCH")
+	router.GET("/notes", adapter(hs.GetAllNotesHandler))
+	router.POST("/notes", adapter(hs.AddNoteHandler))
+	router.GET("/notes/:id", adapter(hs.GetNoteHandler))
+	router.DELETE("/notes/:id", adapter(hs.DeleteNoteHandler))
+	router.PATCH("/notes/:id", adapter(hs.UpdateNoteHandler))
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// Collection handlers
 	// -----------------------------------------------------------------------------------------------------------------
-	router.HandleFunc("/collections", hs.GetAllCollectionsHandler).Methods("GET")
-	router.HandleFunc("/collections", hs.AddCollectionHandler).Methods("POST")
-	router.HandleFunc("/collections/users/{id}", hs.GetAllUsersCollectionsHandler).Methods("GET")
-	router.HandleFunc("/collections/{id}", hs.GetCollectionHandler).Methods("GET")
-	router.HandleFunc("/collections/{id}", hs.DeleteCollectionHandler).Methods("DELETE")
-	router.HandleFunc("/collections/{id}", hs.UpdateCollectionHandler).Methods("PATCH")
-	router.HandleFunc("/collections/{id}/notes", hs.GetAllNotesInCollectionHandler).Methods("GET")
-	router.HandleFunc("/collections/{id}/notes", hs.AddNoteToSectionHandler).Methods("POST")
-	router.HandleFunc("/collections/{collID}/members/{noteID}", hs.DeleteNoteFromCollectionHandler).Methods("DELETE")
+	router.GET("/collections", adapter(hs.GetAllCollectionsHandler))
+	router.POST("/collections", adapter(hs.AddCollectionHandler))
+	router.DELETE("/collections/:collID/members/:noteID", adapter(hs.DeleteNoteFromCollectionHandler))
+	router.GET("/collections/:collID/notes", adapter(hs.GetAllNotesInCollectionHandler))
+	router.POST("/collections/:collID/notes", adapter(hs.AddNoteToSectionHandler))
+	router.GET("/collections/users/:collID", adapter(hs.GetAllUsersCollectionsHandler))
+	router.GET("/collections/:collID", adapter(hs.GetCollectionHandler))
+	router.DELETE("/collections/:collID", adapter(hs.DeleteCollectionHandler))
+	router.PATCH("/collections/:collID", adapter(hs.UpdateCollectionHandler))
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// Section handlers
 	// -----------------------------------------------------------------------------------------------------------------
-	router.HandleFunc("/sections", hs.GetAllSectionsHandler).Methods("GET")
-	router.HandleFunc("/sections", hs.AddSectionHandler).Methods("POST")
-	router.HandleFunc("/sections/{id}", hs.GetSectionHandler).Methods("GET")
-	router.HandleFunc("/sections/{id}", hs.DeleteSectionHandler).Methods("DELETE")
-	router.HandleFunc("/sections/{id}", hs.UpdateSectionHandler).Methods("PATCH")
-	router.HandleFunc("/sections/{id}/notes", hs.GetAllNotesInSectionHandler).Methods("GET")
-	router.HandleFunc("/sections/{id}/notes", hs.AddNoteToSectionHandler).Methods("POST")
-	router.HandleFunc("/sections/{secID}/members/{noteID}", hs.DeleteNoteFromSectionHandler).Methods("DELETE")
+	router.GET("/sections", adapter(hs.GetAllSectionsHandler))
+	router.POST("/sections", adapter(hs.AddSectionHandler))
+	router.DELETE("/sections/:secID/members/:noteID", adapter(hs.DeleteNoteFromSectionHandler))
+	router.GET("/sections/:secID/notes", adapter(hs.GetAllNotesInSectionHandler))
+	router.POST("/sections/:secID/notes", adapter(hs.AddNoteToSectionHandler))
+	router.GET("/sections/:secID", adapter(hs.GetSectionHandler))
+	router.DELETE("/sections/:secID", adapter(hs.DeleteSectionHandler))
+	router.PATCH("/sections/:secID", adapter(hs.UpdateSectionHandler))
+
+	// -----------------------------------------------------------------------------------------------------------------
+	// Static path
+	// -----------------------------------------------------------------------------------------------------------------
+	//router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	router.Static("/swaggerui", "./docs/swaggerui")
+	router.StaticFS("/static", http.Dir("./static/"))
 }
