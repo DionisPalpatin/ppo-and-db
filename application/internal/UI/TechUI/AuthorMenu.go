@@ -2,8 +2,8 @@ package TechUI
 
 import (
 	"fmt"
+	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/config"
 
-	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/config"
 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/UI/TechUI/methods"
 	bl "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/models"

@@ -1,12 +1,13 @@
-FROM golang:latest
+FROM golang:1.23 AS build
 
-WORKDIR /notebookapp
+RUN go install github.com/vektra/mockery/v2@latest
+
+WORKDIR /go/src/app
 
 COPY . .
 
 # RUN go get github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/UI/TechUI
 
-RUN rm -rf /notebookapp/internal/UI/GUI && \
-    go build -o main.exe cmd/main.go
-
-CMD ["/notebookapp/main.exe"]
+RUN rm -rf /go/src/app/internal/UI && \
+    go build -o main cmd/main.go && \
+    cp /go/src/app/internal/config/config.yaml /app/config.yaml

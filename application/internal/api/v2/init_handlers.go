@@ -1,7 +1,8 @@
 package handlersv2
 
 import (
-	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/config"
+	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/config"
+
 	//_ "github.com/DionisPalpatin/ppo-and-db/tree/master/application/docs"
 	bl "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
 	"net/http"

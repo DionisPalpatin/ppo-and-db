@@ -3,10 +3,10 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/config"
 	"log/slog"
 	"time"
 
-	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/config"
 	mylogger "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/logger"
 )
 

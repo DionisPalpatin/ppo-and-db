@@ -1,87 +1,133 @@
-version: '3.8'
-
 services:
-  postgres:
-    container_name: postgres_container
-
-    image: postgres:latest
-    
-    environment:
-      POSTGRES_USER: "postgres"
-      POSTGRES_PASSWORD: "postgrespassword"
-      POSTGRES_DB: "NotebookApp"
-      PGDATA: /var/lib/postgresql/data/pgdata
-
-    volumes:
-      - ./initdb:/docker-entrypoint-initdb.d
-      - .:/var/lib/postgresql/data
-    
-    ports:
-      - "5432:5432"
-    
-    networks:
-      - noteappnetwork
-    
-    restart: unless-stopped
-
-  
-  pgadmin:
-    container_name: pgadmin_container
-    
-    image: dpage/pgadmin4:latest
-    
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
-      PGADMIN_CONFIG_SERVER_MODE: 'False'
-    
-    ports:
-      - "5050:80"
-    
-    networks:
-      - noteappnetwork
-    
-    restart: unless-stopped  
-
-  
-  note_app_backend:
-    container_name: backend_container
-    stdin_open: true # docker run -i
-    tty: true        # docker run -t
-
+  cd-backend:
+    container_name: cd-backend
     build:
       context: .
       dockerfile: Dockerfile
-
+    command: /app/main
     ports:
-     - "13338:13338"
-
+      - "8081:8080"
     volumes:
-     - ./log:/notebookapp/log
-     - ./config:/notebookapp/config
-
+      - ./log.log:/app/log.log
+      - ./backend/config/config.yaml:/app/config.yaml
     depends_on:
-     - postgres
-
+      - postgres-master
     networks:
-     - noteappnetwork
+      - noteappnetwork
 
-  clickhouse_server:
-    image: yandex/clickhouse-server
+  cd-backend-ro1:
+    container_name: cd-backend-ro1
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: /app/main
     ports:
-      - "8123:8123"
-      - "9000:9000"
-      - "9009:9009"
+      - "8082:8080"
+    volumes:
+      - ./log-ro1.log:/app/log.log
+      - ./backend/config/config-ro.yaml:/app/config.yaml
+    depends_on:
+      - postgres-slave
+    networks:
+      - noteappnetwork
 
-    ulimits:
-      nproc: 65535
-      nofile:
-        soft: 262144
-        hard: 262144
+  cd-backend-ro2:
+    container_name: cd-backend-ro2
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: /app/main
+    ports:
+      - "8083:8080"
+    volumes:
+      - ./log-ro2.log:/app/log.log
+      - ./backend/config/config-ro.yaml:/app/config.yaml
+    depends_on:
+      - postgres-slave
+    networks:
+      - noteappnetwork
 
-  clickhouse_client:
-      image: yandex/clickhouse-client
-      command: [ '--host', 'server' ]
+  cd-backend-mirror:
+    container_name: cd-backend-mirror
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: /app/main
+    ports:
+      - "8084:8080"
+    volumes:
+      - ./log-mirror.log:/app/log.log
+      - ./backend/config/config.yaml:/app/config.yaml
+    depends_on:
+      - postgres-master
+    networks:
+      - noteappnetwork
+
+  postgres-master:
+    container_name: postgres-master
+    image: bitnami/postgresql:16
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "password"
+      POSTGRES_DB: "NotebookApp"
+      POSTGRESQL_REPLICATION_MODE: "master"
+      POSTGRESQL_REPLICATION_USER: "repl_user"
+      POSTGRESQL_REPLICATION_PASSWORD: "1337"
+    ports:
+      - "15432:5432"
+    volumes:
+      - ./db/scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./data:/var/lib/postgresql/data
+    networks:
+      - noteappnetwork
+
+  postgres-slave:
+    container_name: postgres-slave
+    image: bitnami/postgresql:16
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d admin -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "password"
+      POSTGRES_DB: "NotebookApp"
+      POSTGRESQL_REPLICATION_MODE: "slave"
+      POSTGRESQL_REPLICATION_USER: "repl_user"
+      POSTGRESQL_REPLICATION_PASSWORD: "password"
+      POSTGRESQL_MASTER_HOST: "postgres-master"
+    depends_on:
+      postgres-master:
+        condition: service_healthy
+    ports:
+      - "15433:5432"
+    volumes:
+      - ./data/slave:/var/lib/postgresql/data
+    networks:
+      - noteappnetwork
+
+  pgadmin:
+    image: dpage/pgadmin4:7
+    env_file:
+      - .env
+    ports:
+      - 5435:80
+    volumes:
+      - ./pgadmin:/var/lib/pgadmin
+    environment:
+      TZ: "Europe/Moscow"
+    depends_on:
+      - postgres-master
+    networks:
+      - cookdroognet
+
+    restart: unless-stopped
 
 networks:
   noteappnetwork:

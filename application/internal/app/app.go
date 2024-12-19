@@ -2,8 +2,9 @@ package app
 
 import (
 	"fmt"
-	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/config"
+	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/config"
 	dapostgres "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/data_access"
+	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/database"
 	"log/slog"
 	//"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/UI/TechUI"
 	handlers "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/api/v2"
@@ -13,17 +14,15 @@ import (
 )
 
 func initDBConnection(config *config.Configs) error {
-	//logger := config.LogConfigs.Logger
-	//logger.WriteLog("Init DB connection", slog.LevelInfo, nil)
-	//
-	//err := database.Connect(config.LogConfigs.Logger, config.DBConfigs)
-	//if err != nil {
-	//	logger.WriteLog("Unable to init db connection", slog.LevelError, nil)
-	//}
-	//
-	//return err
+	logger := config.LogConfigs.Logger
+	logger.WriteLog("Init DB connection", slog.LevelInfo, nil)
 
-	return nil
+	err := database.Connect(config.LogConfigs.Logger, config.DBConfigs)
+	if err != nil {
+		logger.WriteLog("Unable to init db connection", slog.LevelError, nil)
+	}
+
+	return err
 }
 
 // Структура для общей конфигурации приложения
@@ -115,7 +114,6 @@ func RunBackend() error {
 		return err
 	}
 
-	// initRepositories(appStruct)
 	initInterfaces(appStruct)
 
 	//if appStruct.Configs.Mode == "tech" {
