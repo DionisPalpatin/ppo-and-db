@@ -90,7 +90,7 @@ func initInterfaces(appStruct *App) {
 }
 
 func RunBackend() error {
-	configFile := "./config/config.yaml"
+	configFile := "./config.yaml"
 
 	appStruct := new(App)
 	var err error
