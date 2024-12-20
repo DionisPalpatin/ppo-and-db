@@ -1,63 +1,63 @@
 services:
   cd-backend:
-    container_name: cd-backend
+    container_name: mainApplication
     build:
       context: .
       dockerfile: Dockerfile
-    command: /app/main
+    command: /go/src/app/main
     ports:
       - "8081:8080"
     volumes:
       - ./log.log:/app/log.log
-      - ./backend/config/config.yaml:/app/config.yaml
+      - ./internal/config/config.yaml:/app/config.yaml
     depends_on:
       - postgres-master
     networks:
       - noteappnetwork
 
   cd-backend-ro1:
-    container_name: cd-backend-ro1
+    container_name: mainApplication-ro1
     build:
       context: .
       dockerfile: Dockerfile
-    command: /app/main
+    command: /go/src/app/main
     ports:
       - "8082:8080"
     volumes:
       - ./log-ro1.log:/app/log.log
-      - ./backend/config/config-ro.yaml:/app/config.yaml
+      - ./internal/config/config-ro.yaml:/app/config.yaml
     depends_on:
       - postgres-slave
     networks:
       - noteappnetwork
 
   cd-backend-ro2:
-    container_name: cd-backend-ro2
+    container_name: mainApplication-ro2
     build:
       context: .
       dockerfile: Dockerfile
-    command: /app/main
+    command: /go/src/app/main
     ports:
       - "8083:8080"
     volumes:
       - ./log-ro2.log:/app/log.log
-      - ./backend/config/config-ro.yaml:/app/config.yaml
+      - ./internal/config/config-ro.yaml:/app/config.yaml
     depends_on:
       - postgres-slave
     networks:
       - noteappnetwork
 
   cd-backend-mirror:
-    container_name: cd-backend-mirror
+    container_name: mainApplication-mirror
     build:
       context: .
       dockerfile: Dockerfile
-    command: /app/main
+    command: /go/src/app/main
     ports:
       - "8084:8080"
     volumes:
       - ./log-mirror.log:/app/log.log
-      - ./backend/config/config.yaml:/app/config.yaml
+      - ./internal/config/config.yaml:/app/config.yaml
     depends_on:
       - postgres-master
     networks:
@@ -77,11 +77,11 @@ services:
       POSTGRES_DB: "NotebookApp"
       POSTGRESQL_REPLICATION_MODE: "master"
       POSTGRESQL_REPLICATION_USER: "repl_user"
-      POSTGRESQL_REPLICATION_PASSWORD: "1337"
+      POSTGRESQL_REPLICATION_PASSWORD: "password"
     ports:
       - "15432:5432"
     volumes:
-      - ./db/scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./initdb/init_main.sql:/docker-entrypoint-initdb.d/init.sql
       - ./data:/var/lib/postgresql/data
     networks:
       - noteappnetwork
@@ -114,18 +114,19 @@ services:
 
   pgadmin:
     image: dpage/pgadmin4:7
-    env_file:
-      - .env
     ports:
       - 5435:80
     volumes:
       - ./pgadmin:/var/lib/pgadmin
     environment:
       TZ: "Europe/Moscow"
+      PGADMIN_DEFAULT_EMAIL: root@root.root
+      PGADMIN_DEFAULT_PASSWORD: rootadmin
     depends_on:
       - postgres-master
     networks:
-      - cookdroognet
+      - noteappnetwork
+    user: "${UID}:${GID}"
 
     restart: unless-stopped
 

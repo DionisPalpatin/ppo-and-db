@@ -3,3 +3,5 @@ application/pgdata/
 *.exe
 application/log/
 *.py
+*.log
+**/pgadmin/
