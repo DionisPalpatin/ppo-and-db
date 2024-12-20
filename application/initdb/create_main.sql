@@ -87,7 +87,7 @@ create table main.texts (
     id       serial     primary key,
     data     bytea      not null,
     note_id  int        not null references main.notes(id),
-    file_ext varchar(1) default 'txt'
+    file_ext varchar(25) default 'txt'
 );
 
 
