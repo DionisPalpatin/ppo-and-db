@@ -10,4 +10,4 @@ COPY . .
 
 RUN rm -rf /go/src/app/internal/UI && \
     go build -o main cmd/main.go && \
-    cp /go/src/app/internal/config/config.yaml /app/config.yaml
+    cp /go/src/app/internal/config/config.yaml config.yaml
