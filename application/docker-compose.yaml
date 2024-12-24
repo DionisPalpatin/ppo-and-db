@@ -1,6 +1,6 @@
 services:
-  cd-backend:
-    container_name: mainApplication
+  main-application:
+    container_name: main-application
     build:
       context: .
       dockerfile: Dockerfile
@@ -8,15 +8,16 @@ services:
     ports:
       - "8081:8080"
     volumes:
-      - ./log.log:/go/src/app/log.log
+      - ./logs/log.log:/go/src/app/log.log
       - ./internal/config/config.yaml:/app/config.yaml
     depends_on:
       - postgres-master
     networks:
       - noteappnetwork
+    # user: "${UID}:${GID}"
 
-  cd-backend-ro1:
-    container_name: mainApplication-ro1
+  main-application-ro1:
+    container_name: main-application-ro1
     build:
       context: .
       dockerfile: Dockerfile
@@ -24,15 +25,16 @@ services:
     ports:
       - "8082:8080"
     volumes:
-      - ./log-ro1.log:/go/src/app/log.log
+      - ./logs/log-ro1.log:/go/src/app/log.log
       - ./internal/config/config-ro.yaml:/app/config.yaml
     depends_on:
       - postgres-slave
     networks:
       - noteappnetwork
+    # user: "${UID}:${GID}"
 
-  cd-backend-ro2:
-    container_name: mainApplication-ro2
+  main-application-ro2:
+    container_name: main-application-ro2
     build:
       context: .
       dockerfile: Dockerfile
@@ -40,15 +42,16 @@ services:
     ports:
       - "8083:8080"
     volumes:
-      - ./log-ro2.log:/go/src/app/log.log
+      - ./logs/log-ro2.log:/go/src/app/log.log
       - ./internal/config/config-ro.yaml:/app/config.yaml
     depends_on:
       - postgres-slave
     networks:
       - noteappnetwork
+    # user: "${UID}:${GID}"
 
-  cd-backend-mirror:
-    container_name: mainApplication-mirror
+  main-application-mirror:
+    container_name: main-application-mirror
     build:
       context: .
       dockerfile: Dockerfile
@@ -56,12 +59,13 @@ services:
     ports:
       - "8084:8080"
     volumes:
-      - ./log-mirror.log:/go/src/app/log.log
+      - ./logs/log-mirror.log:/go/src/app/log.log
       - ./internal/config/config.yaml:/app/config.yaml
     depends_on:
       - postgres-master
     networks:
       - noteappnetwork
+    # user: "${UID}:${GID}"
 
   postgres-master:
     container_name: postgres-master
@@ -85,6 +89,7 @@ services:
       - ./data:/var/lib/postgresql/data
     networks:
       - noteappnetwork
+    # user: "${UID}:${GID}"
 
   postgres-slave:
     container_name: postgres-slave
@@ -111,6 +116,7 @@ services:
       - ./data/slave:/var/lib/postgresql/data
     networks:
       - noteappnetwork
+    # user: "${UID}:${GID}"
 
   pgadmin:
     image: dpage/pgadmin4:7
@@ -126,7 +132,7 @@ services:
       - postgres-master
     networks:
       - noteappnetwork
-    user: "${UID}:${GID}"
+    # user: "${UID}:${GID}"
 
     restart: unless-stopped
 

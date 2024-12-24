@@ -9,6 +9,8 @@ import (
 )
 
 func getRequester(r *http.Request, w http.ResponseWriter, logger *mylogger.MyLogger) *models.User {
+	logger.WriteLog("Start get requester", slog.LevelInfo, nil)
+	
 	claims, err := bl.ValidateAndParseToken(r.Header.Get("Authorization"))
 
 	if err != nil {
