@@ -5,7 +5,7 @@ import (
 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/api/v2/converters"
 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/api/v2/transport_models"
 	bl "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
-	mylogger "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/logger"
+	_ "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/logger"
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 	"log/slog"
@@ -14,14 +14,14 @@ import (
 )
 
 func (hs *HandlersStruct) GetNoteHandler(w http.ResponseWriter, r *http.Request) {
-	logger.WriteLog("Start get note handler", slog.LevelInfo, nil)
+	hs.Configs.LogConfigs.Logger.WriteLog("Start get note handler", slog.LevelInfo, nil)
 
 	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
 
-	logger.WriteLog("Requester is got", slog.LevelInfo, nil)
+	hs.Configs.LogConfigs.Logger.WriteLog("Requester is got", slog.LevelInfo, nil)
 
 	vars := mux.Vars(r)
 	targetID, err := strconv.Atoi(vars["id"])
@@ -30,7 +30,7 @@ func (hs *HandlersStruct) GetNoteHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	logger.WriteLog("Start get note", slog.LevelInfo, nil)
+	hs.Configs.LogConfigs.Logger.WriteLog("Start get note", slog.LevelInfo, nil)
 
 	srcData, myErr := hs.IServices.INoteSvc.GetNote(targetID, "", bl.SearchByID, reqUser)
 	if myErr == nil {
@@ -46,12 +46,12 @@ func (hs *HandlersStruct) GetNoteHandler(w http.ResponseWriter, r *http.Request)
 		http.Error(w, "Note not found", http.StatusNotFound)
 		return
 	} else if myErr.ErrNum != bl.Ok {
-		hs.Configs.LogConfigs.Logger.WriteLog("Internal server error with num = "+strconv(myErr.ErrNum), slog.LevelError, nil)
+		hs.Configs.LogConfigs.Logger.WriteLog("Internal server error with num = "+strconv.Itoa(myErr.ErrNum), slog.LevelError, nil)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
-	logger.WriteLog("Note is got. Start to send reply", slog.LevelInfo, nil)
+	hs.Configs.LogConfigs.Logger.WriteLog("Note is got. Start to send reply", slog.LevelInfo, nil)
 
 	convertedData := converters.ToNoteFullData(srcData)
 

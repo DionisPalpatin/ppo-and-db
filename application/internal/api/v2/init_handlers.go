@@ -2,7 +2,6 @@ package handlersv2
 
 import (
 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/config"
-
 	//_ "github.com/DionisPalpatin/ppo-and-db/tree/master/application/docs"
 	bl "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
 	"net/http"
@@ -16,6 +15,12 @@ type HandlersStruct struct {
 
 	IServices *bl.IServices
 	IRepos    *bl.IRepositories
+}
+
+func InitHandlersStructFields(hs *HandlersStruct, confs *config.Configs, ireps *bl.IRepositories, iservs *bl.IServices) {
+	hs.Configs = confs
+	hs.IServices = iservs
+	hs.IRepos = ireps
 }
 
 func InitRouter(hs *HandlersStruct) {

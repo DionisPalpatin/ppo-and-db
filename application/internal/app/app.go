@@ -140,6 +140,7 @@ func RunBackend() error {
 	//	appStruct.Configs.LogConfigs.Logger.WriteLog("Server is running on port 8080", slog.LevelInfo, nil)
 	//}
 
+	handlers.InitHandlersStructFields(appStruct.handlers, appStruct.Configs, appStruct.IRepos, appStruct.IServices)
 	handlers.InitRouter(appStruct.handlers)
 	port := fmt.Sprintf(":%d", appStruct.Configs.ServerPort)
 
