@@ -13,7 +13,7 @@ import (
 func getRequester(c *gin.Context, logger *mylogger.MyLogger) *models.User {
 	logger.WriteLog("Start get requester", slog.LevelInfo, nil)
 
-	claims, err := bl.ValidateAndParseToken(r.Header.Get("Authorization"))
+	claims, err := bl.ValidateAndParseToken(c.GetHeader("Authorization"))
 
 	if err != nil {
 		logger.WriteLog("JWT error: "+err.Error(), slog.LevelError, nil)
