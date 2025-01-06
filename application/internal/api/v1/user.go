@@ -1,6 +1,7 @@
 package handlersv1
 
 import (
+	"github.com/gin-gonic/gin"
 	"net/http"
 )
 

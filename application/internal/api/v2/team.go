@@ -1,19 +1,18 @@
 package handlersv2
 
 import (
-	"encoding/json"
 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/api/v2/converters"
 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/api/v2/transport_models"
 	bl "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
+	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-	"github.com/gorilla/mux"
 	"log/slog"
 	"net/http"
 	"strconv"
 )
 
-func (hs *HandlersStruct) GetAllTeamsHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) GetAllTeamsHandler(c *gin.Context) {
+	reqUser := getRequester(c, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
@@ -21,14 +20,14 @@ func (hs *HandlersStruct) GetAllTeamsHandler(w http.ResponseWriter, r *http.Requ
 	data, myErr := hs.IServices.ITeamSvc.GetAllTeams(reqUser)
 	if myErr == nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	} else if myErr.ErrNum == bl.ErrAccessDenied {
 		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
-		http.Error(w, "Insufficient permissions", http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions"})
 		return
 	} else if myErr.ErrNum != bl.Ok {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
@@ -37,68 +36,57 @@ func (hs *HandlersStruct) GetAllTeamsHandler(w http.ResponseWriter, r *http.Requ
 		dataConverted = append(dataConverted, converters.ToTeamInfo(team))
 	}
 
-	w.Header().Set("Content-Type", "application/my_json")
-	err := json.NewEncoder(w).Encode(dataConverted)
-
-	if err != nil {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
+	c.Header("Content-Type", "application/my_json")
+	c.JSON(http.StatusOK, dataConverted)
 }
 
-func (hs *HandlersStruct) GetTeamHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) GetTeamHandler(c *gin.Context) {
+	reqUser := getRequester(c, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
 
-	vars := mux.Vars(r)
-	targetID, err := strconv.Atoi(vars["id"])
+	targetID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		http.Error(w, "Invalid user ID format", http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID format"})
 		return
 	}
 
 	srcData, myErr := hs.IServices.ITeamSvc.GetTeam(targetID, "", bl.SearchByID, reqUser)
 	if myErr == nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	} else if myErr.ErrNum == bl.ErrAccessDenied {
 		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
-		http.Error(w, "Insufficient permissions", http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions"})
 		return
 	} else if myErr.ErrNum == bl.NoSuchTeam {
-		http.Error(w, "Team not found", http.StatusNotFound)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Team not found"})
 		return
 	} else if myErr.ErrNum != bl.Ok {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
 	convertedData := converters.ToTeamFullInfo(srcData)
 
-	w.Header().Set("Content-Type", "application/my_json")
-	err = json.NewEncoder(w).Encode(convertedData)
-
-	if err != nil {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
+	c.Header("Content-Type", "application/my_json")
+	c.JSON(http.StatusOK, convertedData)
 }
 
-func (hs *HandlersStruct) AddTeamHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) AddTeamHandler(c *gin.Context) {
+	reqUser := getRequester(c, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
 
 	var teamInfo transport_models.TeamInfo
-	err := json.NewDecoder(r.Body).Decode(&teamInfo)
+	err := c.ShouldBindJSON(&teamInfo)
 
 	if err != nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("Invalid request payload", slog.LevelError, nil)
-		http.Error(w, "Invalid request payload", http.StatusUnprocessableEntity)
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Invalid request payload"})
 		return
 	}
 
@@ -106,7 +94,7 @@ func (hs *HandlersStruct) AddTeamHandler(w http.ResponseWriter, r *http.Request)
 
 	if err := validate.Struct(&teamInfo); err != nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("Invalid request payload", slog.LevelError, nil)
-		http.Error(w, "Invalid request payload", http.StatusUnprocessableEntity)
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Invalid request payload"})
 		return
 	}
 
@@ -117,79 +105,77 @@ func (hs *HandlersStruct) AddTeamHandler(w http.ResponseWriter, r *http.Request)
 
 	if myErr == nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	} else if myErr.ErrNum == bl.NoSuchTeam {
 		hs.Configs.LogConfigs.Logger.WriteLog("Team not found", slog.LevelError, nil)
-		http.Error(w, "Team not found", http.StatusNotFound)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Team not found"})
 		return
 	} else if myErr.ErrNum != bl.Ok {
 		hs.Configs.LogConfigs.Logger.WriteLog("Error checking user existence", slog.LevelError, nil)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/my_json")
-	err = json.NewEncoder(w).Encode(idStruct)
+	c.Header("Content-Type", "application/my_json")
+	c.JSON(http.StatusOK, idStruct)
 
 	if err != nil {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 }
 
-func (hs *HandlersStruct) DeleteTeamHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) DeleteTeamHandler(c *gin.Context) {
+	reqUser := getRequester(c, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
 
-	vars := mux.Vars(r)
-	targetID, err := strconv.Atoi(vars["id"])
+	targetID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		http.Error(w, "Invalid team ID format", http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid team ID format"})
 		return
 	}
 
 	myErr := hs.IServices.ITeamSvc.DeleteTeam(reqUser, targetID)
 	if myErr.ErrNum == bl.ErrAccessDenied {
 		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
-		http.Error(w, "Insufficient permissions", http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions"})
 		return
 	} else if myErr.ErrNum == bl.OperationError {
-		http.Error(w, "Team not found", http.StatusNotFound)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Team not found"})
 		return
 	} else if myErr.ErrNum != bl.Ok {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	c.Status(http.StatusOK)
 }
 
-func (hs *HandlersStruct) UpdateTeamHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) UpdateTeamHandler(c *gin.Context) {
+	reqUser := getRequester(c, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
 
 	var data transport_models.TeamInfo
-	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+	if err := c.ShouldBindJSON(&data); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
 		return
 	}
 
 	var validate = validator.New()
 	if err := validate.Struct(&data); err != nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("Invalid request payload", slog.LevelError, nil)
-		http.Error(w, "Invalid request payload", http.StatusUnprocessableEntity)
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Invalid request payload"})
 		return
 	}
 
-	vars := mux.Vars(r)
-	targetID, err := strconv.Atoi(vars["id"])
+	targetID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		http.Error(w, "Invalid user ID format", http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID format"})
 		return
 	}
 
@@ -199,42 +185,41 @@ func (hs *HandlersStruct) UpdateTeamHandler(w http.ResponseWriter, r *http.Reque
 
 	if myErr.ErrNum == bl.ErrAccessDenied {
 		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
-		http.Error(w, "Insufficient permissions", http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions"})
 		return
 	} else if myErr.ErrNum == bl.OperationError {
-		http.Error(w, "Team not found", http.StatusNotFound)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Team not found"})
 		return
 	} else if myErr.ErrNum != bl.Ok {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	c.Status(http.StatusOK)
 }
 
-func (hs *HandlersStruct) AddUserToTeamHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) AddUserToTeamHandler(c *gin.Context) {
+	reqUser := getRequester(c, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
 
 	var data userIDStruct
-	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+	if err := c.ShouldBindJSON(&data); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
 		return
 	}
 
 	var validate = validator.New()
 	if err := validate.Struct(&data); err != nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("Invalid request payload", slog.LevelError, nil)
-		http.Error(w, "Invalid request payload", http.StatusUnprocessableEntity)
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Invalid request payload"})
 		return
 	}
 
-	vars := mux.Vars(r)
-	targetID, err := strconv.Atoi(vars["id"])
+	targetID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		http.Error(w, "Invalid team ID format", http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid team ID format"})
 		return
 	}
 
@@ -242,34 +227,33 @@ func (hs *HandlersStruct) AddUserToTeamHandler(w http.ResponseWriter, r *http.Re
 
 	if myErr.ErrNum == bl.ErrAccessDenied {
 		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
-		http.Error(w, "Insufficient permissions", http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions"})
 		return
 	} else if myErr.ErrNum == bl.OperationError {
-		http.Error(w, "Team not found", http.StatusNotFound)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Team not found"})
 		return
 	} else if myErr.ErrNum != bl.Ok {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	c.Status(http.StatusOK)
 }
 
-func (hs *HandlersStruct) DeleteUserFromTeamHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) DeleteUserFromTeamHandler(c *gin.Context) {
+	reqUser := getRequester(c, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
 
-	vars := mux.Vars(r)
-	teamID, err := strconv.Atoi(vars["teamID"])
+	teamID, err := strconv.Atoi(c.Param("teamID"))
 	if err != nil {
-		http.Error(w, "Invalid team ID format", http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid team ID format"})
 		return
 	}
-	userID, err := strconv.Atoi(vars["userID"])
+	userID, err := strconv.Atoi(c.Param("userID"))
 	if err != nil {
-		http.Error(w, "Invalid user ID format", http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID format"})
 		return
 	}
 
@@ -277,42 +261,41 @@ func (hs *HandlersStruct) DeleteUserFromTeamHandler(w http.ResponseWriter, r *ht
 
 	if myErr.ErrNum == bl.ErrAccessDenied {
 		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
-		http.Error(w, "Insufficient permissions", http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions"})
 		return
 	} else if myErr.ErrNum == bl.OperationError {
-		http.Error(w, "Team not found", http.StatusNotFound)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Team not found"})
 		return
 	} else if myErr.ErrNum != bl.Ok {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	c.Status(http.StatusOK)
 }
 
-func (hs *HandlersStruct) GetTeamMembersHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) GetTeamMembersHandler(c *gin.Context) {
+	reqUser := getRequester(c, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
 
-	vars := mux.Vars(r)
-	teamID, err := strconv.Atoi(vars["teamID"])
+	teamID, err := strconv.Atoi(c.Param("teamID"))
 	if err != nil {
-		http.Error(w, "Invalid team ID format", http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid team ID format"})
 		return
 	}
 
 	data, myErr := hs.IServices.ITeamSvc.GetTeamMembers(teamID, reqUser)
 	if myErr.ErrNum == bl.ErrAccessDenied {
 		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
-		http.Error(w, "Insufficient permissions", http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions"})
 		return
 	} else if myErr.ErrNum == bl.OperationError {
-		http.Error(w, "Team not found", http.StatusNotFound)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Team not found"})
 		return
 	} else if myErr.ErrNum != bl.Ok {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
@@ -321,11 +304,6 @@ func (hs *HandlersStruct) GetTeamMembersHandler(w http.ResponseWriter, r *http.R
 		convertedData = append(convertedData, converters.ToUserPublicInfo(user))
 	}
 
-	w.Header().Set("Content-Type", "application/my_json")
-	err = json.NewEncoder(w).Encode(convertedData)
-
-	if err != nil {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
+	c.Header("Content-Type", "application/my_json")
+	c.JSON(http.StatusOK, convertedData)
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/api/v2/transport_models"
 	bl "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
 	_ "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/logger"
+	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 	"log/slog"
@@ -13,20 +14,19 @@ import (
 	"strconv"
 )
 
-func (hs *HandlersStruct) GetNoteHandler(w http.ResponseWriter, r *http.Request) {
+func (hs *HandlersStruct) GetNoteHandler(c *gin.Context) {
 	hs.Configs.LogConfigs.Logger.WriteLog("Start get note handler", slog.LevelInfo, nil)
 
-	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
+	reqUser := getRequester(c, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
 
 	hs.Configs.LogConfigs.Logger.WriteLog("Requester is got", slog.LevelInfo, nil)
 
-	vars := mux.Vars(r)
-	targetID, err := strconv.Atoi(vars["id"])
+	targetID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		http.Error(w, "Invalid note ID format", http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid note ID format"})
 		return
 	}
 
@@ -35,19 +35,19 @@ func (hs *HandlersStruct) GetNoteHandler(w http.ResponseWriter, r *http.Request)
 	srcData, myErr := hs.IServices.INoteSvc.GetNote(targetID, "", bl.SearchByID, reqUser)
 	if myErr == nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	} else if myErr.ErrNum == bl.ErrAccessDenied {
 		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
-		http.Error(w, "Insufficient permissions", http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions"})
 		return
 	} else if myErr.ErrNum == bl.NoSuchNote {
 		hs.Configs.LogConfigs.Logger.WriteLog("Note not found", slog.LevelError, nil)
-		http.Error(w, "Note not found", http.StatusNotFound)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Note not found"})
 		return
 	} else if myErr.ErrNum != bl.Ok {
 		hs.Configs.LogConfigs.Logger.WriteLog("Internal server error with num = "+strconv.Itoa(myErr.ErrNum), slog.LevelError, nil)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
@@ -55,18 +55,18 @@ func (hs *HandlersStruct) GetNoteHandler(w http.ResponseWriter, r *http.Request)
 
 	convertedData := converters.ToNoteFullData(srcData)
 
-	w.Header().Set("Content-Type", "application/my_json")
-	err = json.NewEncoder(w).Encode(convertedData)
+	c.Header("Content-Type", "application/my_json")
+	c.JSON(http.StatusOK, convertedData)
 
 	if err != nil {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		hs.Configs.LogConfigs.Logger.WriteLog("Internal error: "+err.Error(), slog.LevelError, nil)
 		return
 	}
 }
 
-func (hs *HandlersStruct) GetAllNotesHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) GetAllNotesHandler(c *gin.Context) {
+	reqUser := getRequester(c, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
@@ -74,7 +74,7 @@ func (hs *HandlersStruct) GetAllNotesHandler(w http.ResponseWriter, r *http.Requ
 	queryParams := r.URL.Query()
 	srcType := queryParams.Get("type")
 	if srcType != "all" && srcType != "open" {
-		http.Error(w, "Missing 'type' query parameter", http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing 'type' query parameter"})
 		return
 	}
 	open := false
@@ -85,14 +85,14 @@ func (hs *HandlersStruct) GetAllNotesHandler(w http.ResponseWriter, r *http.Requ
 	data, myErr := hs.IServices.INoteSvc.GetAllNotes(open, reqUser)
 	if myErr == nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	} else if myErr.ErrNum == bl.ErrAccessDenied {
 		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
-		http.Error(w, "Insufficient permissions", http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions"})
 		return
 	} else if myErr.ErrNum != bl.Ok {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
@@ -101,27 +101,22 @@ func (hs *HandlersStruct) GetAllNotesHandler(w http.ResponseWriter, r *http.Requ
 		dataConverted = append(dataConverted, converters.ToNoteInfo(el))
 	}
 
-	w.Header().Set("Content-Type", "application/my_json")
-	err := json.NewEncoder(w).Encode(dataConverted)
-
-	if err != nil {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
+	c.Header("Content-Type", "application/my_json")
+	c.JSON(http.StatusOK, dataConverted)
 }
 
-func (hs *HandlersStruct) AddNoteHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) AddNoteHandler(c *gin.Context) {
+	reqUser := getRequester(c, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
 
 	var srcData transport_models.NoteFullData
-	err := json.NewDecoder(r.Body).Decode(&srcData)
+	err := c.ShouldBindJSON(&srcData)
 
 	if err != nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("Invalid request payload", slog.LevelError, nil)
-		http.Error(w, "Invalid request payload", http.StatusUnprocessableEntity)
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Invalid request payload"})
 		return
 	}
 
@@ -129,7 +124,7 @@ func (hs *HandlersStruct) AddNoteHandler(w http.ResponseWriter, r *http.Request)
 
 	if err := validate.Struct(&srcData); err != nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("Invalid request payload", slog.LevelError, nil)
-		http.Error(w, "Invalid request payload", http.StatusUnprocessableEntity)
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Invalid request payload"})
 		return
 	}
 
@@ -140,79 +135,77 @@ func (hs *HandlersStruct) AddNoteHandler(w http.ResponseWriter, r *http.Request)
 
 	if myErr == nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	} else if myErr.ErrNum == bl.NoSuchTeam {
 		hs.Configs.LogConfigs.Logger.WriteLog("Team not found", slog.LevelError, nil)
-		http.Error(w, "Note not found", http.StatusNotFound)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Note not found"})
 		return
 	} else if myErr.ErrNum != bl.Ok {
 		hs.Configs.LogConfigs.Logger.WriteLog("Error checking user existence", slog.LevelError, nil)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/my_json")
-	err = json.NewEncoder(w).Encode(idStruct)
+	c.Header("Content-Type", "application/my_json")
+	c.JSON(http.StatusOK, idStruct)
 
 	if err != nil {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 }
 
-func (hs *HandlersStruct) DeleteNoteHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) DeleteNoteHandler(c *gin.Context) {
+	reqUser := getRequester(c, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
 
-	vars := mux.Vars(r)
-	targetID, err := strconv.Atoi(vars["id"])
+	targetID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		http.Error(w, "Invalid note ID format", http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid note ID format"})
 		return
 	}
 
 	myErr := hs.IServices.INoteSvc.DeleteNote(targetID, reqUser)
 	if myErr.ErrNum == bl.ErrAccessDenied {
 		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
-		http.Error(w, "Insufficient permissions", http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions"})
 		return
 	} else if myErr.ErrNum == bl.OperationError {
-		http.Error(w, "Note not found", http.StatusNotFound)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Note not found"})
 		return
 	} else if myErr.ErrNum != bl.Ok {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	c.Status(http.StatusOK)
 }
 
-func (hs *HandlersStruct) UpdateNoteHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) UpdateNoteHandler(c *gin.Context) {
+	reqUser := getRequester(c, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
 
 	var data transport_models.NoteFullData
-	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+	if err := c.ShouldBindJSON(&data); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
 		return
 	}
 
 	var validate = validator.New()
 	if err := validate.Struct(&data); err != nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("Invalid request payload", slog.LevelError, nil)
-		http.Error(w, "Invalid request payload", http.StatusUnprocessableEntity)
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Invalid request payload"})
 		return
 	}
 
-	vars := mux.Vars(r)
-	targetID, err := strconv.Atoi(vars["id"])
+	targetID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		http.Error(w, "Invalid note ID format", http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid note ID format"})
 		return
 	}
 
@@ -225,15 +218,15 @@ func (hs *HandlersStruct) UpdateNoteHandler(w http.ResponseWriter, r *http.Reque
 
 	if myErr.ErrNum == bl.ErrAccessDenied {
 		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
-		http.Error(w, "Insufficient permissions", http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions"})
 		return
 	} else if myErr.ErrNum == bl.OperationError {
-		http.Error(w, "Note not found", http.StatusNotFound)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Note not found"})
 		return
 	} else if myErr.ErrNum != bl.Ok {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	c.Status(http.StatusOK)
 }

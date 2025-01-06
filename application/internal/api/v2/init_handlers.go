@@ -2,7 +2,9 @@ package handlersv2
 
 import (
 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/config"
-	//_ "github.com/DionisPalpatin/ppo-and-db/tree/master/application/docs"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
+	
 	bl "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
 	"net/http"
 
@@ -27,76 +29,76 @@ func InitRouter(hs *HandlersStruct) {
 	hs.Router = gin.Default()
 	router := hs.Router
 
-	adapter := func(handler func(http.ResponseWriter, *http.Request)) gin.HandlerFunc {
-		return func(c *gin.Context) {
-			handler(c.Writer, c.Request)
-		}
-	}
-
 	// -----------------------------------------------------------------------------------------------------------------
 	// Authorisation handlers
 	// -----------------------------------------------------------------------------------------------------------------
-	router.POST("/login", adapter(hs.LoginHandler))
-	router.POST("/register", adapter(hs.RegisterHandler))
+	router.POST("/login", hs.LoginHandler)
+	router.POST("/register", hs.RegisterHandler)
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// User handlers
 	// -----------------------------------------------------------------------------------------------------------------
-	router.GET("/users", adapter(hs.GetAllUsersHandler))
-	router.GET("/users/:id", adapter(hs.GetUserHandler))
-	router.DELETE("/users/:id", adapter(hs.DeleteUserHandler))
-	router.PATCH("/users/:id", adapter(hs.UpdateUserHandler))
+	router.GET("/users", hs.GetAllUsersHandler)
+	router.GET("/users/:id", hs.GetUserHandler)
+	router.DELETE("/users/:id", hs.DeleteUserHandler)
+	router.PATCH("/users/:id", hs.UpdateUserHandler)
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// Team handlers
 	// -----------------------------------------------------------------------------------------------------------------
-	router.GET("/teams", adapter(hs.GetAllTeamsHandler))
-	router.POST("/teams", adapter(hs.AddTeamHandler))
-	router.DELETE("/teams/:teamID/members/:userID", adapter(hs.DeleteUserFromTeamHandler))
-	router.GET("/teams/:teamID/members", adapter(hs.GetTeamMembersHandler))
-	router.POST("/teams/:teamID/members", adapter(hs.AddUserToTeamHandler))
-	router.GET("/teams/:teamID", adapter(hs.GetTeamHandler))
-	router.DELETE("/teams/:teamID", adapter(hs.DeleteTeamHandler))
-	router.PATCH("/teams/:teamID", adapter(hs.UpdateTeamHandler))
+	router.GET("/teams", hs.GetAllTeamsHandler)
+	router.POST("/teams", hs.AddTeamHandler)
+	router.DELETE("/teams/:teamID/members/:userID", hs.DeleteUserFromTeamHandler)
+	router.GET("/teams/:teamID/members", hs.GetTeamMembersHandler)
+	router.POST("/teams/:teamID/members", hs.AddUserToTeamHandler)
+	router.GET("/teams/:teamID", hs.GetTeamHandler)
+	router.DELETE("/teams/:teamID", hs.DeleteTeamHandler)
+	router.PATCH("/teams/:teamID", hs.UpdateTeamHandler)
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// Note handlers
 	// -----------------------------------------------------------------------------------------------------------------
-	router.GET("/notes", adapter(hs.GetAllNotesHandler))
-	router.POST("/notes", adapter(hs.AddNoteHandler))
-	router.GET("/notes/:id", adapter(hs.GetNoteHandler))
-	router.DELETE("/notes/:id", adapter(hs.DeleteNoteHandler))
-	router.PATCH("/notes/:id", adapter(hs.UpdateNoteHandler))
+	router.GET("/notes", hs.GetAllNotesHandler)
+	router.POST("/notes", hs.AddNoteHandler)
+	router.GET("/notes/:id", hs.GetNoteHandler)
+	router.DELETE("/notes/:id", hs.DeleteNoteHandler)
+	router.PATCH("/notes/:id", hs.UpdateNoteHandler)
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// Collection handlers
 	// -----------------------------------------------------------------------------------------------------------------
-	router.GET("/collections", adapter(hs.GetAllCollectionsHandler))
-	router.POST("/collections", adapter(hs.AddCollectionHandler))
-	router.DELETE("/collections/:collID/members/:noteID", adapter(hs.DeleteNoteFromCollectionHandler))
-	router.GET("/collections/:collID/notes", adapter(hs.GetAllNotesInCollectionHandler))
-	router.POST("/collections/:collID/notes", adapter(hs.AddNoteToSectionHandler))
-	router.GET("/collections/users/:collID", adapter(hs.GetAllUsersCollectionsHandler))
-	router.GET("/collections/:collID", adapter(hs.GetCollectionHandler))
-	router.DELETE("/collections/:collID", adapter(hs.DeleteCollectionHandler))
-	router.PATCH("/collections/:collID", adapter(hs.UpdateCollectionHandler))
+	router.GET("/collections", hs.GetAllCollectionsHandler)
+	router.POST("/collections", hs.AddCollectionHandler)
+	router.DELETE("/collections/:collID/members/:noteID", hs.DeleteNoteFromCollectionHandler)
+	router.GET("/collections/:collID/notes", hs.GetAllNotesInCollectionHandler)
+	router.POST("/collections/:collID/notes", hs.AddNoteToSectionHandler)
+	router.GET("/collections/users/:collID", hs.GetAllUsersCollectionsHandler)
+	router.GET("/collections/:collID", hs.GetCollectionHandler)
+	router.DELETE("/collections/:collID", hs.DeleteCollectionHandler)
+	router.PATCH("/collections/:collID", hs.UpdateCollectionHandler)
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// Section handlers
 	// -----------------------------------------------------------------------------------------------------------------
-	router.GET("/sections", adapter(hs.GetAllSectionsHandler))
-	router.POST("/sections", adapter(hs.AddSectionHandler))
-	router.DELETE("/sections/:secID/members/:noteID", adapter(hs.DeleteNoteFromSectionHandler))
-	router.GET("/sections/:secID/notes", adapter(hs.GetAllNotesInSectionHandler))
-	router.POST("/sections/:secID/notes", adapter(hs.AddNoteToSectionHandler))
-	router.GET("/sections/:secID", adapter(hs.GetSectionHandler))
-	router.DELETE("/sections/:secID", adapter(hs.DeleteSectionHandler))
-	router.PATCH("/sections/:secID", adapter(hs.UpdateSectionHandler))
+	router.GET("/sections", hs.GetAllSectionsHandler)
+	router.POST("/sections", hs.AddSectionHandler)
+	router.DELETE("/sections/:secID/members/:noteID", hs.DeleteNoteFromSectionHandler)
+	router.GET("/sections/:secID/notes", hs.GetAllNotesInSectionHandler)
+	router.POST("/sections/:secID/notes", hs.AddNoteToSectionHandler)
+	router.GET("/sections/:secID", hs.GetSectionHandler)
+	router.DELETE("/sections/:secID", hs.DeleteSectionHandler)
+	router.PATCH("/sections/:secID", hs.UpdateSectionHandler)
+
+	// -----------------------------------------------------------------------------------------------------------------
+	// Documentation
+	// -----------------------------------------------------------------------------------------------------------------
+	router.GET("/docs", ginSwagger.WrapHandler(swaggerFiles.Handler, ginSwagger.URL("/docs/yaml")))
+	router.GET("/docs/yaml", func(c *gin.Context) {
+		c.File("docs/openapi.yaml")
+	})
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// Static path
 	// -----------------------------------------------------------------------------------------------------------------
-	//router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	router.Static("/swaggerui", "./docs/swaggerui")
 	router.StaticFS("/static", http.Dir("./static/"))
 }

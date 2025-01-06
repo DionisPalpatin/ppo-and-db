@@ -5,6 +5,7 @@ import (
 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/api/v2/converters"
 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/api/v2/transport_models"
 	bl "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
+	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 	"log/slog"
@@ -12,33 +13,32 @@ import (
 	"strconv"
 )
 
-func (hs *HandlersStruct) GetUserHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) GetUserHandler(c *gin.Context) {
+	reqUser := getRequester(c, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
 
-	vars := mux.Vars(r)
-	targetUserID, err := strconv.Atoi(vars["id"])
+	targetUserID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		http.Error(w, "Invalid user ID format", http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID format"})
 		return
 	}
 
 	user, myErr := hs.IServices.IUsrSvc.GetUser(targetUserID, "", bl.SearchByID, reqUser)
 	if myErr == nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	} else if myErr.ErrNum == bl.ErrAccessDenied {
 		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
-		http.Error(w, "Insufficient permissions", http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions"})
 		return
 	} else if myErr.ErrNum == bl.NoSuchUser {
-		http.Error(w, "User not found", http.StatusNotFound)
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	} else if myErr.ErrNum != bl.Ok {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
@@ -48,13 +48,13 @@ func (hs *HandlersStruct) GetUserHandler(w http.ResponseWriter, r *http.Request)
 	err = json.NewEncoder(w).Encode(userConverted)
 
 	if err != nil {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 }
 
-func (hs *HandlersStruct) GetAllUsersHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) GetAllUsersHandler(c *gin.Context) {
+	reqUser := getRequester(c, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
@@ -62,14 +62,14 @@ func (hs *HandlersStruct) GetAllUsersHandler(w http.ResponseWriter, r *http.Requ
 	users, myErr := hs.IServices.IUsrSvc.GetAllUsers(reqUser)
 	if myErr == nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	} else if myErr.ErrNum == bl.ErrAccessDenied {
 		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
-		http.Error(w, "Insufficient permissions", http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions"})
 		return
 	} else if myErr.ErrNum != bl.Ok {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
@@ -82,63 +82,61 @@ func (hs *HandlersStruct) GetAllUsersHandler(w http.ResponseWriter, r *http.Requ
 	err := json.NewEncoder(w).Encode(usersConverted)
 
 	if err != nil {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 }
 
-func (hs *HandlersStruct) DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) DeleteUserHandler(c *gin.Context) {
+	reqUser := getRequester(c, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
 
-	vars := mux.Vars(r)
-	targetUserID, err := strconv.Atoi(vars["id"])
+	targetUserID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		http.Error(w, "Invalid user ID format", http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID format"})
 		return
 	}
 
 	myErr := hs.IServices.IUsrSvc.DeleteUser(reqUser, targetUserID)
 	if myErr.ErrNum == bl.ErrAccessDenied {
 		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
-		http.Error(w, "Insufficient permissions", http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions"})
 		return
 	} else if myErr.ErrNum == bl.OperationError {
-		http.Error(w, "User not found", http.StatusNotFound)
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	} else if myErr.ErrNum != bl.Ok {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	c.Status(http.StatusOK)
 }
 
-func (hs *HandlersStruct) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) UpdateUserHandler(c *gin.Context) {
+	reqUser := getRequester(c, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
 
 	var userInfo transport_models.UserPrivateInfo
-	if err := json.NewDecoder(r.Body).Decode(&userInfo); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+	if err := c.ShouldBindJSON(&userInfo); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
 		return
 	}
 
 	var validate = validator.New()
 	if err := validate.Struct(&userInfo); err != nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("Invalid request payload", slog.LevelError, nil)
-		http.Error(w, "Invalid request payload", http.StatusUnprocessableEntity)
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Invalid request payload"})
 		return
 	}
 
-	vars := mux.Vars(r)
-	targetUserID, err := strconv.Atoi(vars["id"])
+	targetUserID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		http.Error(w, "Invalid user ID format", http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID format"})
 		return
 	}
 
@@ -149,15 +147,15 @@ func (hs *HandlersStruct) UpdateUserHandler(w http.ResponseWriter, r *http.Reque
 
 	if myErr.ErrNum == bl.ErrAccessDenied {
 		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
-		http.Error(w, "Insufficient permissions", http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions"})
 		return
 	} else if myErr.ErrNum == bl.OperationError {
-		http.Error(w, "User not found", http.StatusNotFound)
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	} else if myErr.ErrNum != bl.Ok {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	c.Status(http.StatusOK)
 }

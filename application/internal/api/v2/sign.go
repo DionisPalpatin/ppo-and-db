@@ -6,19 +6,20 @@ import (
 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/api/v2/transport_models"
 	bl "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/models"
+	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"log/slog"
 	"net/http"
 )
 
-func (hs *HandlersStruct) RegisterHandler(w http.ResponseWriter, r *http.Request) {
+func (hs *HandlersStruct) RegisterHandler(c *gin.Context) {
 	var userRegInfo transport_models.UserRegistrationInfo
 
-	err := json.NewDecoder(r.Body).Decode(&userRegInfo)
+	err := c.ShouldBindJSON(&userRegInfo)
 
 	if err != nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("Invalid request payload", slog.LevelError, nil)
-		http.Error(w, "Invalid request payload", http.StatusUnprocessableEntity)
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Invalid request payload"})
 		return
 	}
 
@@ -26,7 +27,7 @@ func (hs *HandlersStruct) RegisterHandler(w http.ResponseWriter, r *http.Request
 
 	if err := validate.Struct(&userRegInfo); err != nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("Invalid request payload", slog.LevelError, nil)
-		http.Error(w, "Invalid request payload", http.StatusUnprocessableEntity)
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Invalid request payload"})
 		return
 	}
 
@@ -34,11 +35,11 @@ func (hs *HandlersStruct) RegisterHandler(w http.ResponseWriter, r *http.Request
 
 	if myErr == nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	} else if myErr.ErrNum == bl.Ok && existingUser != nil {
 		hs.Configs.LogConfigs.Logger.WriteLog(myErr.Error(), slog.LevelError, nil)
-		http.Error(w, "User already exists", http.StatusConflict)
+		c.JSON(http.StatusConflict, gin.H{"error": "User already exists"})
 		return
 	}
 
@@ -47,25 +48,25 @@ func (hs *HandlersStruct) RegisterHandler(w http.ResponseWriter, r *http.Request
 
 	if myErr.ErrNum != bl.Ok {
 		hs.Configs.LogConfigs.Logger.WriteLog("Registration error", slog.LevelError, nil)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	c.Status(http.StatusOK)
 }
 
-func (hs *HandlersStruct) LoginHandler(w http.ResponseWriter, r *http.Request) {
+func (hs *HandlersStruct) LoginHandler(c *gin.Context) {
 	logOnNull(hs, "LoginHandler")
-	
+
 	hs.Configs.LogConfigs.Logger.WriteLog("Start login", slog.LevelInfo, nil)
 
 	var userLoginInfo transport_models.UserLoginInfo
 
-	err := json.NewDecoder(r.Body).Decode(&userLoginInfo)
+	err := c.ShouldBindJSON(&userLoginInfo)
 
 	if err != nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("Invalid request payload", slog.LevelError, nil)
-		http.Error(w, "Invalid request payload", http.StatusUnprocessableEntity)
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Invalid request payload"})
 		return
 	}
 
@@ -73,7 +74,7 @@ func (hs *HandlersStruct) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err := validate.Struct(&userLoginInfo); err != nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("Invalid request payload", slog.LevelError, nil)
-		http.Error(w, "Invalid request payload", http.StatusUnprocessableEntity)
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Invalid request payload"})
 		return
 	}
 
@@ -89,15 +90,15 @@ func (hs *HandlersStruct) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	if myErr == nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	} else if myErr.ErrNum == bl.NoSuchUser {
 		hs.Configs.LogConfigs.Logger.WriteLog("User not found", slog.LevelError, nil)
-		http.Error(w, "User not found", http.StatusNotFound)
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	} else if myErr.ErrNum != bl.Ok {
 		hs.Configs.LogConfigs.Logger.WriteLog("Error checking user existence", slog.LevelError, nil)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
@@ -105,15 +106,15 @@ func (hs *HandlersStruct) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	if myErr == nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	} else if myErr.ErrNum == bl.OperationError {
 		hs.Configs.LogConfigs.Logger.WriteLog("Invalid login or password", slog.LevelError, nil)
-		http.Error(w, "Invalid login or password", http.StatusUnauthorized)
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid login or password"})
 		return
 	} else if myErr.ErrNum != bl.Ok {
 		hs.Configs.LogConfigs.Logger.WriteLog("Error during login", slog.LevelError, nil)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
@@ -128,7 +129,7 @@ func (hs *HandlersStruct) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("Error checking user existence", slog.LevelError, nil)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 }

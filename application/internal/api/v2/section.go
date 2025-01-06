@@ -1,77 +1,70 @@
 package handlersv2
 
 import (
-	"encoding/json"
 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/api/v2/converters"
 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/api/v2/transport_models"
 	bl "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
+	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-	"github.com/gorilla/mux"
 	"log/slog"
 	"net/http"
 	"strconv"
 )
 
-func (hs *HandlersStruct) GetSectionHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) GetSectionHandler(c *gin.Context) {
+	reqUser := getRequester(c, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
 
-	vars := mux.Vars(r)
-	targetID, err := strconv.Atoi(vars["id"])
+	targetID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		http.Error(w, "Invalid section ID format", http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid section ID format"})
 		return
 	}
 
 	srcData, myErr := hs.IServices.ISecSvc.GetSection(targetID, "", reqUser, bl.SearchByID)
 	if myErr == nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	} else if myErr.ErrNum == bl.ErrAccessDenied {
 		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
-		http.Error(w, "Insufficient permissions", http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions"})
 		return
 	} else if myErr.ErrNum == bl.NoSuchColl {
-		http.Error(w, "Section not found", http.StatusNotFound)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Section not found"})
 		return
 	} else if myErr.ErrNum != bl.Ok {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
 	team, myErr := hs.IServices.ITeamSvc.GetSectionTeam(srcData.Id, reqUser)
 	if myErr == nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	} else if myErr.ErrNum == bl.ErrAccessDenied {
 		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
-		http.Error(w, "Insufficient permissions", http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions"})
 		return
 	} else if myErr.ErrNum == bl.NoSuchColl {
-		http.Error(w, "Team not found", http.StatusNotFound)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Team not found"})
 		return
 	} else if myErr.ErrNum != bl.Ok {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
 	convertedData := converters.ToSectionFullInfo(srcData, team)
 
-	w.Header().Set("Content-Type", "application/my_json")
-	err = json.NewEncoder(w).Encode(convertedData)
-
-	if err != nil {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
+	c.Header("Content-Type", "application/my_json")
+	c.JSON(http.StatusOK, convertedData)
 }
 
-func (hs *HandlersStruct) GetAllSectionsHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) GetAllSectionsHandler(c *gin.Context) {
+	reqUser := getRequester(c, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
@@ -79,14 +72,14 @@ func (hs *HandlersStruct) GetAllSectionsHandler(w http.ResponseWriter, r *http.R
 	data, myErr := hs.IServices.ISecSvc.GetAllSections(reqUser)
 	if myErr == nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	} else if myErr.ErrNum == bl.ErrAccessDenied {
 		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
-		http.Error(w, "Insufficient permissions", http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions"})
 		return
 	} else if myErr.ErrNum != bl.Ok {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
@@ -96,44 +89,39 @@ func (hs *HandlersStruct) GetAllSectionsHandler(w http.ResponseWriter, r *http.R
 
 		if myErr == nil {
 			hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
-			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 			return
 		} else if myErr.ErrNum == bl.ErrAccessDenied {
 			hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
-			http.Error(w, "Insufficient permissions", http.StatusForbidden)
+			c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions"})
 			return
 		} else if myErr.ErrNum == bl.NoSuchColl {
-			http.Error(w, "Team not found", http.StatusNotFound)
+			c.JSON(http.StatusNotFound, gin.H{"error": "Team not found"})
 			return
 		} else if myErr.ErrNum != bl.Ok {
-			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 			return
 		}
 
 		dataConverted = append(dataConverted, converters.ToSectionInfo(el, team))
 	}
 
-	w.Header().Set("Content-Type", "application/my_json")
-	err := json.NewEncoder(w).Encode(dataConverted)
-
-	if err != nil {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
+	c.Header("Content-Type", "application/my_json")
+	c.JSON(http.StatusOK, dataConverted)
 }
 
-func (hs *HandlersStruct) AddSectionHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) AddSectionHandler(c *gin.Context) {
+	reqUser := getRequester(c, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
 
 	var srcData transport_models.SectionInfo
-	err := json.NewDecoder(r.Body).Decode(&srcData)
+	err := c.ShouldBindJSON(&srcData)
 
 	if err != nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("Invalid request payload", slog.LevelError, nil)
-		http.Error(w, "Invalid request payload", http.StatusUnprocessableEntity)
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Invalid request payload"})
 		return
 	}
 
@@ -141,7 +129,7 @@ func (hs *HandlersStruct) AddSectionHandler(w http.ResponseWriter, r *http.Reque
 
 	if err := validate.Struct(&srcData); err != nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("Invalid request payload", slog.LevelError, nil)
-		http.Error(w, "Invalid request payload", http.StatusUnprocessableEntity)
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Invalid request payload"})
 		return
 	}
 
@@ -151,17 +139,17 @@ func (hs *HandlersStruct) AddSectionHandler(w http.ResponseWriter, r *http.Reque
 
 	if myErr == nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	} else if myErr.ErrNum == bl.ErrAccessDenied {
 		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
-		http.Error(w, "Insufficient permissions", http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions"})
 		return
 	} else if myErr.ErrNum == bl.NoSuchColl {
-		http.Error(w, "Team not found", http.StatusNotFound)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Team not found"})
 		return
 	} else if myErr.ErrNum != bl.Ok {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
@@ -170,65 +158,64 @@ func (hs *HandlersStruct) AddSectionHandler(w http.ResponseWriter, r *http.Reque
 
 	if myErr == nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	} else if myErr.ErrNum == bl.NoSuchTeam {
 		hs.Configs.LogConfigs.Logger.WriteLog("Team not found", slog.LevelError, nil)
-		http.Error(w, "Note not found", http.StatusNotFound)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Note not found"})
 		return
 	} else if myErr.ErrNum != bl.Ok {
 		hs.Configs.LogConfigs.Logger.WriteLog("Error checking user existence", slog.LevelError, nil)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/my_json")
-	err = json.NewEncoder(w).Encode(idStruct)
+	c.Header("Content-Type", "application/my_json")
+	c.JSON(http.StatusOK, idStruct)
 
 	if err != nil {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 }
 
-func (hs *HandlersStruct) DeleteSectionHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) DeleteSectionHandler(c *gin.Context) {
+	reqUser := getRequester(c, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
 
-	vars := mux.Vars(r)
-	targetID, err := strconv.Atoi(vars["id"])
+	targetID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		http.Error(w, "Invalid section ID format", http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid section ID format"})
 		return
 	}
 
 	myErr := hs.IServices.ISecSvc.DeleteSection(targetID, reqUser)
 	if myErr.ErrNum == bl.ErrAccessDenied {
 		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
-		http.Error(w, "Insufficient permissions", http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions"})
 		return
 	} else if myErr.ErrNum == bl.OperationError {
-		http.Error(w, "Section not found", http.StatusNotFound)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Section not found"})
 		return
 	} else if myErr.ErrNum != bl.Ok {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	c.Status(http.StatusOK)
 }
 
-func (hs *HandlersStruct) UpdateSectionHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) UpdateSectionHandler(c *gin.Context) {
+	reqUser := getRequester(c, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
 
 	var data transport_models.SectionInfo
-	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+	if err := c.ShouldBindJSON(&data); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
 		return
 	}
 
@@ -236,14 +223,13 @@ func (hs *HandlersStruct) UpdateSectionHandler(w http.ResponseWriter, r *http.Re
 
 	if err := validate.Struct(&data); err != nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("Invalid request payload", slog.LevelError, nil)
-		http.Error(w, "Invalid request payload", http.StatusUnprocessableEntity)
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Invalid request payload"})
 		return
 	}
 
-	vars := mux.Vars(r)
-	targetID, err := strconv.Atoi(vars["id"])
+	targetID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		http.Error(w, "Invalid section ID format", http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid section ID format"})
 		return
 	}
 
@@ -253,46 +239,45 @@ func (hs *HandlersStruct) UpdateSectionHandler(w http.ResponseWriter, r *http.Re
 
 	if myErr.ErrNum == bl.ErrAccessDenied {
 		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
-		http.Error(w, "Insufficient permissions", http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions"})
 		return
 	} else if myErr.ErrNum == bl.OperationError {
-		http.Error(w, "Section not found", http.StatusNotFound)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Section not found"})
 		return
 	} else if myErr.ErrNum != bl.Ok {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	c.Status(http.StatusOK)
 }
 
-func (hs *HandlersStruct) GetAllNotesInSectionHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) GetAllNotesInSectionHandler(c *gin.Context) {
+	reqUser := getRequester(c, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
 
-	vars := mux.Vars(r)
-	targetID, err := strconv.Atoi(vars["id"])
+	targetID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		http.Error(w, "Invalid section ID format", http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid section ID format"})
 		return
 	}
 
 	data, myErr := hs.IServices.ISecSvc.GetAllNotesInSection(targetID, reqUser)
 	if myErr == nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	} else if myErr.ErrNum == bl.ErrAccessDenied {
 		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
-		http.Error(w, "Insufficient permissions", http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions"})
 		return
 	} else if myErr.ErrNum == bl.NoSuchColl {
-		http.Error(w, "Section not found", http.StatusNotFound)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Section not found"})
 		return
 	} else if myErr.ErrNum != bl.Ok {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
@@ -301,72 +286,66 @@ func (hs *HandlersStruct) GetAllNotesInSectionHandler(w http.ResponseWriter, r *
 		dataConverted = append(dataConverted, converters.ToNoteInfo(el))
 	}
 
-	w.Header().Set("Content-Type", "application/my_json")
-	err = json.NewEncoder(w).Encode(dataConverted)
-
-	if err != nil {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
+	c.Header("Content-Type", "application/my_json")
+	c.JSON(http.StatusOK, dataConverted)
 }
 
-func (hs *HandlersStruct) AddNoteToSectionHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) AddNoteToSectionHandler(c *gin.Context) {
+	reqUser := getRequester(c, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
 
 	var data noteIDStruct
-	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+	if err := c.ShouldBindJSON(&data); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
 		return
 	}
 
 	var validate = validator.New()
 	if err := validate.Struct(&data); err != nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("Invalid request payload", slog.LevelError, nil)
-		http.Error(w, "Invalid request payload", http.StatusUnprocessableEntity)
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Invalid request payload"})
 		return
 	}
 
-	vars := mux.Vars(r)
-	targetID, err := strconv.Atoi(vars["id"])
+	targetID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		http.Error(w, "Invalid section ID format", http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid section ID format"})
 		return
 	}
 
 	section, myErr := hs.IServices.ISecSvc.GetSection(targetID, "", reqUser, bl.SearchByID)
 	if myErr == nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	} else if myErr.ErrNum == bl.ErrAccessDenied {
 		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
-		http.Error(w, "Insufficient permissions", http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions"})
 		return
 	} else if myErr.ErrNum == bl.NoSuchColl {
-		http.Error(w, "Section not found", http.StatusNotFound)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Section not found"})
 		return
 	} else if myErr.ErrNum != bl.Ok {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
 	note, myErr := hs.IServices.INoteSvc.GetNote(targetID, "", bl.SearchByID, reqUser)
 	if myErr == nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	} else if myErr.ErrNum == bl.ErrAccessDenied {
 		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
-		http.Error(w, "Insufficient permissions", http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions"})
 		return
 	} else if myErr.ErrNum == bl.NoSuchColl {
-		http.Error(w, "Note not found", http.StatusNotFound)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Note not found"})
 		return
 	} else if myErr.ErrNum != bl.Ok {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
@@ -374,76 +353,75 @@ func (hs *HandlersStruct) AddNoteToSectionHandler(w http.ResponseWriter, r *http
 
 	if myErr.ErrNum == bl.ErrAccessDenied {
 		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
-		http.Error(w, "Insufficient permissions", http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions"})
 		return
 	} else if myErr.ErrNum == bl.OperationError {
-		http.Error(w, "Section not found", http.StatusNotFound)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Section not found"})
 		return
 	} else if myErr.ErrNum != bl.Ok {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	c.Status(http.StatusOK)
 }
 
-func (hs *HandlersStruct) DeleteNoteFromSectionHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) DeleteNoteFromSectionHandler(c *gin.Context) {
+	reqUser := getRequester(c, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
 
 	var data noteIDStruct
-	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+	if err := c.ShouldBindJSON(&data); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
 		return
 	}
 
 	var validate = validator.New()
 	if err := validate.Struct(&data); err != nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("Invalid request payload", slog.LevelError, nil)
-		http.Error(w, "Invalid request payload", http.StatusUnprocessableEntity)
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Invalid request payload"})
 		return
 	}
 
-	vars := mux.Vars(r)
-	targetID, err := strconv.Atoi(vars["id"])
+	targetID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		http.Error(w, "Invalid section ID format", http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid section ID format"})
 		return
 	}
 
 	section, myErr := hs.IServices.ISecSvc.GetSection(targetID, "", reqUser, bl.SearchByID)
 	if myErr == nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	} else if myErr.ErrNum == bl.ErrAccessDenied {
 		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
-		http.Error(w, "Insufficient permissions", http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions"})
 		return
 	} else if myErr.ErrNum == bl.NoSuchColl {
-		http.Error(w, "Section not found", http.StatusNotFound)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Section not found"})
 		return
 	} else if myErr.ErrNum != bl.Ok {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
 	note, myErr := hs.IServices.INoteSvc.GetNote(targetID, "", bl.SearchByID, reqUser)
 	if myErr == nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	} else if myErr.ErrNum == bl.ErrAccessDenied {
 		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
-		http.Error(w, "Insufficient permissions", http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions"})
 		return
 	} else if myErr.ErrNum == bl.NoSuchColl {
-		http.Error(w, "Note not found", http.StatusNotFound)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Note not found"})
 		return
 	} else if myErr.ErrNum != bl.Ok {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
@@ -451,15 +429,15 @@ func (hs *HandlersStruct) DeleteNoteFromSectionHandler(w http.ResponseWriter, r 
 
 	if myErr.ErrNum == bl.ErrAccessDenied {
 		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
-		http.Error(w, "Insufficient permissions", http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions"})
 		return
 	} else if myErr.ErrNum == bl.OperationError {
-		http.Error(w, "Section not found", http.StatusNotFound)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Section not found"})
 		return
 	} else if myErr.ErrNum != bl.Ok {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	c.Status(http.StatusOK)
 }

@@ -1,60 +1,53 @@
 package handlersv2
 
 import (
-	"encoding/json"
 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/api/v2/converters"
 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/api/v2/transport_models"
 	bl "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
+	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-	"github.com/gorilla/mux"
 	"log/slog"
 	"net/http"
 	"strconv"
 )
 
-func (hs *HandlersStruct) GetCollectionHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) GetCollectionHandler(c *gin.Context) {
+	reqUser := getRequester(c, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
 
-	vars := mux.Vars(r)
-	targetID, err := strconv.Atoi(vars["id"])
+	targetID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		http.Error(w, "Invalid collection ID format", http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid collection ID format"})
 		return
 	}
 
 	srcData, myErr := hs.IServices.IColSvc.GetCollection(targetID, "", bl.SearchByID)
 	if myErr == nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	} else if myErr.ErrNum == bl.ErrAccessDenied {
 		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
-		http.Error(w, "Insufficient permissions", http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions"})
 		return
 	} else if myErr.ErrNum == bl.NoSuchColl {
-		http.Error(w, "Collection not found", http.StatusNotFound)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Collection not found"})
 		return
 	} else if myErr.ErrNum != bl.Ok {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
 	convertedData := converters.ToCollectionFullInfo(srcData)
 
-	w.Header().Set("Content-Type", "application/my_json")
-	err = json.NewEncoder(w).Encode(convertedData)
-
-	if err != nil {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
+	c.Header("Content-Type", "application/my_json")
+	c.JSON(http.StatusOK, convertedData)
 }
 
-func (hs *HandlersStruct) GetAllCollectionsHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) GetAllCollectionsHandler(c *gin.Context) {
+	reqUser := getRequester(c, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
@@ -62,14 +55,14 @@ func (hs *HandlersStruct) GetAllCollectionsHandler(w http.ResponseWriter, r *htt
 	data, myErr := hs.IServices.IColSvc.GetAllCollections(reqUser)
 	if myErr == nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	} else if myErr.ErrNum == bl.ErrAccessDenied {
 		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
-		http.Error(w, "Insufficient permissions", http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions"})
 		return
 	} else if myErr.ErrNum != bl.Ok {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
@@ -78,17 +71,12 @@ func (hs *HandlersStruct) GetAllCollectionsHandler(w http.ResponseWriter, r *htt
 		dataConverted = append(dataConverted, converters.ToCollectionInfo(el))
 	}
 
-	w.Header().Set("Content-Type", "application/my_json")
-	err := json.NewEncoder(w).Encode(dataConverted)
-
-	if err != nil {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
+	c.Header("Content-Type", "application/my_json")
+	c.JSON(http.StatusOK, dataConverted)
 }
 
-func (hs *HandlersStruct) GetAllUsersCollectionsHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) GetAllUsersCollectionsHandler(c *gin.Context) {
+	reqUser := getRequester(c, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
@@ -96,14 +84,14 @@ func (hs *HandlersStruct) GetAllUsersCollectionsHandler(w http.ResponseWriter, r
 	data, myErr := hs.IServices.IColSvc.GetAllUsersCollections(reqUser)
 	if myErr == nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	} else if myErr.ErrNum == bl.ErrAccessDenied {
 		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
-		http.Error(w, "Insufficient permissions", http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions"})
 		return
 	} else if myErr.ErrNum != bl.Ok {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
@@ -112,27 +100,22 @@ func (hs *HandlersStruct) GetAllUsersCollectionsHandler(w http.ResponseWriter, r
 		dataConverted = append(dataConverted, converters.ToCollectionInfo(el))
 	}
 
-	w.Header().Set("Content-Type", "application/my_json")
-	err := json.NewEncoder(w).Encode(dataConverted)
-
-	if err != nil {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
+	c.Header("Content-Type", "application/my_json")
+	c.JSON(http.StatusOK, dataConverted)
 }
 
-func (hs *HandlersStruct) AddCollectionHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) AddCollectionHandler(c *gin.Context) {
+	reqUser := getRequester(c, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
 
 	var srcData transport_models.CollectionAddInfo
-	err := json.NewDecoder(r.Body).Decode(&srcData)
+	err := c.ShouldBindJSON(&srcData)
 
 	if err != nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("Invalid request payload", slog.LevelError, nil)
-		http.Error(w, "Invalid request payload", http.StatusUnprocessableEntity)
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Invalid request payload"})
 		return
 	}
 
@@ -140,7 +123,7 @@ func (hs *HandlersStruct) AddCollectionHandler(w http.ResponseWriter, r *http.Re
 
 	if err := validate.Struct(&srcData); err != nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("Invalid request payload", slog.LevelError, nil)
-		http.Error(w, "Invalid request payload", http.StatusUnprocessableEntity)
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Invalid request payload"})
 		return
 	}
 
@@ -151,65 +134,59 @@ func (hs *HandlersStruct) AddCollectionHandler(w http.ResponseWriter, r *http.Re
 
 	if myErr == nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	} else if myErr.ErrNum == bl.NoSuchTeam {
 		hs.Configs.LogConfigs.Logger.WriteLog("Team not found", slog.LevelError, nil)
-		http.Error(w, "Note not found", http.StatusNotFound)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Note not found"})
 		return
 	} else if myErr.ErrNum != bl.Ok {
 		hs.Configs.LogConfigs.Logger.WriteLog("Error checking user existence", slog.LevelError, nil)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/my_json")
-	err = json.NewEncoder(w).Encode(idStruct)
-
-	if err != nil {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
+	c.Header("Content-Type", "application/my_json")
+	c.JSON(http.StatusOK, idStruct)
 }
 
-func (hs *HandlersStruct) DeleteCollectionHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) DeleteCollectionHandler(c *gin.Context) {
+	reqUser := getRequester(c, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
 
-	vars := mux.Vars(r)
-	targetID, err := strconv.Atoi(vars["id"])
+	targetID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		http.Error(w, "Invalid collection ID format", http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid collection ID format"})
 		return
 	}
 
 	myErr := hs.IServices.IColSvc.DeleteCollection(targetID, reqUser)
 	if myErr.ErrNum == bl.ErrAccessDenied {
 		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
-		http.Error(w, "Insufficient permissions", http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions"})
 		return
 	} else if myErr.ErrNum == bl.OperationError {
-		http.Error(w, "Collection not found", http.StatusNotFound)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Collection not found"})
 		return
 	} else if myErr.ErrNum != bl.Ok {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	c.Status(http.StatusOK)
 }
 
-func (hs *HandlersStruct) UpdateCollectionHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) UpdateCollectionHandler(c *gin.Context) {
+	reqUser := getRequester(c, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
 
 	var data transport_models.CollectionAddInfo
-	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+	if err := c.ShouldBindJSON(&data); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
 		return
 	}
 
@@ -217,14 +194,13 @@ func (hs *HandlersStruct) UpdateCollectionHandler(w http.ResponseWriter, r *http
 
 	if err := validate.Struct(&data); err != nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("Invalid request payload", slog.LevelError, nil)
-		http.Error(w, "Invalid request payload", http.StatusUnprocessableEntity)
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Invalid request payload"})
 		return
 	}
 
-	vars := mux.Vars(r)
-	targetID, err := strconv.Atoi(vars["id"])
+	targetID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		http.Error(w, "Invalid collection ID format", http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid collection ID format"})
 		return
 	}
 
@@ -234,60 +210,59 @@ func (hs *HandlersStruct) UpdateCollectionHandler(w http.ResponseWriter, r *http
 
 	if myErr.ErrNum == bl.ErrAccessDenied {
 		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
-		http.Error(w, "Insufficient permissions", http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions"})
 		return
 	} else if myErr.ErrNum == bl.OperationError {
-		http.Error(w, "Collection not found", http.StatusNotFound)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Collection not found"})
 		return
 	} else if myErr.ErrNum != bl.Ok {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	c.Status(http.StatusOK)
 }
 
-func (hs *HandlersStruct) GetAllNotesInCollectionHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) GetAllNotesInCollectionHandler(c *gin.Context) {
+	reqUser := getRequester(c, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
 
-	vars := mux.Vars(r)
-	targetID, err := strconv.Atoi(vars["id"])
+	targetID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		http.Error(w, "Invalid collection ID format", http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid collection ID format"})
 		return
 	}
 
 	collection, myErr := hs.IServices.IColSvc.GetCollection(targetID, "", bl.SearchByID)
 	if myErr == nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	} else if myErr.ErrNum == bl.ErrAccessDenied {
 		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
-		http.Error(w, "Insufficient permissions", http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions"})
 		return
 	} else if myErr.ErrNum == bl.NoSuchColl {
-		http.Error(w, "Collection not found", http.StatusNotFound)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Collection not found"})
 		return
 	} else if myErr.ErrNum != bl.Ok {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
 	data, myErr := hs.IServices.IColSvc.GetAllNotesInCollection(collection)
 	if myErr == nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	} else if myErr.ErrNum == bl.ErrAccessDenied {
 		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
-		http.Error(w, "Insufficient permissions", http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions"})
 		return
 	} else if myErr.ErrNum != bl.Ok {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
@@ -296,38 +271,32 @@ func (hs *HandlersStruct) GetAllNotesInCollectionHandler(w http.ResponseWriter, 
 		dataConverted = append(dataConverted, converters.ToNoteInfo(el))
 	}
 
-	w.Header().Set("Content-Type", "application/my_json")
-	err = json.NewEncoder(w).Encode(dataConverted)
-
-	if err != nil {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
+	c.Header("Content-Type", "application/my_json")
+	c.JSON(http.StatusOK, dataConverted)
 }
 
-func (hs *HandlersStruct) AddNoteToCollectionHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) AddNoteToCollectionHandler(c *gin.Context) {
+	reqUser := getRequester(c, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
 
 	var data noteIDStruct
-	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+	if err := c.ShouldBindJSON(&data); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
 		return
 	}
 
 	var validate = validator.New()
 	if err := validate.Struct(&data); err != nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("Invalid request payload", slog.LevelError, nil)
-		http.Error(w, "Invalid request payload", http.StatusUnprocessableEntity)
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Invalid request payload"})
 		return
 	}
 
-	vars := mux.Vars(r)
-	targetID, err := strconv.Atoi(vars["id"])
+	targetID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		http.Error(w, "Invalid collection ID format", http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid collection ID format"})
 		return
 	}
 
@@ -335,34 +304,33 @@ func (hs *HandlersStruct) AddNoteToCollectionHandler(w http.ResponseWriter, r *h
 
 	if myErr.ErrNum == bl.ErrAccessDenied {
 		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
-		http.Error(w, "Insufficient permissions", http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions"})
 		return
 	} else if myErr.ErrNum == bl.OperationError {
-		http.Error(w, "Collection not found", http.StatusNotFound)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Collection not found"})
 		return
 	} else if myErr.ErrNum != bl.Ok {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	c.Status(http.StatusOK)
 }
 
-func (hs *HandlersStruct) DeleteNoteFromCollectionHandler(w http.ResponseWriter, r *http.Request) {
-	reqUser := getRequester(r, w, hs.Configs.LogConfigs.Logger)
+func (hs *HandlersStruct) DeleteNoteFromCollectionHandler(c *gin.Context) {
+	reqUser := getRequester(c, hs.Configs.LogConfigs.Logger)
 	if reqUser == nil {
 		return
 	}
 
-	vars := mux.Vars(r)
-	noteID, err := strconv.Atoi(vars["note_id"])
+	noteID, err := strconv.Atoi(c.Param("note_id"))
 	if err != nil {
-		http.Error(w, "Invalid collection ID format", http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid collection ID format"})
 		return
 	}
-	collID, err := strconv.Atoi(vars["coll_id"])
+	collID, err := strconv.Atoi(c.Param("coll_id"))
 	if err != nil {
-		http.Error(w, "Invalid collection ID format", http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid collection ID format"})
 		return
 	}
 
@@ -370,15 +338,15 @@ func (hs *HandlersStruct) DeleteNoteFromCollectionHandler(w http.ResponseWriter,
 
 	if myErr.ErrNum == bl.ErrAccessDenied {
 		hs.Configs.LogConfigs.Logger.WriteLog("Insufficient permissions", slog.LevelError, nil)
-		http.Error(w, "Insufficient permissions", http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Insufficient permissions"})
 		return
 	} else if myErr.ErrNum == bl.OperationError {
-		http.Error(w, "Collection not found", http.StatusNotFound)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Collection not found"})
 		return
 	} else if myErr.ErrNum != bl.Ok {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	c.Status(http.StatusOK)
 }
