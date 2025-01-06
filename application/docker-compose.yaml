@@ -86,7 +86,7 @@ services:
       - "15432:5432"
     volumes:
       - ./initdb/create_main.sql:/docker-entrypoint-initdb.d/init.sql
-      - ./data:/var/lib/postgresql/data
+      - /home/daemo/SpecialForCP/forDocker/pgdata:/var/lib/postgresql/data
     networks:
       - noteappnetwork
     # user: "${UID}:${GID}"
@@ -123,7 +123,7 @@ services:
     ports:
       - 5435:80
     volumes:
-      - ./pgadmin:/var/lib/pgadmin
+      - /home/daemo/SpecialForCP/forDocker/pgadmin:/var/lib/pgadmin
     environment:
       TZ: "Europe/Moscow"
       PGADMIN_DEFAULT_EMAIL: root@root.root

@@ -55,6 +55,10 @@ func (hs *HandlersStruct) RegisterHandler(w http.ResponseWriter, r *http.Request
 }
 
 func (hs *HandlersStruct) LoginHandler(w http.ResponseWriter, r *http.Request) {
+	logOnNull(hs, "LoginHandler")
+	
+	hs.Configs.LogConfigs.Logger.WriteLog("Start login", slog.LevelInfo, nil)
+
 	var userLoginInfo transport_models.UserLoginInfo
 
 	err := json.NewDecoder(r.Body).Decode(&userLoginInfo)
@@ -73,8 +77,15 @@ func (hs *HandlersStruct) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	hs.Configs.LogConfigs.Logger.WriteLog("JSON in validated. Start to convert structs", slog.LevelInfo, nil)
+
 	user := converters.FromLoginInfo(&userLoginInfo)
+
+	hs.Configs.LogConfigs.Logger.WriteLog("Start get user to check existanse", slog.LevelInfo, nil)
+
 	_, myErr := hs.IServices.IUsrSvc.GetUser(-1, user.Login, bl.SearchByString, &models.User{Role: bl.Admin})
+
+	hs.Configs.LogConfigs.Logger.WriteLog("End get user to check existanse", slog.LevelInfo, nil)
 
 	if myErr == nil {
 		hs.Configs.LogConfigs.Logger.WriteLog("myErr is nil", slog.LevelError, nil)
@@ -106,7 +117,11 @@ func (hs *HandlersStruct) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	hs.Configs.LogConfigs.Logger.WriteLog("Start convert token", slog.LevelInfo, nil)
+
 	convToken := converters.ToTransportToken(token)
+
+	hs.Configs.LogConfigs.Logger.WriteLog("Start send token", slog.LevelInfo, nil)
 
 	w.Header().Set("Content-Type", "application/my_json")
 	err = json.NewEncoder(w).Encode(convToken)

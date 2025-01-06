@@ -6,6 +6,7 @@ import (
 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/models"
 	"log/slog"
 	"net/http"
+	"reflect"
 )
 
 func getRequester(r *http.Request, w http.ResponseWriter, logger *mylogger.MyLogger) *models.User {
@@ -30,4 +31,41 @@ func getRequester(r *http.Request, w http.ResponseWriter, logger *mylogger.MyLog
 	}
 
 	return reqUser
+}
+
+
+func logOnNull(hs *HandlersStruct, methodName string) {
+	val := reflect.ValueOf(hs)
+    if val.Kind() == reflect.Ptr && val.IsNil() {
+		hs.Configs.LogConfigs.Logger.WriteLog("HandlersStruct is nil when method " + methodName + " is called\n", slog.LevelError, nil)
+        return
+    }
+
+	if hs.IServices == nil {
+		hs.Configs.LogConfigs.Logger.WriteLog("IServices is nil in HandlersStruct during method: " + methodName + "\n", slog.LevelError, nil)
+		return
+	}
+
+	if hs.IRepos == nil {
+		hs.Configs.LogConfigs.Logger.WriteLog("IRepositories is nil in HandlersStruct during method: " + methodName + "\n", slog.LevelError, nil)
+		return
+	}
+	
+	servicesVal := reflect.ValueOf(hs.IServices).Elem()
+	for i := 0; i < servicesVal.NumField(); i++ {
+	field := servicesVal.Field(i)
+		if field.IsNil() {
+			fieldName := servicesVal.Type().Field(i).Name
+			hs.Configs.LogConfigs.Logger.WriteLog("Service " + fieldName + " is nil in HandlersStruct during method: " + methodName + "\n", slog.LevelError, nil)
+		}
+	}
+
+	reposVal := reflect.ValueOf(hs.IRepos).Elem()
+	for i := 0; i < reposVal.NumField(); i++ {
+		field := reposVal.Field(i)
+		if field.IsNil() {
+			fieldName := reposVal.Type().Field(i).Name
+			hs.Configs.LogConfigs.Logger.WriteLog("Repository " + fieldName + " is nil in HandlersStruct during method: " + methodName + "\n", slog.LevelError, nil)
+		}
+	}
 }
