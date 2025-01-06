@@ -1,71 +1,140 @@
-version: '3.8'
-
 services:
-  postgres:
-    container_name: postgres_container
+  main-application:
+    container_name: main-application
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: /go/src/app/main
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./logs/log.log:/go/src/app/log.log
+      - ./internal/config/config.yaml:/app/config.yaml
+    depends_on:
+      - postgres-master
+    networks:
+      - noteappnetwork
+    # user: "${UID}:${GID}"
 
-    image: postgres:latest
-    
+  main-application-ro1:
+    container_name: main-application-ro1
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: /go/src/app/main
+    ports:
+      - "8082:8080"
+    volumes:
+      - ./logs/log-ro1.log:/go/src/app/log.log
+      - ./internal/config/config-ro.yaml:/app/config.yaml
+    depends_on:
+      - postgres-slave
+    networks:
+      - noteappnetwork
+    # user: "${UID}:${GID}"
+
+  main-application-ro2:
+    container_name: main-application-ro2
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: /go/src/app/main
+    ports:
+      - "8083:8080"
+    volumes:
+      - ./logs/log-ro2.log:/go/src/app/log.log
+      - ./internal/config/config-ro.yaml:/app/config.yaml
+    depends_on:
+      - postgres-slave
+    networks:
+      - noteappnetwork
+    # user: "${UID}:${GID}"
+
+  main-application-mirror:
+    container_name: main-application-mirror
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: /go/src/app/main
+    ports:
+      - "8084:8080"
+    volumes:
+      - ./logs/log-mirror.log:/go/src/app/log.log
+      - ./internal/config/config.yaml:/app/config.yaml
+    depends_on:
+      - postgres-master
+    networks:
+      - noteappnetwork
+    # user: "${UID}:${GID}"
+
+  postgres-master:
+    container_name: postgres-master
+    image: bitnami/postgresql:16
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     environment:
       POSTGRES_USER: "postgres"
-      POSTGRES_PASSWORD: "postgrespassword"
+      POSTGRES_PASSWORD: "password"
       POSTGRES_DB: "NotebookApp"
-      PGDATA: /var/lib/postgresql/data/pgdata
-
+      POSTGRESQL_REPLICATION_MODE: "master"
+      POSTGRESQL_REPLICATION_USER: "repl_user"
+      POSTGRESQL_REPLICATION_PASSWORD: "password"
+    ports:
+      - "15432:5432"
     volumes:
-      - ./initdb:/docker-entrypoint-initdb.d
-      - .:/var/lib/postgresql/data
-    
-    ports:
-      - "5432:5432"
-    
+      - ./initdb/create_main.sql:/docker-entrypoint-initdb.d/init.sql
+      - /home/daemo/SpecialForCP/forDocker/pgdata:/var/lib/postgresql/data
     networks:
       - noteappnetwork
-    
-    restart: unless-stopped
+    # user: "${UID}:${GID}"
 
-  
-  pgadmin:
-    container_name: pgadmin_container
-    
-    image: dpage/pgadmin4:latest
-    
+  postgres-slave:
+    container_name: postgres-slave
+    image: bitnami/postgresql:16
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d admin -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
-      PGADMIN_CONFIG_SERVER_MODE: 'False'
-    
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "password"
+      POSTGRES_DB: "NotebookApp"
+      POSTGRESQL_REPLICATION_MODE: "slave"
+      POSTGRESQL_REPLICATION_USER: "repl_user"
+      POSTGRESQL_REPLICATION_PASSWORD: "password"
+      POSTGRESQL_MASTER_HOST: "postgres-master"
+    depends_on:
+      postgres-master:
+        condition: service_healthy
     ports:
-      - "5050:80"
-    
+      - "15433:5432"
+    volumes:
+      - ./data/slave:/var/lib/postgresql/data
     networks:
       - noteappnetwork
-    
-    restart: unless-stopped  
+    # user: "${UID}:${GID}"
 
-  
-  # note_app_backend:
-  #   container_name: backend_container
-  #   stdin_open: true # docker run -i
-  #   tty: true        # docker run -t
+  pgadmin:
+    image: dpage/pgadmin4:7
+    ports:
+      - 5435:80
+    volumes:
+      - /home/daemo/SpecialForCP/forDocker/pgadmin:/var/lib/pgadmin
+    environment:
+      TZ: "Europe/Moscow"
+      PGADMIN_DEFAULT_EMAIL: root@root.root
+      PGADMIN_DEFAULT_PASSWORD: rootadmin
+    depends_on:
+      - postgres-master
+    networks:
+      - noteappnetwork
+    # user: "${UID}:${GID}"
 
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile
-    
-  #   ports:
-  #     - "13338:13338"
-    
-  #   volumes:
-  #     - ./log:/notebookapp/log
-  #     - ./config:/notebookapp/config
-    
-  #   depends_on:
-  #     - postgres
-    
-  #   networks:
-  #     - noteappnetwork
-
+    restart: unless-stopped
 
 networks:
   noteappnetwork:

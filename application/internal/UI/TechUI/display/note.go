@@ -16,7 +16,7 @@ func DisplayNoteInfo(note *models.Note) {
 		fmt.Printf("Тип контента: %d\n", note.ContentType)
 		fmt.Printf("Лайки: %d\n", note.Likes)
 		fmt.Printf("Дизлайки: %d\n", note.Dislikes)
-		fmt.Printf("Дата регистрации: %s\n", note.RegistrationDate)
+		fmt.Printf("Дата регистрации: %s\n", note.RegistrationDate.Format("2006-01-02"))
 		fmt.Printf("ID владельца: %d\n", note.OwnerID)
 		fmt.Printf("ID раздела: %d\n\n", note.SectionID)
 	}

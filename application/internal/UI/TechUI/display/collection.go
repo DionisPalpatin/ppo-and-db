@@ -11,7 +11,7 @@ func DisplayCollectionInfo(collection *models.Collection) {
 		fmt.Println("## Подборка:")
 		fmt.Printf("ID: %d\n", collection.Id)
 		fmt.Printf("Название: %s\n", collection.Name)
-		fmt.Printf("Дата создания: %s\n", collection.CreationDate)
+		fmt.Printf("Дата создания: %s\n", collection.CreationDate.Format("2006-01-02"))
 		fmt.Printf("ID владельца: %d\n\n", collection.OwnerID)
 	}
 }

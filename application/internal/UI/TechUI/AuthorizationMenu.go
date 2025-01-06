@@ -2,9 +2,9 @@ package TechUI
 
 import (
 	"fmt"
+	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/config"
 	"os"
 
-	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/config"
 	bl "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/models"
 )
@@ -50,7 +50,7 @@ func LogIn(configs *config.Configs, ireps *bl.IRepositories, isvcs *bl.IServices
 	iur := ireps.IUsrRepo
 	user, err := ioas.SignInUser(login, password, iur)
 
-	if err.ErrNum == bl.AllIsOk {
+	if err.ErrNum == bl.Ok {
 		if user.Password != password {
 			fmt.Println("Неправильный логин или пароль")
 			return nil
@@ -83,7 +83,7 @@ func Registration(configs *config.Configs, ireps *bl.IRepositories, isvcs *bl.IS
 	iur := ireps.IUsrRepo
 	user, err := ioas.RegisterUser(fio, login, password, iur)
 
-	if err.ErrNum == bl.AllIsOk {
+	if err.ErrNum == bl.Ok {
 		fmt.Println("Ошибка: попробуйте еще раз")
 		return nil
 	}

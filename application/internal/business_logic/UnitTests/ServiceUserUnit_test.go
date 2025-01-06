@@ -1,46 +1,51 @@
 package UnitTests
 
 import (
+	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/database/mocks/v1"
+	"github.com/ozontech/allure-go/pkg/framework/suite"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
-	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic/UnitTests/mocks"
 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/models"
 )
 
+type userTestSuite struct {
+	suite.Suite
+}
+
 func TestGetUser(t *testing.T) {
 	t.Run("SuccessGetUserByID", func(t *testing.T) {
-		retErr := bl.CreateError(bl.AllIsOk, nil, "")
+		retErr := bl.CreateError(bl.Ok, "", nil)
 		retUser := &models.User{Role: bl.Admin}
 		reqUser := &models.User{Role: bl.Admin}
 
-		mockRepo := new(mocks.MockIUserRepository)
+		mockRepo := new(v1.MockIUserRepository)
 		mockRepo.On("GetUserByID", 1).Return(retUser, retErr)
 
 		usSrv := bl.UserService{}
 		_, err := usSrv.GetUser(1, "", bl.SearchByID, reqUser, mockRepo)
 
 		assert.NotNil(t, err)
-		assert.Equal(t, bl.AllIsOk, err.ErrNum)
+		assert.Equal(t, bl.Ok, err.ErrNum)
 
 		mockRepo.AssertExpectations(t)
 	})
 
 	t.Run("SuccessGetUserByLogin", func(t *testing.T) {
-		retErr := bl.CreateError(bl.AllIsOk, nil, "")
+		retErr := bl.CreateError(bl.Ok, "", nil)
 		retUser := &models.User{Role: bl.Admin}
 		reqUser := &models.User{Role: bl.Admin}
 
-		mockRepo := new(mocks.MockIUserRepository)
+		mockRepo := new(v1.MockIUserRepository)
 		mockRepo.On("GetUserByLogin", "testuser").Return(retUser, retErr)
 
 		usSrv := bl.UserService{}
 		_, err := usSrv.GetUser(0, "testuser", bl.SearchByString, reqUser, mockRepo)
 
 		assert.NotNil(t, err)
-		assert.Equal(t, bl.AllIsOk, err.ErrNum)
+		assert.Equal(t, bl.Ok, err.ErrNum)
 
 		mockRepo.AssertExpectations(t)
 	})
@@ -48,7 +53,7 @@ func TestGetUser(t *testing.T) {
 	t.Run("ErrorRequesterNotAdmin", func(t *testing.T) {
 		reqUser := &models.User{Role: bl.Reader}
 
-		mockRepo := new(mocks.MockIUserRepository)
+		mockRepo := new(v1.MockIUserRepository)
 
 		usSrv := bl.UserService{}
 		_, err := usSrv.GetUser(1, "", bl.SearchByID, reqUser, mockRepo)
@@ -62,7 +67,7 @@ func TestGetUser(t *testing.T) {
 	t.Run("ErrorUnknownSearchParameter", func(t *testing.T) {
 		reqUser := &models.User{Role: bl.Admin}
 
-		mockRepo := new(mocks.MockIUserRepository)
+		mockRepo := new(v1.MockIUserRepository)
 
 		usSrv := bl.UserService{}
 		_, err := usSrv.GetUser(-1, "", 100, reqUser, mockRepo)
@@ -74,11 +79,11 @@ func TestGetUser(t *testing.T) {
 	})
 
 	t.Run("ErrorGetUserByID", func(t *testing.T) {
-		retErr := bl.CreateError(bl.ErrGetUserByID, bl.ErrGetUserByIDError(), "GetUserByID")
+		retErr := bl.CreateError(bl.ErrGetUserByID, "GetUserByID", bl.ErrGetUserByIDError())
 		retUser := &models.User{Role: bl.Admin}
 		reqUser := &models.User{Role: bl.Admin}
 
-		mockRepo := new(mocks.MockIUserRepository)
+		mockRepo := new(v1.MockIUserRepository)
 		mockRepo.On("GetUserByID", -1).Return(retUser, retErr)
 
 		usSrv := bl.UserService{}
@@ -91,18 +96,18 @@ func TestGetUser(t *testing.T) {
 	})
 
 	t.Run("ErrorGetUserByLogin", func(t *testing.T) {
-		retErr := bl.CreateError(bl.ErrGetUserByLogin, bl.ErrGetUserByLoginError(), "GetUserByLogin")
+		retErr := bl.CreateError(bl.ErrGetUserByLoginOrFio, "GetUserByLogin", bl.ErrGetUserByLoginError())
 		retUser := &models.User{Role: bl.Admin}
 		reqUser := &models.User{Role: bl.Admin}
 
-		mockRepo := new(mocks.MockIUserRepository)
+		mockRepo := new(v1.MockIUserRepository)
 		mockRepo.On("GetUserByLogin", "").Return(retUser, retErr)
 
 		usSrv := bl.UserService{}
 		_, err := usSrv.GetUser(0, "", bl.SearchByString, reqUser, mockRepo)
 
 		assert.NotNil(t, err)
-		assert.Equal(t, bl.ErrGetUserByLogin, err.ErrNum)
+		assert.Equal(t, bl.ErrGetUserByLoginOrFio, err.ErrNum)
 
 		mockRepo.AssertExpectations(t)
 	})
@@ -110,18 +115,18 @@ func TestGetUser(t *testing.T) {
 
 func TestGetAllUsers(t *testing.T) {
 	t.Run("SuccessGetAllUsers", func(t *testing.T) {
-		retOk := bl.CreateError(bl.AllIsOk, nil, "")
+		retOk := bl.CreateError(bl.Ok, "", nil)
 		retUsers := []*models.User{&models.User{}}
 		reqUser := &models.User{Role: bl.Admin}
 
-		mockRepo := new(mocks.MockIUserRepository)
+		mockRepo := new(v1.MockIUserRepository)
 		mockRepo.On("GetAllUsers").Return(retUsers, retOk)
 
 		usSrv := bl.UserService{}
 		_, err := usSrv.GetAllUsers(reqUser, mockRepo)
 
 		assert.NotNil(t, err)
-		assert.Equal(t, bl.AllIsOk, err.ErrNum)
+		assert.Equal(t, bl.Ok, err.ErrNum)
 
 		mockRepo.AssertExpectations(t)
 	})
@@ -129,7 +134,7 @@ func TestGetAllUsers(t *testing.T) {
 	t.Run("ErrorRequesterNotAdmin", func(t *testing.T) {
 		reqUser := &models.User{Role: bl.Reader}
 
-		mockRepo := new(mocks.MockIUserRepository)
+		mockRepo := new(v1.MockIUserRepository)
 
 		usSrv := bl.UserService{}
 		_, err := usSrv.GetAllUsers(reqUser, mockRepo)
@@ -141,11 +146,11 @@ func TestGetAllUsers(t *testing.T) {
 	})
 
 	t.Run("ErrorGetAllUsers", func(t *testing.T) {
-		retErr := bl.CreateError(bl.ErrGetAllUsers, bl.ErrGetAllUsersError(), "GetAllUsers")
+		retErr := bl.CreateError(bl.ErrGetAllUsers, "GetAllUsers", bl.ErrGetAllUsersError())
 		reqUser := &models.User{Role: bl.Admin}
 		retUsers := []*models.User{&models.User{}}
 
-		mockRepo := new(mocks.MockIUserRepository)
+		mockRepo := new(v1.MockIUserRepository)
 		mockRepo.On("GetAllUsers").Return(retUsers, retErr)
 
 		usSrv := bl.UserService{}
@@ -160,18 +165,18 @@ func TestGetAllUsers(t *testing.T) {
 
 func TestUpdateUser(t *testing.T) {
 	t.Run("SuccessUpdateUser", func(t *testing.T) {
-		retOk := bl.CreateError(bl.AllIsOk, nil, "")
+		retOk := bl.CreateError(bl.Ok, "", nil)
 		updateUser := &models.User{Id: 2, Role: bl.Reader}
 		reqUser := &models.User{Role: bl.Admin}
 
-		mockRepo := new(mocks.MockIUserRepository)
+		mockRepo := new(v1.MockIUserRepository)
 		mockRepo.On("UpdateUser", updateUser).Return(retOk)
 
 		usSrv := bl.UserService{}
 		err := usSrv.UpdateUser(reqUser, updateUser, mockRepo)
 
 		assert.NotNil(t, err)
-		assert.Equal(t, bl.AllIsOk, err.ErrNum)
+		assert.Equal(t, bl.Ok, err.ErrNum)
 
 		mockRepo.AssertExpectations(t)
 	})
@@ -180,7 +185,7 @@ func TestUpdateUser(t *testing.T) {
 		updateUser := &models.User{Id: 2, Role: bl.Reader}
 		reqUser := &models.User{Role: bl.Reader}
 
-		mockRepo := new(mocks.MockIUserRepository)
+		mockRepo := new(v1.MockIUserRepository)
 
 		usSrv := bl.UserService{}
 		err := usSrv.UpdateUser(reqUser, updateUser, mockRepo)
@@ -192,11 +197,11 @@ func TestUpdateUser(t *testing.T) {
 	})
 
 	t.Run("ErrorUpdateUser", func(t *testing.T) {
-		retErr := bl.CreateError(bl.ErrUpdateUser, bl.ErrUpdateUserError(), "")
+		retErr := bl.CreateError(bl.ErrUpdateUser, "", bl.ErrUpdateUserError())
 		updateUser := &models.User{Id: 2, Role: bl.Reader}
 		reqUser := &models.User{Role: bl.Admin}
 
-		mockRepo := new(mocks.MockIUserRepository)
+		mockRepo := new(v1.MockIUserRepository)
 		mockRepo.On("UpdateUser", updateUser).Return(retErr)
 
 		usSrv := bl.UserService{}
@@ -211,17 +216,17 @@ func TestUpdateUser(t *testing.T) {
 
 func TestDeleteUser(t *testing.T) {
 	t.Run("SuccessDeleteUser", func(t *testing.T) {
-		retOk := bl.CreateError(bl.AllIsOk, nil, "")
+		retOk := bl.CreateError(bl.Ok, "", nil)
 		reqUser := &models.User{Role: bl.Admin}
 
-		mockRepo := new(mocks.MockIUserRepository)
+		mockRepo := new(v1.MockIUserRepository)
 		mockRepo.On("DeleteUser", 2).Return(retOk)
 
 		usSrv := bl.UserService{}
 		err := usSrv.DeleteUser(reqUser, 2, mockRepo)
 
 		assert.NotNil(t, err)
-		assert.Equal(t, err.ErrNum, bl.AllIsOk)
+		assert.Equal(t, err.ErrNum, bl.Ok)
 
 		mockRepo.AssertExpectations(t)
 	})
@@ -229,7 +234,7 @@ func TestDeleteUser(t *testing.T) {
 	t.Run("ErrorRequesterNotAdmin", func(t *testing.T) {
 		reqUser := &models.User{Role: bl.Reader}
 
-		mockRepo := new(mocks.MockIUserRepository)
+		mockRepo := new(v1.MockIUserRepository)
 
 		usSrv := bl.UserService{}
 		err := usSrv.DeleteUser(reqUser, 2, mockRepo)
@@ -241,10 +246,10 @@ func TestDeleteUser(t *testing.T) {
 	})
 
 	t.Run("ErrorDeleteUser", func(t *testing.T) {
-		retErr := bl.CreateError(bl.ErrDeleteUser, bl.ErrDeleteUserError(), "")
+		retErr := bl.CreateError(bl.ErrDeleteUser, "", bl.ErrDeleteUserError())
 		reqUser := &models.User{Role: bl.Admin}
 
-		mockRepo := new(mocks.MockIUserRepository)
+		mockRepo := new(v1.MockIUserRepository)
 		mockRepo.On("DeleteUser", 2).Return(retErr)
 
 		usSrv := bl.UserService{}

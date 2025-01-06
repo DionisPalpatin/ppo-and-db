@@ -2,54 +2,56 @@ package bl
 
 import "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/models"
 
-type CollectionService struct{}
+type CollectionService struct {
+	icr ICollectionRepository
+}
 
-func (CollectionService) GetCollection(colID int, name string, searchBy int, icr ICollectionRepository) (*models.Collection, *MyError) {
+func (cs *CollectionService) GetCollection(colID int, name string, searchBy int) (*models.Collection, *MyError) {
 	switch searchBy {
 	case SearchByID:
-		return icr.GetCollectionByID(colID)
+		return cs.icr.GetCollectionByID(colID)
 
 	case SearchByString:
-		return icr.GetCollectionByName(name)
+		return cs.icr.GetCollectionByName(name)
 
 	default:
-		return nil, CreateError(ErrSearchParameter, ErrSearchParameterError(), "GetCollection")
+		return nil, CreateError(ErrSearchParameter, "GetCollection", "bl")
 	}
 }
 
-func (CollectionService) GetAllCollections(user *models.User, icr ICollectionRepository) ([]*models.Collection, *MyError) {
+func (cs *CollectionService) GetAllCollections(user *models.User) ([]*models.Collection, *MyError) {
 	if user.Role != Admin {
-		return nil, CreateError(ErrAccessDenied, ErrAccessDeniedError(), "GetAllCollections")
+		return nil, CreateError(ErrAccessDenied, "GetAllCollections", "bl")
 	}
-	return icr.GetAllCollections()
+	return cs.icr.GetAllCollections()
 }
 
-func (CollectionService) GetAllUsersCollections(user *models.User, icr ICollectionRepository) ([]*models.Collection, *MyError) {
-	return icr.GetAllUserCollections(user)
+func (cs *CollectionService) GetAllUsersCollections(user *models.User) ([]*models.Collection, *MyError) {
+	return cs.icr.GetAllUserCollections(user)
 }
 
-func (CollectionService) AddCollection(coll *models.Collection, icr ICollectionRepository) *MyError {
-	return icr.AddCollection(coll)
+func (cs *CollectionService) AddCollection(coll *models.Collection) (int, *MyError) {
+	return cs.icr.AddCollection(coll)
 }
 
-func (CollectionService) DeleteCollection(id int, user *models.User, icr ICollectionRepository) *MyError {
-	col, myErr := icr.GetCollectionByID(id)
-	if myErr.ErrNum != AllIsOk {
+func (cs *CollectionService) DeleteCollection(id int, user *models.User) *MyError {
+	col, myErr := cs.icr.GetCollectionByID(id)
+	if myErr.ErrNum != Ok {
 		return myErr
 	}
 
 	if col.OwnerID != user.Id && user.Role != Admin {
-		myErr = CreateError(ErrDeleteCollection, ErrDeleteCollectionError(), "DeleteColleciton")
+		myErr = CreateError(OperationError, "DeleteCollection", "bl")
 		return myErr
 	}
 
-	return icr.DeleteCollection(id)
+	return cs.icr.DeleteCollection(id)
 }
 
-func (CollectionService) UpdateCollection(collection *models.Collection, icr ICollectionRepository) *MyError {
-	return icr.UpdateCollection(collection)
+func (cs *CollectionService) UpdateCollection(collection *models.Collection) *MyError {
+	return cs.icr.UpdateCollection(collection)
 }
 
-func (CollectionService) GetAllNotesInCollection(collection *models.Collection, icr ICollectionRepository) ([]*models.Note, *MyError) {
-	return icr.GetAllNotesInCollection(collection)
+func (cs *CollectionService) GetAllNotesInCollection(collection *models.Collection) ([]*models.Note, *MyError) {
+	return cs.icr.GetAllNotesInCollection(collection)
 }

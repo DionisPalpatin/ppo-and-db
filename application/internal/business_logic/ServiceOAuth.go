@@ -3,16 +3,17 @@ package bl
 import (
 	"time"
 
-	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/config"
 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/models"
 )
 
-type OAuthService struct{}
+type OAuthService struct {
+	iur IUserRepository
+}
 
-func (OAuthService) RegisterUser(fio string, login string, password string, iur IUserRepository) (*models.User, *MyError) {
-	user, err := iur.GetUserByLogin(login)
-	if err.ErrNum == AllIsOk {
-		return nil, CreateError(ErrRegisterUser, ErrRegistrationError(), "RegisterUse")
+func (oas *OAuthService) RegisterUser(fio string, login string, password string) (*models.User, *MyError) {
+	user, err := oas.iur.GetUserByLogin(login)
+	if err.ErrNum == Ok {
+		return nil, CreateError(UserExists, "RegisterUse", "bl")
 	}
 
 	user = &models.User{
@@ -20,20 +21,25 @@ func (OAuthService) RegisterUser(fio string, login string, password string, iur 
 		Login:            login,
 		Password:         password,
 		Role:             Reader,
-		RegistrationDate: time.Now().Format(config.Configs{}.DateTimeFormat),
+		RegistrationDate: time.Now(),
 	}
-	return user, iur.AddUser(user)
+
+	return user, oas.iur.AddUser(user)
 }
 
-func (OAuthService) SignInUser(login string, password string, iur IUserRepository) (*models.User, *MyError) {
-	user, err := iur.GetUserByLogin(login)
+func (oas *OAuthService) SignInUser(login string, password string) (*models.Token, *MyError) {
+	user, myErr := oas.iur.GetUserByLogin(login)
 
-	if err.ErrNum != AllIsOk {
-		return nil, err
+	if myErr.ErrNum != Ok {
+		return nil, myErr
 	}
 	if user.Password != password {
-		return nil, CreateError(ErrSignInUser, ErrSignInUserError(), "SignInUser")
+		myErr := CreateError(AuthenticationError, "SignInUser", "bl")
+		return nil, myErr
 	}
 
-	return user, &MyError{ErrNum: AllIsOk, FuncName: "", Err: nil}
+	token, _ := generateToken(user.Id, string(rune(user.Role)))
+
+	myOk := CreateError(Ok, "", "bl")
+	return token, myOk
 }

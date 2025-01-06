@@ -2,12 +2,13 @@ package bl
 
 import "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/models"
 
-type UserService struct{}
+type UserService struct {
+	iur IUserRepository
+}
 
-func (usSrv UserService) GetUser(id int, login string, searchBy int, requester *models.User, iur IUserRepository) (*models.User, *MyError) {
-	// Проверка, что пользователь имеет право запрашивать других пользователей
-	if requester.Role != Admin {
-		err := CreateError(ErrAccessDenied, ErrAccessDeniedError(), "GetUser")
+func (us *UserService) GetUser(id int, login string, searchBy int, requester *models.User) (*models.User, *MyError) {
+	if requester.Role != Admin && requester.Id != id {
+		err := CreateError(ErrAccessDenied, "GetUser", "")
 		return nil, err
 	}
 
@@ -17,45 +18,42 @@ func (usSrv UserService) GetUser(id int, login string, searchBy int, requester *
 	// Получаем пользователя
 	switch searchBy {
 	case SearchByID:
-		user, err = iur.GetUserByID(id)
+		user, err = us.iur.GetUserByID(id)
 
 	case SearchByString:
-		user, err = iur.GetUserByLogin(login)
+		user, err = us.iur.GetUserByLogin(login)
 
 	default:
 		user = nil
-		err = CreateError(ErrSearchParameter, ErrSearchParameterError(), "GetUser")
+		err = CreateError(ErrSearchParameter, "GetUser", "")
 	}
 
 	return user, err
 }
 
-func (usSrv UserService) GetAllUsers(requester *models.User, iur IUserRepository) ([]*models.User, *MyError) {
-	// Проверка, что пользователь имеет право запрашивать других пользователей
+func (us *UserService) GetAllUsers(requester *models.User) ([]*models.User, *MyError) {
 	if requester.Role != Admin {
-		err := CreateError(ErrAccessDenied, ErrAccessDeniedError(), "GetAllUsers")
+		err := CreateError(ErrAccessDenied, "GetAllUsers", "")
 		return nil, err
 	}
 
-	return iur.GetAllUsers()
+	return us.iur.GetAllUsers()
 }
 
-func (usSrv UserService) UpdateUser(requester *models.User, user *models.User, iur IUserRepository) *MyError {
-	// Проверка, что пользователь имеет право изменять данные других пользователей
+func (us *UserService) UpdateUser(requester *models.User, user *models.User) *MyError {
 	if requester.Role != Admin {
-		err := CreateError(ErrAccessDenied, ErrAccessDeniedError(), "UpdateUser")
+		err := CreateError(ErrAccessDenied, "UpdateUser", "")
 		return err
 	}
 
-	return iur.UpdateUser(user)
+	return us.iur.UpdateUser(user)
 }
 
-func (usSrv UserService) DeleteUser(requester *models.User, id int, iur IUserRepository) *MyError {
-	// Проверка, что пользователь имеет право удалять других пользователей
+func (us *UserService) DeleteUser(requester *models.User, id int) *MyError {
 	if requester.Role != Admin {
-		err := CreateError(ErrAccessDenied, ErrAccessDeniedError(), "DeleteUser")
+		err := CreateError(ErrAccessDenied, "DeleteUser", "")
 		return err
 	}
 
-	return iur.DeleteUser(id)
+	return us.iur.DeleteUser(id)
 }

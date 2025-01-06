@@ -1,7 +1,9 @@
 package models
 
+import "time"
+
 type Team struct {
 	Id               int
 	Name             string
-	RegistrationDate string
+	RegistrationDate time.Time
 }
