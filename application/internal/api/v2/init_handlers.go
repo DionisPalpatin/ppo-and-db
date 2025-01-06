@@ -2,9 +2,9 @@ package handlersv2
 
 import (
 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/config"
-	swaggerFiles "github.com/swaggo/files"
+	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
-	
+
 	bl "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
 	"net/http"
 
@@ -92,7 +92,7 @@ func InitRouter(hs *HandlersStruct) {
 	// -----------------------------------------------------------------------------------------------------------------
 	// Documentation
 	// -----------------------------------------------------------------------------------------------------------------
-	router.GET("/docs", ginSwagger.WrapHandler(swaggerFiles.Handler, ginSwagger.URL("/docs/yaml")))
+	router.GET("/docs", ginSwagger.WrapHandler(swaggerfiles.Handler, ginSwagger.URL("/docs/yaml")))
 	router.GET("/docs/yaml", func(c *gin.Context) {
 		c.File("docs/openapi.yaml")
 	})
