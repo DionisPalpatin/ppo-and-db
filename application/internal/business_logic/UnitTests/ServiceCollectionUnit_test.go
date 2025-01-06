@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	v1 "github.com/DionisPalpatin/ppo-and-db/application/internal/database/mocks/v1"
 	"github.com/DionisPalpatin/ppo-and-db/application/internal/models"
-	v1 "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/database/mocks/v1"
 )
 
 func TestGetCollection(t *testing.T) {

@@ -3,7 +3,7 @@ package UnitTests
 import (
 	"testing"
 
-	v1 "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/database/mocks/v1"
+	v1 "github.com/DionisPalpatin/ppo-and-db/application/internal/database/mocks/v1"
 	"github.com/stretchr/testify/assert"
 )
 

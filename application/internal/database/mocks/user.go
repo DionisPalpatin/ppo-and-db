@@ -1,8 +1,8 @@
 package mocks
 
 import (
+	bl "github.com/DionisPalpatin/ppo-and-db/application/internal/business_logic"
 	"github.com/DionisPalpatin/ppo-and-db/application/internal/models"
-	bl "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
 )
 
 //go:generate mockery --name MockUserRepository --with-expecter
