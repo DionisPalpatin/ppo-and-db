@@ -1,13 +1,14 @@
 package handlersv2
 
 import (
-	bl "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
-	mylogger "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/logger"
-	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/models"
-	"github.com/gin-gonic/gin"
 	"log/slog"
 	"net/http"
 	"reflect"
+
+	bl "github.com/DionisPalpatin/ppo-and-db/application/internal/business_logic"
+	mylogger "github.com/DionisPalpatin/ppo-and-db/application/internal/logger"
+	"github.com/DionisPalpatin/ppo-and-db/application/internal/models"
+	"github.com/gin-gonic/gin"
 )
 
 func getRequester(c *gin.Context, logger *mylogger.MyLogger) *models.User {

@@ -3,7 +3,7 @@ package handlersv1
 import (
 	"net/http"
 
-	bl "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
+	bl "github.com/DionisPalpatin/ppo-and-db/application/internal/business_logic"
 	"github.com/gorilla/mux"
 )
 

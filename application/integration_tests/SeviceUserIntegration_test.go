@@ -4,10 +4,10 @@ package IntegrationTests
 // 	"testing"
 // 	"time"
 //
-// 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/config"
-// 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
-// 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/database"
-// 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/models"
+// 	"github.com/DionisPalpatin/ppo-and-db/application/config"
+// 	"github.com/DionisPalpatin/ppo-and-db/application/internal/business_logic"
+// 	"github.com/DionisPalpatin/ppo-and-db/application/internal/database"
+// 	"github.com/DionisPalpatin/ppo-and-db/application/internal/models"
 // )
 
 // func TestIntegrationGetUser(t *testing.T) {

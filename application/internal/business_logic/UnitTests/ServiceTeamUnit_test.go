@@ -1,12 +1,10 @@
 package UnitTests
 
 import (
-	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/database/mocks/v1"
 	"testing"
 
+	v1 "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/database/mocks/v1"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
 )
 
 func TestGetTeam(t *testing.T) {

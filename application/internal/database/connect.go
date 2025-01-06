@@ -3,11 +3,12 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/config"
 	"log/slog"
 	"time"
 
-	mylogger "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/logger"
+	"github.com/DionisPalpatin/ppo-and-db/application/internal/config"
+
+	mylogger "github.com/DionisPalpatin/ppo-and-db/application/internal/logger"
 )
 
 func Connect(logger *mylogger.MyLogger, configs *config.DBConfigs) error {

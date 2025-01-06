@@ -1,6 +1,6 @@
 package TechUI
 
-import "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/models"
+import "github.com/DionisPalpatin/ppo-and-db/application/internal/models"
 
 type Structs struct {
 	note *models.Note

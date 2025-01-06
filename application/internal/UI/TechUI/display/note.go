@@ -3,8 +3,8 @@ package display
 import (
 	"fmt"
 
-	bl "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
-	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/models"
+	bl "github.com/DionisPalpatin/ppo-and-db/application/internal/business_logic"
+	"github.com/DionisPalpatin/ppo-and-db/application/internal/models"
 )
 
 func DisplayNoteInfo(note *models.Note) {

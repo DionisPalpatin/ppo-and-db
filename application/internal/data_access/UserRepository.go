@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"log/slog"
 
-	bl "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
-	mylogger "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/logger"
-	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/models"
+	bl "github.com/DionisPalpatin/ppo-and-db/application/internal/business_logic"
+	mylogger "github.com/DionisPalpatin/ppo-and-db/application/internal/logger"
+	"github.com/DionisPalpatin/ppo-and-db/application/internal/models"
 )
 
 func (ur *UserRepository) GetUserByID(id int) (*models.User, *bl.MyError) {

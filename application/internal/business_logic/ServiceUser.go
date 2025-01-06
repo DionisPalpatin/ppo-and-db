@@ -1,6 +1,6 @@
 package bl
 
-import "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/models"
+import "github.com/DionisPalpatin/ppo-and-db/application/internal/models"
 
 type UserService struct {
 	iur IUserRepository

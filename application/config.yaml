@@ -22,7 +22,7 @@ image_types:
     - png
 
 system: 1
-server_port: 8080
+server_port: 8081
 
 # Which UI program will use
 ui_mode: "gui"

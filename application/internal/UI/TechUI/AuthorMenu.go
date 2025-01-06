@@ -2,11 +2,12 @@ package TechUI
 
 import (
 	"fmt"
-	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/config"
 
-	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/UI/TechUI/methods"
-	bl "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
-	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/models"
+	"github.com/DionisPalpatin/ppo-and-db/application/internal/config"
+
+	"github.com/DionisPalpatin/ppo-and-db/application/internal/UI/TechUI/methods"
+	bl "github.com/DionisPalpatin/ppo-and-db/application/internal/business_logic"
+	"github.com/DionisPalpatin/ppo-and-db/application/internal/models"
 )
 
 func AuthorMenu(user *models.User, configs *config.Configs, ireps *bl.IRepositories, isvcs *bl.IServices) {

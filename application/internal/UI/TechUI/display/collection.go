@@ -3,7 +3,7 @@ package display
 import (
 	"fmt"
 
-	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/models"
+	"github.com/DionisPalpatin/ppo-and-db/application/internal/models"
 )
 
 func DisplayCollectionInfo(collection *models.Collection) {

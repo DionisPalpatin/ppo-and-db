@@ -2,9 +2,10 @@ package bl
 
 import (
 	"fmt"
-	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/models"
-	"github.com/golang-jwt/jwt/v5"
 	"time"
+
+	"github.com/DionisPalpatin/ppo-and-db/application/internal/models"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 var secretKey = []byte("your_secret_key")

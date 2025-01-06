@@ -3,14 +3,15 @@ package methods
 import (
 	"bufio"
 	"fmt"
-	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/config"
 	"os"
 	"strings"
 	"time"
 
-	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/UI/TechUI/display"
-	bl "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
-	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/models"
+	"github.com/DionisPalpatin/ppo-and-db/application/internal/config"
+
+	"github.com/DionisPalpatin/ppo-and-db/application/internal/UI/TechUI/display"
+	bl "github.com/DionisPalpatin/ppo-and-db/application/internal/business_logic"
+	"github.com/DionisPalpatin/ppo-and-db/application/internal/models"
 )
 
 func (MenuPoints) FindNote(user *models.User, ireps *bl.IRepositories, isvcs *bl.IServices) {

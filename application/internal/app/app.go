@@ -2,15 +2,18 @@ package app
 
 import (
 	"fmt"
-	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/config"
-	dapostgres "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/data_access"
-	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/database"
 	"log/slog"
-	//"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/UI/TechUI"
-	handlers "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/api/v2"
-	bl "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
-	//"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/database"
-	mylogger "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/logger"
+
+	"github.com/DionisPalpatin/ppo-and-db/application/internal/config"
+	dapostgres "github.com/DionisPalpatin/ppo-and-db/application/internal/data_access"
+	"github.com/DionisPalpatin/ppo-and-db/application/internal/database"
+
+	//"github.com/DionisPalpatin/ppo-and-db/application/internal/UI/TechUI"
+	handlers "github.com/DionisPalpatin/ppo-and-db/application/internal/api/v2"
+	bl "github.com/DionisPalpatin/ppo-and-db/application/internal/business_logic"
+
+	//"github.com/DionisPalpatin/ppo-and-db/application/internal/database"
+	mylogger "github.com/DionisPalpatin/ppo-and-db/application/internal/logger"
 )
 
 func initDBConnection(config *config.Configs) error {
@@ -109,10 +112,10 @@ func RunBackend() error {
 		return err
 	}
 
-	err = initDBConnection(configs)
-	if err != nil {
-		return err
-	}
+	// err = initDBConnection(configs)
+	// if err != nil {
+	// 	return err
+	// }
 
 	initInterfaces(appStruct)
 

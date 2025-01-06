@@ -1,13 +1,12 @@
 package UnitTests
 
 import (
-	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/database/mocks/v1"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
-	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/models"
+	"github.com/DionisPalpatin/ppo-and-db/application/internal/models"
+	v1 "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/database/mocks/v1"
 )
 
 func TestRegisterUser(t *testing.T) {

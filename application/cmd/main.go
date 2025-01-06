@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/app"
+	"github.com/DionisPalpatin/ppo-and-db/application/internal/app"
 )
 
 func main() {

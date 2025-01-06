@@ -3,7 +3,7 @@ package bl
 import (
 	"time"
 
-	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/models"
+	"github.com/DionisPalpatin/ppo-and-db/application/internal/models"
 )
 
 type OAuthService struct {

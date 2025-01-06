@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"os"
 
-	mylogger "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/logger"
+	mylogger "github.com/DionisPalpatin/ppo-and-db/application/internal/logger"
 )
 
 func ReadConfig(filePath string) (*Configs, error) {

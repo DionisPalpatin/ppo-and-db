@@ -1,10 +1,8 @@
 package data_access
 
 import (
-	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/config"
+	"github.com/DionisPalpatin/ppo-and-db/application/internal/config"
 	_ "github.com/lib/pq"
-
-	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/logger"
 )
 
 // ---------------------------------------------------------------------------------------------------------------------

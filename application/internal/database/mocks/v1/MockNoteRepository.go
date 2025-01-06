@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/mock"
 
-	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
-	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/models"
+	"github.com/DionisPalpatin/ppo-and-db/application/internal/models"
+	bl "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
 )
 
 // MockINoteRepository Мок-реализация INoteRepository

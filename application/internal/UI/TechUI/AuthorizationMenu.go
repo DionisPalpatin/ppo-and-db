@@ -2,11 +2,12 @@ package TechUI
 
 import (
 	"fmt"
-	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/config"
 	"os"
 
-	bl "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
-	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/models"
+	"github.com/DionisPalpatin/ppo-and-db/application/internal/config"
+
+	bl "github.com/DionisPalpatin/ppo-and-db/application/internal/business_logic"
+	"github.com/DionisPalpatin/ppo-and-db/application/internal/models"
 )
 
 func AuthorizationMenu(configs *config.Configs, ireps *bl.IRepositories, isvcs *bl.IServices) *models.User {

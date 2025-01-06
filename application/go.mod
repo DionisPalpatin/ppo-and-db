@@ -1,4 +1,4 @@
-module github.com/DionisPalpatin/ppo-and-db/tree/master/application
+module github.com/DionisPalpatin/ppo-and-db/application
 
 go 1.22.0
 

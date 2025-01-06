@@ -7,9 +7,8 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
-	mylogger "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/logger"
-	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/models"
+	mylogger "github.com/DionisPalpatin/ppo-and-db/application/internal/logger"
+	"github.com/DionisPalpatin/ppo-and-db/application/internal/models"
 )
 
 func (cr *CollectionRepository) GetCollectionByID(id int) (*models.Collection, *bl.MyError) {

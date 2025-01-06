@@ -1,14 +1,15 @@
 package handlersv2
 
 import (
-	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/api/v2/converters"
-	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/api/v2/transport_models"
-	bl "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
-	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
 	"log/slog"
 	"net/http"
 	"strconv"
+
+	"github.com/DionisPalpatin/ppo-and-db/application/internal/api/v2/converters"
+	"github.com/DionisPalpatin/ppo-and-db/application/internal/api/v2/transport_models"
+	bl "github.com/DionisPalpatin/ppo-and-db/application/internal/business_logic"
+	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 )
 
 func (hs *HandlersStruct) GetCollectionHandler(c *gin.Context) {

@@ -1,14 +1,12 @@
 package UnitTests
 
 import (
-	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/database/mocks/v1"
 	"os"
 	"testing"
 
+	v1 "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/database/mocks/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-
-	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
 )
 
 func TestGetNote(t *testing.T) {
