@@ -1,13 +1,11 @@
 package handlersv2
 
 import (
-	"encoding/json"
 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/api/v2/converters"
 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/api/v2/transport_models"
 	bl "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-	"github.com/gorilla/mux"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -44,13 +42,8 @@ func (hs *HandlersStruct) GetUserHandler(c *gin.Context) {
 
 	userConverted := converters.ToUserFullInfo(user)
 
-	w.Header().Set("Content-Type", "application/my_json")
-	err = json.NewEncoder(w).Encode(userConverted)
-
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
-		return
-	}
+	c.Header("Content-Type", "application/my_json")
+	c.JSON(http.StatusOK, userConverted)
 }
 
 func (hs *HandlersStruct) GetAllUsersHandler(c *gin.Context) {
@@ -78,13 +71,8 @@ func (hs *HandlersStruct) GetAllUsersHandler(c *gin.Context) {
 		usersConverted = append(usersConverted, converters.ToUserPublicInfo(user))
 	}
 
-	w.Header().Set("Content-Type", "application/my_json")
-	err := json.NewEncoder(w).Encode(usersConverted)
-
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
-		return
-	}
+	c.Header("Content-Type", "application/my_json")
+	c.JSON(http.StatusOK, usersConverted)
 }
 
 func (hs *HandlersStruct) DeleteUserHandler(c *gin.Context) {

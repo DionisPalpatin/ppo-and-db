@@ -1,7 +1,6 @@
 package handlersv2
 
 import (
-	"encoding/json"
 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/api/v2/converters"
 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/api/v2/transport_models"
 	bl "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
@@ -124,12 +123,6 @@ func (hs *HandlersStruct) LoginHandler(c *gin.Context) {
 
 	hs.Configs.LogConfigs.Logger.WriteLog("Start send token", slog.LevelInfo, nil)
 
-	w.Header().Set("Content-Type", "application/my_json")
-	err = json.NewEncoder(w).Encode(convToken)
-
-	if err != nil {
-		hs.Configs.LogConfigs.Logger.WriteLog("Error checking user existence", slog.LevelError, nil)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
-		return
-	}
+	c.Header("Content-Type", "application/my_json")
+	c.JSON(http.StatusOK, convToken)
 }

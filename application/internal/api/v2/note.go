@@ -1,14 +1,12 @@
 package handlersv2
 
 import (
-	"encoding/json"
 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/api/v2/converters"
 	"github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/api/v2/transport_models"
 	bl "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/business_logic"
 	_ "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-	"github.com/gorilla/mux"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -71,8 +69,7 @@ func (hs *HandlersStruct) GetAllNotesHandler(c *gin.Context) {
 		return
 	}
 
-	queryParams := r.URL.Query()
-	srcType := queryParams.Get("type")
+	srcType := c.Query("type")
 	if srcType != "all" && srcType != "open" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing 'type' query parameter"})
 		return
