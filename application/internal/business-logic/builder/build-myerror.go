@@ -1,7 +1,7 @@
 package myerror_builder
 
 import (
-	bl "github.com/DionisPalpatin/ppo-and-db/application/internal/business_logic"
+	bl "github.com/DionisPalpatin/ppo-and-db/application/internal/business-logic"
 )
 
 
