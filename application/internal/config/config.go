@@ -8,11 +8,14 @@ import (
 	"fmt"
 	"os"
 
-	mylogger "github.com/DionisPalpatin/ppo-and-db/tree/master/application/internal/logger"
+	mylogger "github.com/DionisPalpatin/ppo-and-db/application/internal/logger"
 )
 
 func ReadConfig(filePath string) (*Configs, error) {
 	// Чтение файла конфигурации
+	dir, _ := os.Getwd()
+	fmt.Println("Текущая директория в ReadConfig: " + dir)
+
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка чтения файла конфигурации: %w", err)
