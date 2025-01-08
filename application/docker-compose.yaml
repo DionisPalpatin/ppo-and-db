@@ -1,71 +1,71 @@
 services:
   main-application:
     container_name: main-application
+    working_dir: /servers/notebook-app/application
     build:
       context: .
       dockerfile: Dockerfile
-    command: /go/src/app/main
+    command: /servers/notebook-app/application/server.exe
     ports:
       - "8081:8080"
     volumes:
       - ./logs/log.log:/go/src/app/log.log
-      - ./internal/config/config.yaml:/app/config.yaml
+      - ./internal/config/config.yaml:/servers/notebook-app/application/config.yaml
     depends_on:
       - postgres-master
     networks:
       - noteappnetwork
-    # user: "${UID}:${GID}"
 
   main-application-ro1:
     container_name: main-application-ro1
+    working_dir: /servers/notebook-app/application
     build:
       context: .
       dockerfile: Dockerfile
-    command: /go/src/app/main
+    command: /servers/notebook-app/application/server.exe
     ports:
       - "8082:8080"
     volumes:
       - ./logs/log-ro1.log:/go/src/app/log.log
-      - ./internal/config/config-ro.yaml:/app/config.yaml
+      - ./internal/config/config-ro.yaml:/servers/notebook-app/application/config.yaml
     depends_on:
       - postgres-slave
     networks:
       - noteappnetwork
-    # user: "${UID}:${GID}"
 
   main-application-ro2:
     container_name: main-application-ro2
+    working_dir: /servers/notebook-app/application
     build:
       context: .
       dockerfile: Dockerfile
-    command: /go/src/app/main
+    command: /servers/notebook-app/application/server.exe
     ports:
       - "8083:8080"
     volumes:
       - ./logs/log-ro2.log:/go/src/app/log.log
-      - ./internal/config/config-ro.yaml:/app/config.yaml
+      - ./internal/config/config-ro.yaml:/servers/notebook-app/application/config.yaml
     depends_on:
       - postgres-slave
     networks:
       - noteappnetwork
-    # user: "${UID}:${GID}"
 
   main-application-mirror:
     container_name: main-application-mirror
+    working_dir: /servers/notebook-app/application
     build:
       context: .
       dockerfile: Dockerfile
-    command: /go/src/app/main
+    command: /servers/notebook-app/application/server.exe
     ports:
       - "8084:8080"
     volumes:
       - ./logs/log-mirror.log:/go/src/app/log.log
-      - ./internal/config/config.yaml:/app/config.yaml
+      - ./internal/config/config.yaml:/servers/notebook-app/application/config.yaml
     depends_on:
       - postgres-master
     networks:
       - noteappnetwork
-    # user: "${UID}:${GID}"
 
   postgres-master:
     container_name: postgres-master
@@ -86,10 +86,9 @@ services:
       - "15432:5432"
     volumes:
       - ./initdb/create_main.sql:/docker-entrypoint-initdb.d/init.sql
-      - /home/daemo/SpecialForCP/forDocker/pgdata:/var/lib/postgresql/data
+      - /servers/notebook-app/docker-data/postgres-master-data:/var/lib/postgresql/data
     networks:
       - noteappnetwork
-    # user: "${UID}:${GID}"
 
   postgres-slave:
     container_name: postgres-slave
@@ -113,17 +112,16 @@ services:
     ports:
       - "15433:5432"
     volumes:
-      - ./data/slave:/var/lib/postgresql/data
+      - /servers/notebook-app/docker-data/postgres-slave-data:/var/lib/postgresql/data
     networks:
       - noteappnetwork
-    # user: "${UID}:${GID}"
 
   pgadmin:
     image: dpage/pgadmin4:7
     ports:
       - 5435:80
     volumes:
-      - /home/daemo/SpecialForCP/forDocker/pgadmin:/var/lib/pgadmin
+      - /servers/notebook-app/docker-data/pgadmin-data:/var/lib/pgadmin
     environment:
       TZ: "Europe/Moscow"
       PGADMIN_DEFAULT_EMAIL: root@root.root
@@ -132,9 +130,6 @@ services:
       - postgres-master
     networks:
       - noteappnetwork
-    # user: "${UID}:${GID}"
-
-    restart: unless-stopped
 
 networks:
   noteappnetwork:

@@ -13,6 +13,9 @@ import (
 
 func ReadConfig(filePath string) (*Configs, error) {
 	// Чтение файла конфигурации
+	dir, _ := os.Getwd()
+	fmt.Println("Текущая директория в ReadConfig: " + dir)
+
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка чтения файла конфигурации: %w", err)

@@ -1,0 +1,9 @@
+internal/UI
+internal/tests
+internal/business_logic/UnitTests
+timetests
+initdb
+integration_tests
+logs/
+internal/config/config.yaml
+internal/config/config-ro.yaml

@@ -3,13 +3,14 @@ package app
 import (
 	"fmt"
 	"log/slog"
+	"os"
 
 	"github.com/DionisPalpatin/ppo-and-db/application/internal/config"
 	dapostgres "github.com/DionisPalpatin/ppo-and-db/application/internal/data_access"
 	"github.com/DionisPalpatin/ppo-and-db/application/internal/database"
 
 	//"github.com/DionisPalpatin/ppo-and-db/application/internal/UI/TechUI"
-	handlers "github.com/DionisPalpatin/ppo-and-db/application/internal/api/v2"
+	handlers "github.com/DionisPalpatin/ppo-and-db/application/internal/api"
 	bl "github.com/DionisPalpatin/ppo-and-db/application/internal/business_logic"
 
 	//"github.com/DionisPalpatin/ppo-and-db/application/internal/database"
@@ -44,7 +45,7 @@ func initInterfaces(appStruct *App) {
 	if dbconf.DriverName == "postgres" {
 		appStruct.IRepos = &bl.IRepositories{
 			IUsrRepo:  &dapostgres.UserRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
-			ISecRepo:  &dapostgres.SectionRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
+			// ISecRepo:  &dapostgres.SectionRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
 			INoteRepo: &dapostgres.NoteRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
 			IColRepo:  &dapostgres.CollectionRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
 			ITeamRepo: &dapostgres.TeamRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
@@ -64,7 +65,7 @@ func initInterfaces(appStruct *App) {
 
 	appStruct.IServices = &bl.IServices{
 		IUsrSvc:   &bl.UserService{},
-		ISecSvc:   &bl.SectionService{},
+		// ISecSvc:   &bl.SectionService{},
 		INoteSvc:  &bl.NoteService{},
 		IColSvc:   &bl.CollectionService{},
 		ITeamSvc:  &bl.TeamService{},
@@ -75,7 +76,7 @@ func initInterfaces(appStruct *App) {
 	appStruct.handlers = &handlers.HandlersStruct{}
 	appStruct.handlers.IServices = &bl.IServices{
 		IUsrSvc:   &bl.UserService{},
-		ISecSvc:   &bl.SectionService{},
+		// ISecSvc:   &bl.SectionService{},
 		INoteSvc:  &bl.NoteService{},
 		IColSvc:   &bl.CollectionService{},
 		ITeamSvc:  &bl.TeamService{},
@@ -84,7 +85,7 @@ func initInterfaces(appStruct *App) {
 	}
 	appStruct.handlers.IRepos = &bl.IRepositories{
 		IUsrRepo:  &dapostgres.UserRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
-		ISecRepo:  &dapostgres.SectionRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
+		// ISecRepo:  &dapostgres.SectionRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
 		INoteRepo: &dapostgres.NoteRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
 		IColRepo:  &dapostgres.CollectionRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
 		ITeamRepo: &dapostgres.TeamRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
@@ -94,6 +95,8 @@ func initInterfaces(appStruct *App) {
 
 func RunBackend() error {
 	configFile := "./config.yaml"
+	dir, _ := os.Getwd()
+	fmt.Println("Текущая директория в RunBackend: " + dir)
 
 	appStruct := new(App)
 	var err error
@@ -112,10 +115,10 @@ func RunBackend() error {
 		return err
 	}
 
-	// err = initDBConnection(configs)
-	// if err != nil {
-	// 	return err
-	// }
+	err = initDBConnection(configs)
+	if err != nil {
+		return err
+	}
 
 	initInterfaces(appStruct)
 
