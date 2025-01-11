@@ -6,7 +6,7 @@ import (
 
 	"github.com/DionisPalpatin/ppo-and-db/application/internal/api/converters"
 	"github.com/DionisPalpatin/ppo-and-db/application/internal/api/transport_models"
-	bl "github.com/DionisPalpatin/ppo-and-db/application/internal/business_logic"
+	bl "github.com/DionisPalpatin/ppo-and-db/application/internal/business-logic"
 	"github.com/DionisPalpatin/ppo-and-db/application/internal/models"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"

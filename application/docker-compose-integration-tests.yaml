@@ -1,0 +1,38 @@
+services:
+  postgres-int-tests:
+    container_name: postgres-int-tests
+    image: bitnami/postgresql:16
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "password"
+      POSTGRES_DB: "NotebookAppIntTests"
+    ports:
+      - "15423:5432"
+    volumes:
+      # - ./integration-tests/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - /servers/notebook-app/docker-data/postgres-int-tests-data:/var/lib/postgresql/data
+    networks:
+      - noteappnetwork
+
+  tests-app:
+    build:
+      context: ./application
+      dockerfile: Dockerfile-integration-tests
+    container_name: tests
+    environment:
+      - ALLURE_OUTPUT_PATH_UNIT=allure-unit/allure-results
+      - ALLURE_OUTPUT_PATH_INTEGR=allure-integration/allure-results
+      - ALLURE_OUTPUT_PATH_E2E=allure-e2e/allure-results
+    depends_on:
+      - postgres-int-tests
+    networks:
+      - noteappnetwork   
+
+networks:
+  noteappnetwork:
+    driver: bridge

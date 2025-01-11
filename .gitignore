@@ -6,3 +6,4 @@ application/log/
 *.log
 **/pgadmin/
 .venv/
+**/allure-results/

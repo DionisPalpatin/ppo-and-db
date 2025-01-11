@@ -6,12 +6,12 @@ import (
 	"os"
 
 	"github.com/DionisPalpatin/ppo-and-db/application/internal/config"
-	dapostgres "github.com/DionisPalpatin/ppo-and-db/application/internal/data_access"
+	dapostgres "github.com/DionisPalpatin/ppo-and-db/application/internal/data-access"
 	"github.com/DionisPalpatin/ppo-and-db/application/internal/database"
 
 	//"github.com/DionisPalpatin/ppo-and-db/application/internal/UI/TechUI"
 	handlers "github.com/DionisPalpatin/ppo-and-db/application/internal/api"
-	bl "github.com/DionisPalpatin/ppo-and-db/application/internal/business_logic"
+	bl "github.com/DionisPalpatin/ppo-and-db/application/internal/business-logic"
 
 	//"github.com/DionisPalpatin/ppo-and-db/application/internal/database"
 	mylogger "github.com/DionisPalpatin/ppo-and-db/application/internal/logger"
@@ -44,7 +44,7 @@ func initInterfaces(appStruct *App) {
 
 	if dbconf.DriverName == "postgres" {
 		appStruct.IRepos = &bl.IRepositories{
-			IUsrRepo:  &dapostgres.UserRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
+			IUsrRepo: &dapostgres.UserRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
 			// ISecRepo:  &dapostgres.SectionRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
 			INoteRepo: &dapostgres.NoteRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
 			IColRepo:  &dapostgres.CollectionRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
@@ -64,7 +64,7 @@ func initInterfaces(appStruct *App) {
 	// }
 
 	appStruct.IServices = &bl.IServices{
-		IUsrSvc:   &bl.UserService{},
+		IUsrSvc: &bl.UserService{},
 		// ISecSvc:   &bl.SectionService{},
 		INoteSvc:  &bl.NoteService{},
 		IColSvc:   &bl.CollectionService{},
@@ -75,7 +75,7 @@ func initInterfaces(appStruct *App) {
 
 	appStruct.handlers = &handlers.HandlersStruct{}
 	appStruct.handlers.IServices = &bl.IServices{
-		IUsrSvc:   &bl.UserService{},
+		IUsrSvc: &bl.UserService{},
 		// ISecSvc:   &bl.SectionService{},
 		INoteSvc:  &bl.NoteService{},
 		IColSvc:   &bl.CollectionService{},
@@ -84,7 +84,7 @@ func initInterfaces(appStruct *App) {
 		//IStatSvc:  &bl.StatService{},
 	}
 	appStruct.handlers.IRepos = &bl.IRepositories{
-		IUsrRepo:  &dapostgres.UserRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
+		IUsrRepo: &dapostgres.UserRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
 		// ISecRepo:  &dapostgres.SectionRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
 		INoteRepo: &dapostgres.NoteRepository{DbConfigs: dbconf, MyLogger: logger.Logger},
 		IColRepo:  &dapostgres.CollectionRepository{DbConfigs: dbconf, MyLogger: logger.Logger},

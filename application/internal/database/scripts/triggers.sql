@@ -275,9 +275,9 @@ begin
 end;
 $$ language plpgsql;
 
-drop trigger if exists stat_teams_trigger on main.data;
+drop trigger if exists stat_teams_trigger on interg_tests.teams;
 create trigger stat_teams_trigger
-    after insert or update or delete on main.data
+    after insert or update or delete on interg_tests.teams
     for each row
 execute procedure main.func_stat_teams_trigger();
 
@@ -319,9 +319,9 @@ begin
 end;
 $$ language plpgsql;
 
-drop trigger if exists stat_team_members_trigger on main.team_members;
+drop trigger if exists stat_team_members_trigger on interg_tests.teams_members;
 create trigger stat_team_members_trigger
-    after insert or update or delete on main.team_members
+    after insert or update or delete on interg_tests.teams_members
     for each row
 execute procedure main.func_stat_team_members_trigger();
 
@@ -363,9 +363,9 @@ begin
 end;
 $$ language plpgsql;
 
-drop trigger if exists stat_teams_sections_trigger on main.teams_sections;
+drop trigger if exists stat_teams_sections_trigger on interg_tests.teamss_sections;
 create trigger stat_teams_sections_trigger
-    after insert or update or delete on main.teams_sections
+    after insert or update or delete on interg_tests.teamss_sections
     for each row
 execute procedure main.func_stat_teams_sections_trigger();
 

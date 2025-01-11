@@ -1,0 +1,22 @@
+# Используем официальный образ Go
+FROM golang:latest
+
+# Устанавливаем зависимости для тестов
+RUN apt-get update && apt-get install -y \
+    allure \
+    && rm -rf /var/lib/apt/lists/*
+
+# Устанавливаем рабочую директорию
+WORKDIR /app
+
+# Копируем исходный код приложения
+COPY . .
+
+# Устанавливаем зависимости Go
+RUN go mod download
+
+# Устанавливаем рабочую директорию для тестов
+WORKDIR /app
+
+# Добавляем Allure CLI
+RUN mkdir -p allure-results allure-reports
