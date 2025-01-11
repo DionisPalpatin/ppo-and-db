@@ -31,10 +31,10 @@ jobs:
           sudo usermod -aG docker $USER
           newgrp docker
 
-      - name: Install Docker Compose (specific version, recommended)
-        uses: docker/setup-docker-compose@v2
+      - name: Set up Docker Compose
+        uses: docker/setup-docker@v3
         with:
-          version: 2.15.0
+          docker-version: latest
 
       # Start services with docker compose
       - name: Start services
