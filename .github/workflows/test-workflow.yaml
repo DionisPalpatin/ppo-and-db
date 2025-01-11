@@ -26,10 +26,11 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: "1.20"
+          go-version: "1.23.4"
 
       # Unit Tests
       - name: Run Unit Tests
+        working-directory: ./application
         run: |
           docker run --rm -v ${{ github.workspace }}:/app -w /app your-app-test-image bash -c "
             make unit-test &&
@@ -41,6 +42,7 @@ jobs:
 
       # Integration Tests
       - name: Run Integration Tests
+        working-directory: ./application
         if: env.UNIT_SUCCESS == '1'
         run: |
           docker run --rm -v ${{ github.workspace }}:/app -w /app your-app-test-image bash -c "
@@ -54,6 +56,7 @@ jobs:
 
       # E2E Tests
       - name: Run E2E Tests
+        working-directory: ./application
         if: env.INTEGRATION_SUCCESS == '1'
         run: |
           docker run --rm -v ${{ github.workspace }}:/app -w /app your-app-test-image bash -c "make e2e-test"
