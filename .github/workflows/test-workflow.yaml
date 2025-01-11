@@ -31,11 +31,6 @@ jobs:
           sudo usermod -aG docker $USER
           newgrp docker
 
-      - name: Set up Docker Compose
-        uses: docker/setup-docker@v3
-        with:
-          docker-version: latest
-
       # Start services with docker compose
       - name: Start services
         run: docker compose -f docker-compose-integration-tests.yaml up -d --build
