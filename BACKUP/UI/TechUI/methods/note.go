@@ -10,7 +10,7 @@ import (
 	"github.com/DionisPalpatin/ppo-and-db/application/internal/config"
 
 	"github.com/DionisPalpatin/ppo-and-db/application/internal/UI/TechUI/display"
-	bl "github.com/DionisPalpatin/ppo-and-db/application/internal/business_logic"
+	bl "github.com/DionisPalpatin/ppo-and-db/application/internal/business-logic"
 	"github.com/DionisPalpatin/ppo-and-db/application/internal/models"
 )
 

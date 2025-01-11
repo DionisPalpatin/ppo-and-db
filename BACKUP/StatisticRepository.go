@@ -7,7 +7,7 @@ package data_access
 //	_ "errors"
 //	"fmt"
 //
-//	_ "github.com/DionisPalpatin/ppo-and-db/application/internal/business_logic"
+//	_ "github.com/DionisPalpatin/ppo-and-db/application/internal/business-logic"
 //)
 //
 //func (sr *StatisticRepository) CountMarks() int {

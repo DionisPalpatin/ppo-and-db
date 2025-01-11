@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"log/slog"
 
-	bl "github.com/DionisPalpatin/ppo-and-db/application/internal/business_logic"
+	bl "github.com/DionisPalpatin/ppo-and-db/application/internal/business-logic"
 	mylogger "github.com/DionisPalpatin/ppo-and-db/application/internal/logger"
 	"github.com/DionisPalpatin/ppo-and-db/application/internal/models"
 )
@@ -35,7 +35,7 @@ func (sr *SectionRepository) GetSectionByID(id int) (*models.Section, *bl.MyErro
 			resState = bl.CreateError(bl.NoSuchSect, "GetSectionByID", "data_access")
 			sr.MyLogger.WriteLog(resState.ConcatenateFields(), slog.LevelError, mylogger.LogCallerInfo())
 		} else {
-			resState := bl.CreateError(bl.DatabaseError, "GetSectionByID", "data_access")
+			resState = bl.CreateError(bl.DatabaseError, "GetSectionByID", "data_access")
 			sr.MyLogger.WriteLog(resState.ConcatenateWithExternalErr(err), slog.LevelError, mylogger.LogCallerInfo())
 		}
 
@@ -71,7 +71,7 @@ func (sr *SectionRepository) GetSectionByTeamName(teamName string) (*models.Sect
 			resState = bl.CreateError(bl.NoSuchSect, "GetSectionByTeamName", "data_access")
 			sr.MyLogger.WriteLog(resState.ConcatenateFields(), slog.LevelError, mylogger.LogCallerInfo())
 		} else {
-			resState := bl.CreateError(bl.DatabaseError, "GetSectionByTeamName", "data_access")
+			resState = bl.CreateError(bl.DatabaseError, "GetSectionByTeamName", "data_access")
 			sr.MyLogger.WriteLog(resState.ConcatenateWithExternalErr(err), slog.LevelError, mylogger.LogCallerInfo())
 		}
 
@@ -99,7 +99,7 @@ func (sr *SectionRepository) GetAllSections() ([]*models.Section, *bl.MyError) {
 			resState = bl.CreateError(bl.EmptyResult, "GetAllSections", "data_access")
 			sr.MyLogger.WriteLog(resState.ConcatenateFields(), slog.LevelError, mylogger.LogCallerInfo())
 		} else {
-			resState := bl.CreateError(bl.DatabaseError, "GetAllSections", "data_access")
+			resState = bl.CreateError(bl.DatabaseError, "GetAllSections", "data_access")
 			sr.MyLogger.WriteLog(resState.ConcatenateWithExternalErr(err), slog.LevelError, mylogger.LogCallerInfo())
 		}
 
@@ -174,7 +174,7 @@ func (sr *SectionRepository) AddSection(section *models.Section, team *models.Te
 			resState = bl.CreateError(bl.NoSuchSect, "AddSection", "data_access")
 			sr.MyLogger.WriteLog(resState.ConcatenateFields(), slog.LevelError, mylogger.LogCallerInfo())
 		} else {
-			resState := bl.CreateError(bl.DatabaseError, "AddSection", "data_access")
+			resState = bl.CreateError(bl.DatabaseError, "AddSection", "data_access")
 			sr.MyLogger.WriteLog(resState.ConcatenateWithExternalErr(err), slog.LevelError, mylogger.LogCallerInfo())
 		}
 
@@ -234,7 +234,7 @@ func (sr *SectionRepository) DeleteSection(id int) *bl.MyError {
 			resState = bl.CreateError(bl.NoSuchSect, "DeleteSection", "data_access")
 			sr.MyLogger.WriteLog(resState.ConcatenateFields(), slog.LevelError, mylogger.LogCallerInfo())
 		} else {
-			resState := bl.CreateError(bl.DatabaseError, "DeleteSection", "data_access")
+			resState = bl.CreateError(bl.DatabaseError, "DeleteSection", "data_access")
 			sr.MyLogger.WriteLog(resState.ConcatenateWithExternalErr(err), slog.LevelError, mylogger.LogCallerInfo())
 		}
 
@@ -277,7 +277,7 @@ func (sr *SectionRepository) UpdateSection(section *models.Section) *bl.MyError 
 			resState = bl.CreateError(bl.NoSuchSect, "UpdateSection", "data_access")
 			sr.MyLogger.WriteLog(resState.ConcatenateFields(), slog.LevelError, mylogger.LogCallerInfo())
 		} else {
-			resState := bl.CreateError(bl.DatabaseError, "UpdateSection", "data_access")
+			resState = bl.CreateError(bl.DatabaseError, "UpdateSection", "data_access")
 			sr.MyLogger.WriteLog(resState.ConcatenateWithExternalErr(err), slog.LevelError, mylogger.LogCallerInfo())
 		}
 
@@ -311,7 +311,7 @@ func (sr *SectionRepository) GetAllNotesInSection(section *models.Section) ([]*m
 			resState = bl.CreateError(bl.NoSuchSect, "GetAllNotesInSection", "data_access")
 			sr.MyLogger.WriteLog(resState.ConcatenateFields(), slog.LevelError, mylogger.LogCallerInfo())
 		} else {
-			resState := bl.CreateError(bl.DatabaseError, "GetAllNotesInSection", "data_access")
+			resState = bl.CreateError(bl.DatabaseError, "GetAllNotesInSection", "data_access")
 			sr.MyLogger.WriteLog(resState.ConcatenateWithExternalErr(err), slog.LevelError, mylogger.LogCallerInfo())
 		}
 
@@ -383,7 +383,7 @@ func (sr *SectionRepository) AddNoteToSection(note *models.Note, section *models
 			resState = bl.CreateError(bl.NoSuchSect, "AddNoteToSection", "data_access")
 			sr.MyLogger.WriteLog(resState.ConcatenateFields(), slog.LevelError, mylogger.LogCallerInfo())
 		} else {
-			resState := bl.CreateError(bl.DatabaseError, "AddNoteToSection", "data_access")
+			resState = bl.CreateError(bl.DatabaseError, "AddNoteToSection", "data_access")
 			sr.MyLogger.WriteLog(resState.ConcatenateWithExternalErr(err), slog.LevelError, mylogger.LogCallerInfo())
 		}
 
@@ -425,7 +425,7 @@ func (sr *SectionRepository) DeleteNoteFromSection(note *models.Note, section *m
 			resState = bl.CreateError(bl.NoSuchSect, "DeleteNoteFromSection", "data_access")
 			sr.MyLogger.WriteLog(resState.ConcatenateFields(), slog.LevelError, mylogger.LogCallerInfo())
 		} else {
-			resState := bl.CreateError(bl.DatabaseError, "DeleteNoteFromSection", "data_access")
+			resState = bl.CreateError(bl.DatabaseError, "DeleteNoteFromSection", "data_access")
 			sr.MyLogger.WriteLog(resState.ConcatenateWithExternalErr(err), slog.LevelError, mylogger.LogCallerInfo())
 		}
 

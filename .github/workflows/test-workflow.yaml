@@ -1,0 +1,79 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+
+    env:
+      UNIT_SUCCESS: "0"
+      INTEGRATION_SUCCESS: "0"
+
+    steps:
+      # Checkout code
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Set up Go environment
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.20"
+
+      # Unit Tests
+      - name: Run Unit Tests
+        run: |
+          docker run --rm -v ${{ github.workspace }}:/app -w /app your-app-test-image bash -c "
+            make unit-test &&
+            export UNIT_SUCCESS=1 ||
+            export UNIT_SUCCESS=0
+          "
+        env:
+          UNIT_SUCCESS: "0"
+
+      # Integration Tests
+      - name: Run Integration Tests
+        if: env.UNIT_SUCCESS == '1'
+        run: |
+          docker run --rm -v ${{ github.workspace }}:/app -w /app your-app-test-image bash -c "
+            make integration-test &&
+            export INTEGRATION_SUCCESS=1 ||
+            export INTEGRATION_SUCCESS=0
+          "
+        env:
+          UNIT_SUCCESS: ${{ env.UNIT_SUCCESS }}
+          INTEGRATION_SUCCESS: "0"
+
+      # E2E Tests
+      - name: Run E2E Tests
+        if: env.INTEGRATION_SUCCESS == '1'
+        run: |
+          docker run --rm -v ${{ github.workspace }}:/app -w /app your-app-test-image bash -c "make e2e-test"
+        env:
+          INTEGRATION_SUCCESS: ${{ env.INTEGRATION_SUCCESS }}
+
+      # Generate Allure Report
+      - name: Generate Allure Report
+        run: |
+          docker run --rm -v ${{ github.workspace }}:/app -w /app your-app-test-image bash -c "make allure"
+
+      # Upload Allure Report
+      - name: Upload Allure Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: allure-reports
+          path: allure-reports
+
+      # Show Report (Optional, for debugging purposes)
+      - name: Show Allure Report (Optional)
+        if: always()
+        run: |
+          docker run --rm -v ${{ github.workspace }}:/app -w /app your-app-test-image bash -c "make show-report"

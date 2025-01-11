@@ -6,7 +6,7 @@ import (
 
 	"github.com/DionisPalpatin/ppo-and-db/application/internal/config"
 
-	bl "github.com/DionisPalpatin/ppo-and-db/application/internal/business_logic"
+	bl "github.com/DionisPalpatin/ppo-and-db/application/internal/business-logic"
 	"github.com/DionisPalpatin/ppo-and-db/application/internal/models"
 )
 

@@ -1,4 +1,4 @@
-package UnitTests
+package unit_tests
 
 // func TestGetSection(t *testing.T) {
 // 	t.Run("SuccessGetSectionByID", func(t *testing.T) {
