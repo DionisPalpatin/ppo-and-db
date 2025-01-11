@@ -21,7 +21,6 @@ services:
 
   tests-app:
     build:
-      context: ./application
       dockerfile: Dockerfile-integration-tests
     container_name: tests
     environment:
