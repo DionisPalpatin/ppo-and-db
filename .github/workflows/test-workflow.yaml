@@ -22,13 +22,23 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Set up Docker Compose
-      - name: Set up Docker Compose
-        uses: docker/setup-docker-compose@v3
+      - name: Install Docker
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker.io containerd.io docker-compose-plugin
+          sudo systemctl start docker
+          sudo systemctl enable docker
+          sudo usermod -aG docker $USER
+          newgrp docker
+
+      - name: Install Docker Compose (specific version, recommended)
+        uses: docker/setup-docker-compose@v2
+        with:
+          version: 2.15.0
 
       # Start services with docker compose
       - name: Start services
-        run: docker compose -f docker-compose-integration-tests.yaml up -d
+        run: docker compose -f docker-compose-integration-tests.yaml up -d --build
 
       # Unit Tests
       - name: Run Unit Tests
