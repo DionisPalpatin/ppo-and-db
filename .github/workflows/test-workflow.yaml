@@ -33,7 +33,7 @@ jobs:
 
       # Start services with docker compose
       - name: Start services
-        run: docker compose -f docker-compose-integration-tests.yaml up -d --build
+        run: docker compose -f application/docker-compose-integration-tests.yaml up -d --build
 
       # Unit Tests
       - name: Run Unit Tests
