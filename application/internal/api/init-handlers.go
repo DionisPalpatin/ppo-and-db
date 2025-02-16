@@ -95,11 +95,11 @@ func InitRouter(hs *HandlersStruct) {
 	// -----------------------------------------------------------------------------------------------------------------
 	// Documentation
 	// -----------------------------------------------------------------------------------------------------------------
-	router.StaticFile("/api/v1/apifile", "/servers/notebook-app/docs/swagger.json")
-	router.StaticFile("/api/v1/docs", "/servers/notebook-app/docs/index.html")
+	router.StaticFile("/apifile", "/servers/notebook-app/docs/swagger.yaml")
+	router.StaticFile("/docs", "/servers/notebook-app/docs/index.html")
 
 	// -----------------------------------------------------------------------------------------------------------------
 	// Static path
 	// -----------------------------------------------------------------------------------------------------------------
-	router.StaticFS("/api/v1/static", http.Dir("/servers/notebook-app/static/"))
+	router.StaticFS("/static", http.Dir("/servers/notebook-app/static/"))
 }

@@ -1,6 +1,6 @@
 services:
-  main-application:
-    container_name: main-application
+  main-application-new:
+    container_name: main-application-new
     working_dir: /servers/notebook-app/application
     build:
       context: .
@@ -16,8 +16,8 @@ services:
     networks:
       - noteappnetwork
 
-  main-application-ro1:
-    container_name: main-application-ro1
+  main-application-ro1-new:
+    container_name: main-application-ro1-new
     working_dir: /servers/notebook-app/application
     build:
       context: .
@@ -33,8 +33,8 @@ services:
     networks:
       - noteappnetwork
 
-  main-application-ro2:
-    container_name: main-application-ro2
+  main-application-ro2-new:
+    container_name: main-application-ro2-new
     working_dir: /servers/notebook-app/application
     build:
       context: .
@@ -50,8 +50,8 @@ services:
     networks:
       - noteappnetwork
 
-  main-application-mirror:
-    container_name: main-application-mirror
+  main-application-mirror-new:
+    container_name: main-application-mirror-new
     working_dir: /servers/notebook-app/application
     build:
       context: .
@@ -112,7 +112,7 @@ services:
     ports:
       - "15433:5432"
     volumes:
-      - /servers/notebook-app/docker-data/postgres-slave-data:/var/lib/postgresql/data
+      - /servers/notebook-app/docker-data/postgers-slave-data:/var/lib/postgresql/data
     networks:
       - noteappnetwork
 
